@@ -1,0 +1,24 @@
+{
+  "name": "tyriaq",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tyriaq \u2014 an all-in-one productivity and work management platform",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@flow/web",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@flow/web",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "5.7.2",
+    "prettier": "^3.4.2"
+  }
+}

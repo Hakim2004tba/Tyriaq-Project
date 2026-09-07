@@ -1,0 +1,7 @@
+{
+  "$comment": "Reference only — cannot be used via 'extends' from apps/mobile because TypeScript resolves non-relative 'extends' specifiers relative to THIS file's location, and 'expo' is not a dependency of @flow/config. apps/mobile/tsconfig.json extends 'expo/tsconfig.base' directly instead; keep the compilerOptions below in sync with that file.",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true
+  }
+}

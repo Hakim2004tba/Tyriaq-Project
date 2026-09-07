@@ -1,0 +1,14 @@
+{
+  "extends": "@flow/config/typescript/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["react", "react-dom", "node"],
+    "paths": {
+      "@/*": ["./*"],
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
