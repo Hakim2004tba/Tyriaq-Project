@@ -1,20 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Link2, MoreHorizontal, Star, Trash2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Link2,
+  MoreHorizontal,
+  Star,
+  Trash2,
+} from "lucide-react";
+import {
+  AvatarGroup,
   Badge,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   IconButton,
-  Sheet,
-  SheetContent,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
+  toast,
 } from "@flow/ui";
 import { cn } from "@flow/utils";
 import { SPACE_COLOR } from "@/components/shell";
@@ -43,15 +56,24 @@ import {
 /**
  * The task detail panel.
  *
- * Opens over the project rather than navigating to it: the point of a
+ * Opens over the workspace rather than navigating to it: the point of a
  * task list is comparison, and a full page transition loses the row you
  * came from, your scroll position and your filters every time you glance
  * at something.
  *
- * Layout is two columns above `lg` — properties on the left, the long
- * content (description, subtasks, comments) on the right — and one
- * column below, where the properties collapse behind a disclosure so the
- * description is not pushed a screen down by eight metadata rows.
+ * A CENTRED modal, not a side drawer. A task is the thing you are doing
+ * when it is open, and a panel pinned to one edge fights the page it is
+ * covering for attention; a modal settles that — the workspace dims
+ * behind it and the task is unambiguously the live surface.
+ *
+ * Inside, two columns above `lg`: the long content (description,
+ * subtasks, attachments) beside a properties rail. Below that the rail
+ * moves above the content behind a disclosure, so a description is not
+ * pushed a screen down by nine metadata rows on a phone.
+ *
+ * Escape, the backdrop and the close button all dismiss it, focus is
+ * trapped while it is open and page scrolling is locked — all of which
+ * come from the dialog primitive rather than being re-implemented here.
  *
  * Prev/next walk the same filtered order the list is showing, so
  * stepping through the panel matches what is on screen behind it rather
@@ -73,6 +95,29 @@ export function TaskPanel({
 }) {
   const store = useTasks();
   const [propsOpen, setPropsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  /**
+   * A link straight to this task, open.
+   *
+   * Built from the current location rather than a hardcoded origin, so
+   * it is correct in development, on a preview deployment and in
+   * production without being told which one it is.
+   */
+  const copyLink = useCallback(async () => {
+    if (!taskId) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("task", taskId);
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be refused outright; saying so beats a
+      // button that silently does nothing.
+      toast.error("Your browser would not let us copy. Copy the address bar instead.");
+    }
+  }, [taskId]);
 
   const task = taskId ? store.getTask(taskId) : undefined;
   const project = taskId ? resolveProject(taskId) : undefined;
@@ -92,8 +137,11 @@ export function TaskPanel({
   const chip = project ? SPACE_COLOR[project.color] : SPACE_COLOR.violet;
 
   return (
-    <Sheet open={Boolean(task)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent width="2xl" className="p-0" aria-describedby={undefined}>
+    <Dialog open={Boolean(task)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex max-h-[90vh] w-[min(96vw,980px)] max-w-none flex-col overflow-hidden rounded-2xl p-0"
+      >
         {task && detail && project && (
           <>
             {/* Header */}
@@ -109,11 +157,37 @@ export function TaskPanel({
                 >
                   {initialsOf(project.name)}
                 </span>
-                <span className="truncate text-caption text-text-muted">{project.name}</span>
+                <Link
+                  href={`/spaces/${project.spaceSlug}`}
+                  className="shrink-0 rounded text-caption text-text-muted transition-colors hover:text-text-primary
+                             focus-visible:outline-none focus-visible:shadow-focus"
+                >
+                  {project.spaceName}
+                </Link>
+                <ChevronRight className="size-3 shrink-0 text-text-muted" aria-hidden="true" />
+                <Link
+                  href={`/projects/${project.slug}`}
+                  className="min-w-0 truncate rounded text-caption text-text-muted transition-colors hover:text-text-primary
+                             focus-visible:outline-none focus-visible:shadow-focus"
+                >
+                  {project.name}
+                </Link>
                 {task.milestone && (
                   <Badge variant="primary" size="sm">
                     Milestone
                   </Badge>
+                )}
+
+                {/* Who is on it, in the header where it is legible at a
+                    glance; the rail below is where it is changed. */}
+                {task.assignees.length > 0 && (
+                  <span className="ml-1 shrink-0">
+                    <AvatarGroup
+                      people={task.assignees.map((a) => ({ id: a.id, name: a.name }))}
+                      max={3}
+                      size="xs"
+                    />
+                  </span>
                 )}
 
                 <div className="ml-auto flex items-center gap-0.5">
@@ -133,11 +207,21 @@ export function TaskPanel({
                   >
                     <ChevronDown className="size-4" />
                   </IconButton>
-                  <IconButton label="Copy link to task" size="sm">
-                    <Link2 className="size-4" />
+                  <IconButton
+                    label={copied ? "Link copied" : "Copy link to task"}
+                    size="sm"
+                    onClick={copyLink}
+                  >
+                    {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />}
                   </IconButton>
-                  <IconButton label="Star task" size="sm">
-                    <Star className="size-4" />
+                  <IconButton
+                    label={task.starred ? "Remove from starred" : "Star task"}
+                    size="sm"
+                    onClick={() => store.toggleStar(task.id)}
+                  >
+                    <Star
+                      className={cn("size-4", task.starred && "fill-warning text-warning")}
+                    />
                   </IconButton>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -145,7 +229,7 @@ export function TaskPanel({
                         <MoreHorizontal className="size-4" />
                       </IconButton>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuContent align="end" className="z-[60] w-52">
                       <DropdownMenuItem
                         destructive
                         onSelect={() => {
@@ -166,7 +250,9 @@ export function TaskPanel({
               {/* The title is editable in place — opening a modal to
                   rename a task is the kind of friction that makes people
                   leave bad titles alone. */}
-              <TaskTitle key={task.id} id={task.id} title={task.title} />
+              <DialogTitle asChild>
+                <TaskTitle key={task.id} id={task.id} title={task.title} />
+              </DialogTitle>
             </header>
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row-reverse">
@@ -201,6 +287,31 @@ export function TaskPanel({
                   </Field>
                   <Field label="Dependencies">
                     <DependenciesField task={task} all={store.topLevel} />
+                  </Field>
+                  {/* Read-only: a task moves between projects, not
+                      between spaces on its own — the project it belongs
+                      to decides its space. Shown because "which part of
+                      the workspace is this?" is the first thing somebody
+                      opening a task from search needs to know. */}
+                  <Field label="Space">
+                    <Link
+                      href={`/spaces/${project.spaceSlug}`}
+                      className="flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-body-sm
+                                 text-text-primary transition-colors hover:bg-white/5
+                                 focus-visible:outline-none focus-visible:shadow-focus"
+                    >
+                      <span
+                        className={cn(
+                          "flex size-4 shrink-0 items-center justify-center rounded-[5px] text-[9px] font-bold ring-1 ring-inset",
+                          SPACE_COLOR[project.spaceColor].chip,
+                          SPACE_COLOR[project.spaceColor].text
+                        )}
+                        aria-hidden="true"
+                      >
+                        {project.spaceName.slice(0, 1).toUpperCase()}
+                      </span>
+                      <span className="truncate">{project.spaceName}</span>
+                    </Link>
                   </Field>
 
                   <div className="mt-4 border-t border-border pt-4">
@@ -243,8 +354,8 @@ export function TaskPanel({
             </div>
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
 

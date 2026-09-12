@@ -50,6 +50,8 @@ export interface ProjectTask {
   parentId: string | null;
   /** Manual ordering within a status column. */
   position: number;
+  /** Bookmarked by the VIEWER — a star is personal, not a task property. */
+  starred?: boolean;
 }
 
 export const TASK_STATUS_ORDER: TaskStatus[] = ["todo", "in_progress", "review", "done", "blocked"];

@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import { Check, ChevronDown, Plus, Tag as TagIcon } from "lucide-react";
 import {
   Avatar,
@@ -55,20 +56,34 @@ export function Field({ label, children }: { label: string; children: React.Reac
 /** A borderless control that only reveals its affordance on hover — the
  * panel is mostly reading, and eight outlined selects would make it look
  * like a form. */
-function FieldButton({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-body-sm transition-colors duration-fast",
-        "hover:bg-white/[0.05] focus-visible:outline-none focus-visible:shadow-focus",
-        className
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+/**
+ * The control every property field is built from.
+ *
+ * Forwards its ref AND spreads the rest of its props, because it is used
+ * as `<DropdownMenuTrigger asChild>`. Without both, Radix has nothing to
+ * attach to: it hands the trigger's handlers and `aria-expanded` to a
+ * component that drops them, and the menu simply never opens — the
+ * button takes focus and nothing else happens, which is exactly what it
+ * did before this was fixed.
+ */
+const FieldButton = forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ children, className, ...props }, ref) => (
+  <button
+    ref={ref}
+    type="button"
+    className={cn(
+      "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-body-sm transition-colors duration-fast",
+      "hover:bg-white/[0.05] focus-visible:outline-none focus-visible:shadow-focus",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+));
+FieldButton.displayName = "FieldButton";
 
 export function StatusField({ task }: { task: ProjectTask }) {
   const store = useTasks();
@@ -82,7 +97,7 @@ export function StatusField({ task }: { task: ProjectTask }) {
           <ChevronDown className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
         </FieldButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align="start" className="z-[60] w-48">
         {TASK_STATUS_ORDER.map((s) => (
           <DropdownMenuItem key={s} onSelect={() => store.setStatus(task.id, s)}>
             <span className="flex size-4 items-center justify-center">
@@ -108,7 +123,7 @@ export function PriorityField({ task }: { task: ProjectTask }) {
           <ChevronDown className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
         </FieldButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-44">
+      <DropdownMenuContent align="start" className="z-[60] w-44">
         {PRIORITIES.map((p) => (
           <DropdownMenuItem key={p} onSelect={() => store.updateTask(task.id, { priority: p })}>
             <span className="flex size-4 items-center justify-center">
@@ -140,7 +155,7 @@ export function AssigneesField({ task, roster }: { task: ProjectTask; roster: Pe
           <Plus className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
         </FieldButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60">
+      <DropdownMenuContent align="start" className="z-[60] w-60">
         {roster.map((p) => {
           const on = task.assignees.some((a) => a.id === p.id);
           return (
@@ -251,7 +266,7 @@ export function TagsField({ task, available }: { task: ProjectTask; available: s
           )}
         </FieldButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-52">
+      <DropdownMenuContent align="start" className="z-[60] w-52">
         {available.map((t) => (
           <DropdownMenuItem
             key={t}

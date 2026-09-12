@@ -26,6 +26,7 @@ import {
   moveTask as moveTaskAction,
   setTaskAssignee,
   setTaskDependency,
+  setTaskStarred,
   updateTask as updateTaskAction,
 } from "@/lib/actions/task";
 import { createClient } from "@/lib/supabase/client";
@@ -104,6 +105,8 @@ export interface TaskStore {
   openAttachment: (attachmentId: string, download: boolean) => void;
   logTime: (taskId: string, minutes: number, note: string) => void;
   toggleTag: (taskId: string, tag: string) => void;
+  /** Personal bookmark; nobody else's view changes. */
+  toggleStar: (taskId: string) => void;
   /** `source` blocks `target`. Refuses self-links, duplicates and any
    * edge that would close a cycle. Returns why it refused, or null. */
   addDependency: (sourceId: string, targetId: string) => string | null;
@@ -704,6 +707,19 @@ export function TaskStoreProvider({
     [commit, recount]
   );
 
+  const toggleStar = useCallback(
+    (taskId: string) => {
+      const task = tasksRef.current.find((t) => t.id === taskId);
+      if (!task) return;
+      const next = !task.starred;
+      commit(
+        () => patchLocal(taskId, { starred: next }),
+        () => setTaskStarred(taskId, next)
+      );
+    },
+    [commit, patchLocal]
+  );
+
   const toggleTag = useCallback(
     (taskId: string, tag: string) => {
       const task = tasksRef.current.find((t) => t.id === taskId);
@@ -1073,11 +1089,12 @@ export function TaskStoreProvider({
       openAttachment,
       logTime,
       toggleTag,
+      toggleStar,
       toggleAssignee,
       addDependency,
       removeDependency,
     }),
-    [tasks, details, people, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, toggleTag, toggleAssignee, addDependency, removeDependency]
+    [tasks, details, people, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

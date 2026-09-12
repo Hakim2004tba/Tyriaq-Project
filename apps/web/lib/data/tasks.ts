@@ -77,8 +77,11 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
 
   const ids = rows.map((r) => r.id);
 
-  const [{ data: assigneeRows, error: assigneeError }, { data: dependencyRows, error: dependencyError }] =
-    await Promise.all([
+  const [
+    { data: assigneeRows, error: assigneeError },
+    { data: dependencyRows, error: dependencyError },
+    { data: starRows, error: starError },
+  ] = await Promise.all([
     supabase
       .from("task_assignees")
       // Unhinted on purpose: only one key from this column reaches
@@ -90,10 +93,13 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
       .from("task_dependencies")
       .select("predecessor_id, successor_id")
       .in("predecessor_id", ids),
+    // RLS limits this to the caller's own rows, so no user filter here.
+    supabase.from("task_stars").select("task_id").in("task_id", ids),
   ]);
 
   reportReadError("loadTasks:assignees", assigneeError);
   reportReadError("loadTasks:dependencies", dependencyError);
+  reportReadError("loadTasks:stars", starError);
 
   const assignees = new Map<string, Person[]>();
   for (const row of (assigneeRows ?? []) as unknown as {
@@ -128,7 +134,13 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
     else children.set(row.parent_task_id, [row]);
   }
 
-  const tasks = rows.map((row) => toTask(row, assignees.get(row.id) ?? [], blocks.get(row.id), children.get(row.id)));
+  const starred = new Set(
+    ((starRows ?? []) as unknown as { task_id: string }[]).map((row) => row.task_id)
+  );
+
+  const tasks = rows.map((row) =>
+    toTask(row, assignees.get(row.id) ?? [], blocks.get(row.id), children.get(row.id), starred.has(row.id))
+  );
 
   const details: Record<string, TaskDetail> = {};
   for (const row of rows) {
@@ -148,7 +160,8 @@ function toTask(
   row: TaskRow,
   assignees: Person[],
   blocks: string[] | undefined,
-  children: TaskRow[] | undefined
+  children: TaskRow[] | undefined,
+  starred: boolean
 ): ProjectTask {
   return {
     id: row.id,
@@ -163,6 +176,7 @@ function toTask(
     tags: row.tags ?? [],
     milestone: row.is_milestone,
     position: row.position,
+    starred,
     blocks: blocks ?? [],
     subtasks: children?.length
       ? { done: children.filter((c) => c.status === "done").length, total: children.length }

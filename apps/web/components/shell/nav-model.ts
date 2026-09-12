@@ -35,7 +35,7 @@ export const WORKSPACE_NAV: NavEntry[] = [
   // Points at the preview dashboard while /app is still on the old,
   // auth-gated shell. Repoint to "/app" when that route adopts AppFrame.
   { id: "home", label: "Home", href: "/dashboard", icon: Home, primary: true },
-  { id: "my-tasks", label: "My Tasks", href: "/app/my-tasks", icon: CheckSquare, count: 23, primary: true },
+  { id: "my-tasks", label: "My Tasks", href: "/my-tasks", icon: CheckSquare, primary: true },
   { id: "projects", label: "Projects", href: "/projects", icon: FolderKanban },
   { id: "calendar", label: "Calendar", href: "/calendar", icon: CalendarDays, primary: true },
   { id: "docs", label: "Documents", href: "/documents", icon: FileText },

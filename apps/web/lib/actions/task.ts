@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { toISODate, type Priority, type TaskStatus } from "@/lib/data/task-types";
 import type { ActionResult } from "./workspace";
 
@@ -175,6 +176,31 @@ export async function setTaskDependency(
         .eq("successor_id", successorId);
 
   if (error) return { error: error.message };
+  refresh();
+  return {};
+}
+
+/**
+ * Stars or unstars a task for the caller.
+ *
+ * Nothing here says which user: the policies only ever accept
+ * `auth.uid()`, so a request cannot bookmark on somebody else's behalf
+ * however it is shaped.
+ */
+export async function setTaskStarred(taskId: string, starred: boolean): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+
+  const supabase = await createClient();
+  const { error } = starred
+    ? await supabase
+        .from("task_stars")
+        // Overwritten by the trigger from the task itself.
+        .insert({ task_id: taskId, user_id: user.id, workspace_id: taskId })
+    : await supabase.from("task_stars").delete().eq("task_id", taskId).eq("user_id", user.id);
+
+  // Starring twice is not an error worth surfacing; it is already true.
+  if (error && error.code !== "23505") return { error: error.message };
   refresh();
   return {};
 }
