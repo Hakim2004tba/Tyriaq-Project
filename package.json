@@ -14,7 +14,8 @@
     "build:web": "turbo run build --filter=@flow/web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "bundle": "turbo run build --filter=@flow/web && node scripts/bundle-for-octenium.mjs"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

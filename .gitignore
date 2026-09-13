@@ -41,3 +41,6 @@ supabase/.temp
 # A separate product that happens to sit inside this folder. It is not
 # part of Tyriaq and must not be published from this repository.
 tibyan-full-project/
+
+# deployment bundle, built on demand
+dist/
