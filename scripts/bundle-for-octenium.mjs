@@ -22,7 +22,7 @@ const web = join(root, "apps", "web");
 const out = join(root, "dist", "octenium");
 
 const need = [
-  [join(web, ".next", "standalone"), "run `pnpm --filter @flow/web build` first"],
+  [join(web, ".next", "standalone"), "run `pnpm bundle` — a plain build does not produce this"],
   [join(web, ".next", "static"), "the build did not finish"],
 ];
 for (const [path, hint] of need) {

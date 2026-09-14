@@ -14,17 +14,22 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../../"),
 
   /*
-    Self-hosted on cPanel, so the build has to produce something that can
-    RUN somewhere else.
+    Two hosts, two answers.
 
-    `standalone` traces the files the server actually needs and copies
-    them — including the workspace packages — into `.next/standalone`,
-    with its own minimal `node_modules` and a `server.js` that listens on
-    `PORT`. That is what makes this deployable to shared hosting at all:
-    the alternative is installing a pnpm workspace of ~1 GB on a box with
-    a few hundred megabytes of memory and no pnpm.
+    On cPanel the build has to produce something that can RUN somewhere
+    else: `standalone` traces the files the server needs and copies them
+    — workspace packages included — into `.next/standalone`, with its own
+    minimal `node_modules` and a `server.js` that listens on `PORT`. That
+    is what makes shared hosting possible at all; the alternative is
+    installing a ~1 GB pnpm workspace on a box with a few hundred
+    megabytes of memory and no pnpm.
+
+    Vercel needs none of that and builds the app its own way, so the
+    setting is off unless something asks for it. `scripts/bundle-for-
+    octenium.mjs` sets BUILD_TARGET before building. Leaving it on for
+    both was what broke every Vercel deploy after the hosting change.
   */
-  output: "standalone",
+  ...(process.env.BUILD_TARGET === "octenium" ? { output: "standalone" } : {}),
 };
 
 module.exports = nextConfig;
