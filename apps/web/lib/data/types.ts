@@ -17,6 +17,19 @@ export interface Member {
   name: string;
   email: string;
   avatarUrl: string | null;
+  /**
+   * Their standing in the workspace.
+   *
+   * Carried on the member rather than looked up where it is needed,
+   * because it decides what a screen may OFFER — an owner has no
+   * "remove" button, and a screen that draws one is a screen that
+   * promises something the database will refuse.
+   *
+   * Named `workspaceRole` rather than `role` because a project member is
+   * `Member & { role: ProjectRole }`, and two different `role` fields on
+   * one object is a bug waiting for somebody to read the wrong one.
+   */
+  workspaceRole: "owner" | "admin" | "member";
 }
 
 export interface Workspace {

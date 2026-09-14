@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
-import { Check, Copy, Mail, Search, UserPlus, X } from "lucide-react";
+import { Check, Copy, Crown, LogOut, Mail, MoreHorizontal, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   Avatar,
   Button,
@@ -11,6 +11,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Input,
   toast,
 } from "@flow/ui";
@@ -20,6 +25,7 @@ import { PERMISSION_META, type PermissionLevel } from "@/lib/data/permissions";
 import { inviteToWorkspace } from "@/lib/actions/invitation";
 import {
   addSpaceMember,
+  removeFromWorkspace,
   removeSpaceMember,
   setSpaceMemberLevel,
 } from "@/lib/actions/space-member";
@@ -133,6 +139,28 @@ export function SpaceMembersDialog({
         onChange(previous);
         toast.error(result.error);
       }
+    });
+  }
+
+  /**
+   * Out of the workspace altogether, not just this space.
+   *
+   * A separate menu item rather than a second X, because the two look
+   * the same and mean very different things: one ends their access
+   * here, the other ends it everywhere, and it cannot be undone by
+   * pressing the button again.
+   */
+  function removeEverywhere(entry: SpaceMemberEntry) {
+    const previous = entries;
+    onChange(entries.filter((e) => e.member.id !== entry.member.id));
+    startTransition(async () => {
+      const result = await removeFromWorkspace(entry.member.id);
+      if (result.error) {
+        onChange(previous);
+        toast.error(result.error);
+        return;
+      }
+      toast.success(`${entry.member.name} was removed from the workspace.`);
     });
   }
 
@@ -300,19 +328,58 @@ export function SpaceMembersDialog({
                       onChange={(next) => changeLevel(entry, next)}
                     />
 
-                    {canManage && (
-                      <button
-                        type="button"
-                        onClick={() => remove(entry)}
-                        aria-label={`Remove ${entry.member.name}`}
-                        className={cn(
-                          "flex size-7 shrink-0 items-center justify-center rounded-md text-text-muted",
-                          "transition-colors hover:bg-danger-subtle hover:text-danger",
-                          "focus-visible:outline-none focus-visible:shadow-focus"
-                        )}
+                    {/*
+                      The owner has no remove button at all.
+
+                      Taking the owner out of a space leaves it with
+                      nobody who can administer it from inside, and
+                      taking them out of the workspace leaves the
+                      workspace unadministrable entirely. The database
+                      refuses both; drawing the buttons anyway would
+                      only promise something that cannot happen.
+                    */}
+                    {canManage && entry.member.workspaceRole !== "owner" && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Manage ${entry.member.name}`}
+                            className={cn(
+                              "flex size-7 shrink-0 items-center justify-center rounded-md text-text-muted",
+                              "transition-colors hover:bg-white/[0.06] hover:text-text-primary",
+                              "focus-visible:outline-none focus-visible:shadow-focus"
+                            )}
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-60">
+                          <DropdownMenuItem onSelect={() => remove(entry)}>
+                            <LogOut className="size-4" />
+                            <span className="flex-1">Remove from {spaceName}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem destructive onSelect={() => removeEverywhere(entry)}>
+                            <UserMinus className="size-4" />
+                            <span className="flex-1">
+                              Remove from the workspace
+                              <span className="block text-caption text-text-muted">
+                                Every space and project, not just this one
+                              </span>
+                            </span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+
+                    {entry.member.workspaceRole === "owner" && (
+                      <span
+                        title="The workspace owner cannot be removed"
+                        className="flex size-7 shrink-0 items-center justify-center text-text-muted"
                       >
-                        <X className="size-4" />
-                      </button>
+                        <Crown className="size-3.5" aria-hidden="true" />
+                        <span className="sr-only">Workspace owner</span>
+                      </span>
                     )}
                   </li>
                 ))}

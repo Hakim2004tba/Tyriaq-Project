@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentWorkspace } from "@/lib/data/queries";
 import type { PermissionLevel } from "@/lib/data/permissions";
 import type { ActionResult } from "./workspace";
 
@@ -100,4 +101,34 @@ export async function removeSpaceMember(spaceId: string, userId: string): Promis
   if (error) return { error: error.message };
   revalidatePath("/spaces", "layout");
   return {};
+}
+
+/**
+ * Removes somebody from the workspace entirely.
+ *
+ * Different from taking them out of a space, which only ends their
+ * access to that one. This ends all of it: every space, every project,
+ * every task they were assigned, every conversation they had joined.
+ *
+ * What they WROTE stays — tasks they created, comments they left, files
+ * they uploaded. That is the team's record of what happened, and
+ * deleting it would rewrite history because somebody left.
+ *
+ * The rules live in the database, not here: the owner cannot be removed,
+ * nobody can remove themselves, and only an owner or admin can remove
+ * anybody. This surfaces the refusal rather than duplicating the check.
+ */
+export async function removeFromWorkspace(userId: string): Promise<ActionResult> {
+  const ws = await getCurrentWorkspace();
+  if (!ws) return { error: "No workspace selected." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("remove_from_workspace", {
+    p_workspace: ws.id,
+    p_user: userId,
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { message: "Removed from the workspace." };
 }

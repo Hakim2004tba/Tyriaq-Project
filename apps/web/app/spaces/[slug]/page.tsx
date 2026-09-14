@@ -61,11 +61,14 @@ export default async function SpacePage({
       canManageMembers={workspace?.role === "owner" || workspace?.role === "admin"}
       joinRequests={joinRequests}
       spaceMembers={memberRows.map((row) => ({
+        // A space member who is no longer in the workspace list at all
+        // still has to render — the roster row outlives the membership.
         member: byId.get(row.userId) ?? {
           id: row.userId,
           name: row.name,
           email: "",
           avatarUrl: row.avatarUrl,
+          workspaceRole: "member" as const,
         },
         level: row.level,
       }))}

@@ -1,19 +1,29 @@
--- Tyriaq — spaces become a real boundary, and profile pictures.
+-- Tyriaq — spaces become a real boundary, profile pictures, and removal.
 --
 -- Run this in the Supabase SQL editor: select all, press Run.
+-- It finishes with "Success. No rows returned".
 --
--- Until now, being in a workspace meant seeing everything in it, which
--- is why accepting a link to ONE space handed over every other space in
--- that workspace. After this, a space is only visible to the people in
--- it (workspace owners and admins still see everything), and everything
--- underneath — projects, tasks, comments, files, time — follows the
--- same answer.
+-- Three things:
 --
--- One consequence, worth knowing before you run it: somebody who
--- accepts a WORKSPACE invitation now sees an empty app until an admin
--- puts them in a space. That is the point of the change, but it makes
--- "invite to the workspace" an incomplete action on its own.
+--   1. A space is now only visible to the people in it. Until now, being
+--      in a workspace meant seeing everything in it, which is why
+--      accepting a link to ONE space handed over every other space in
+--      that workspace. Workspace owners and admins still see everything.
+--
+--   2. An avatars bucket, so people can have a face instead of initials.
+--
+--   3. remove_from_workspace(), and a rule that the owner can never be
+--      removed — from the workspace or from a space. Removing the owner
+--      would leave a workspace nobody can administer.
+--
+-- One consequence worth knowing before you run it: somebody who accepts
+-- a WORKSPACE invitation now sees an empty app until an admin puts them
+-- in a space. That is the point of the change, but it makes "invite to
+-- the workspace" an incomplete action on its own.
 
+-- ============================================================
+-- 20260909000100_space_scoped_visibility.sql
+-- ============================================================
 /* ------------------------------------------------------------------ */
 /* The two questions everything else asks                              */
 /* ------------------------------------------------------------------ */
@@ -276,6 +286,9 @@ create policy "people read links to tasks they can see"
   to authenticated
   using (public.can_see_task(task_id));
 
+-- ============================================================
+-- 20260909000200_avatars.sql
+-- ============================================================
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'avatars',
@@ -318,3 +331,104 @@ create policy "people delete their own avatar"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'avatars' and split_part(name, '/', 1) = (select auth.uid())::text);
+
+-- ============================================================
+-- 20260909000300_remove_from_workspace.sql
+-- ============================================================
+create or replace function public.remove_from_workspace(p_workspace uuid, p_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_role public.workspace_role;
+begin
+  if not public.is_workspace_admin(p_workspace) then
+    raise exception 'Only an owner or admin can remove somebody' using errcode = 'P0001';
+  end if;
+  if p_user = auth.uid() then
+    raise exception 'You cannot remove yourself' using errcode = 'P0001';
+  end if;
+
+  select role into target_role from public.workspace_members
+  where workspace_id = p_workspace and user_id = p_user;
+
+  if target_role is null then
+    -- Already gone. Saying so would be pedantic about an outcome the
+    -- caller already has.
+    return;
+  end if;
+  if target_role = 'owner' then
+    raise exception 'The owner cannot be removed from their own workspace' using errcode = 'P0001';
+  end if;
+
+  /*
+    Every grant they held, in one transaction.
+
+    `space_members` and `project_members` reference `profiles`, not
+    `workspace_members`, so nothing cascades from the membership row —
+    left behind, those rows would keep working the moment somebody was
+    re-invited, silently restoring access an admin thought they had
+    taken away.
+  */
+  delete from public.project_members pm
+  using public.projects pr
+  where pm.project_id = pr.id
+    and pr.workspace_id = p_workspace
+    and pm.user_id = p_user;
+
+  delete from public.space_members
+  where workspace_id = p_workspace and user_id = p_user;
+
+  delete from public.task_assignees
+  where workspace_id = p_workspace and user_id = p_user;
+
+  delete from public.conversation_members cm
+  using public.conversations c
+  where cm.conversation_id = c.id
+    and c.workspace_id = p_workspace
+    and cm.user_id = p_user;
+
+  delete from public.space_join_requests
+  where workspace_id = p_workspace and user_id = p_user and status = 'pending';
+
+  delete from public.workspace_members
+  where workspace_id = p_workspace and user_id = p_user;
+end;
+$$;
+
+grant execute on function public.remove_from_workspace(uuid, uuid) to authenticated;
+
+/*
+  The owner's own space membership is equally load-bearing.
+
+  Removing the last admin of a space leaves it visible to workspace
+  admins only — which for a space whose members were the point is a
+  space nobody can administer from inside. The UI hides that button, and
+  this refuses it regardless, because a hidden button is not a rule.
+*/
+create or replace function public.space_members_protect_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if exists (
+    select 1 from public.workspace_members m
+    where m.workspace_id = old.workspace_id
+      and m.user_id = old.user_id
+      and m.role = 'owner'
+  ) then
+    raise exception 'The workspace owner cannot be removed from a space' using errcode = 'P0001';
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists space_members_protect_owner on public.space_members;
+create trigger space_members_protect_owner
+  before delete on public.space_members
+  for each row execute function public.space_members_protect_owner();
+

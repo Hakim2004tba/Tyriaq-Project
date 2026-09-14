@@ -33,60 +33,28 @@ import { cn } from "@flow/utils";
 import { SpaceBadge } from "@/components/spaces/space-badge";
 import { SpaceEditor } from "@/components/spaces/space-editor";
 import { ProjectEditor } from "@/components/projects/project-editor";
+import { ProjectCard } from "@/app/projects/project-card";
 import {
   SpaceMembersDialog,
   type SpaceMemberEntry,
 } from "@/components/spaces/space-members-dialog";
 import type { JoinRequest } from "@/lib/actions/space-link";
 import { deleteSpace, setSpaceArchived } from "@/lib/actions/space";
+import { setProjectArchived } from "@/lib/actions/project";
 import {
-  PROJECT_STATUS_META,
-  formatDate,
-  isOverdue,
   progressOf,
   type Member,
   type Project,
   type Space,
 } from "@/lib/data/types";
 
-function ProjectRow({ project }: { project: Project }) {
-  const status = PROJECT_STATUS_META[project.status];
-  const late = isOverdue(project);
-  return (
-    <li>
-      <Link
-        href={`/projects/${project.slug}`}
-        className="flex items-center gap-3 py-2.5 pl-4 pr-4 transition-colors duration-fast
-                   hover:bg-white/[0.025] focus-visible:outline-none focus-visible:bg-white/[0.04]"
-      >
-        <span className={cn("size-2 shrink-0 rounded-full", status.dot)} aria-hidden="true" title={status.label} />
-        <span className="min-w-0 flex-1 truncate text-body-sm text-text-primary">{project.name}</span>
-
-        <Badge variant={status.badge} size="sm" className="hidden shrink-0 lg:inline-flex">
-          {status.label}
-        </Badge>
-        <span className="hidden w-28 shrink-0 items-center gap-2 md:flex">
-          <Progress value={progressOf(project)} label={`${project.name} progress`} className="flex-1" />
-          <span className="shrink-0 text-caption tabular text-text-muted">{progressOf(project)}%</span>
-        </span>
-        <span
-          className={cn(
-            "hidden w-24 shrink-0 text-right text-caption tabular sm:block",
-            late ? "text-danger" : "text-text-muted"
-          )}
-        >
-          {formatDate(project.dueDate)}
-        </span>
-      </Link>
-    </li>
-  );
-}
-
 /**
  * A space's own page.
  *
- * The hierarchy here is Workspace → Space → Project, so projects render as
- * one flat list under the space rather than nested further.
+ * The hierarchy is Workspace → Space → Project, and the projects render
+ * as the same cards the Projects index uses. They were a compact row per
+ * project here, which said less and, being a second rendering of the
+ * same thing, had already drifted — no status chip, no lead, no members.
  */
 export function SpaceDetail({
   space,
@@ -111,6 +79,15 @@ export function SpaceDetail({
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  function archiveProject(project: Project) {
+    startTransition(async () => {
+      const result = await setProjectArchived(project.id, !project.archived);
+      if (result.error) toast.error(result.error);
+      else if (result.message) toast.success(result.message);
+    });
+  }
   const params = useSearchParams();
   const [membersOpen, setMembersOpen] = useState(false);
 
@@ -302,23 +279,44 @@ export function SpaceDetail({
               />
             </div>
           ) : (
-            <ul className="divide-y divide-border border-t border-border">
-              {active.map((p) => (
-                <ProjectRow key={p.id} project={p} />
-              ))}
+            /*
+              The same cards as /projects, rather than a row each.
+
+              A space usually holds a handful of projects, and the thing
+              somebody wants from this page is a sense of each one —
+              progress, dates, who is on it — which a single line cannot
+              carry. Two renderings of "a project" also drifted: the row
+              here never learned the status chip or the lead that the
+              card already showed.
+            */
+            <div className="border-t border-border px-4 py-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {active.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    onEdit={() => setEditingProject(p)}
+                    onArchive={() => archiveProject(p)}
+                  />
+                ))}
+              </div>
+
               {archived.length > 0 && (
-                <li>
-                  <p className="border-b border-border bg-surface-muted/40 px-4 py-2 text-overline uppercase text-text-muted">
-                    Archived
-                  </p>
-                  <ul className="divide-y divide-border opacity-60">
+                <>
+                  <p className="mt-6 text-overline uppercase text-text-muted">Archived</p>
+                  <div className="mt-2 grid gap-4 opacity-70 md:grid-cols-2 xl:grid-cols-3">
                     {archived.map((p) => (
-                      <ProjectRow key={p.id} project={p} />
+                      <ProjectCard
+                        key={p.id}
+                        project={p}
+                        onEdit={() => setEditingProject(p)}
+                        onArchive={() => archiveProject(p)}
+                      />
                     ))}
-                  </ul>
-                </li>
+                  </div>
+                </>
               )}
-            </ul>
+            </div>
           )}
         </SectionCard>
       </div>
@@ -342,6 +340,16 @@ export function SpaceDetail({
         onOpenChange={setProjectOpen}
         spaces={spaces}
         defaultSpaceId={space.id}
+      />
+
+      {/* One editor, two ways in: the New project button opens it empty,
+          a card's menu opens it on that project. */}
+      <ProjectEditor
+        open={editingProject !== null}
+        onOpenChange={(open) => !open && setEditingProject(null)}
+        spaces={spaces}
+        defaultSpaceId={space.id}
+        project={editingProject ?? undefined}
       />
     </div>
   );

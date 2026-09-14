@@ -20,9 +20,19 @@ import type { Member, Project, ProjectRole, Space, Workspace } from "./types";
 
 type ProfileRow = { id: string; full_name: string; avatar_url: string | null };
 
-function toMember(p: ProfileRow | null | undefined, email = ""): Member | null {
+function toMember(
+  p: ProfileRow | null | undefined,
+  email = "",
+  workspaceRole: Member["workspaceRole"] = "member"
+): Member | null {
   if (!p) return null;
-  return { id: p.id, name: p.full_name || email || "Unknown", email, avatarUrl: p.avatar_url };
+  return {
+    id: p.id,
+    name: p.full_name || email || "Unknown",
+    email,
+    avatarUrl: p.avatar_url,
+    workspaceRole,
+  };
 }
 
 export const getWorkspaces = cache(async (): Promise<Workspace[]> => {
@@ -69,7 +79,7 @@ export const getWorkspaceMembers = cache(async (): Promise<Member[]> => {
 
   return (data ?? []).flatMap((row) => {
     const m = toMember(row.profiles as unknown as ProfileRow | null);
-    return m ? [m] : [];
+    return m ? [{ ...m, workspaceRole: (row.role ?? "member") as Member["workspaceRole"] }] : [];
   });
 });
 
