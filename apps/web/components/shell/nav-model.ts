@@ -29,6 +29,15 @@ export interface NavEntry {
   count?: number;
   /** Surfaced in the mobile tab bar (max 4 + "More"). */
   primary?: boolean;
+  /**
+   * Named in the rail, but not built yet.
+   *
+   * Shown so the shape of the product is visible, and rendered
+   * unclickable — a nav item that leads to a 404 teaches people that
+   * the sidebar cannot be trusted, which is a worse cost than an
+   * honest "Soon".
+   */
+  soon?: boolean;
 }
 
 export const WORKSPACE_NAV: NavEntry[] = [
@@ -39,11 +48,11 @@ export const WORKSPACE_NAV: NavEntry[] = [
   { id: "projects", label: "Projects", href: "/projects", icon: FolderKanban },
   { id: "calendar", label: "Calendar", href: "/calendar", icon: CalendarDays, primary: true },
   { id: "docs", label: "Documents", href: "/documents", icon: FileText },
-  { id: "whiteboards", label: "Whiteboards", href: "/app/whiteboards", icon: PenTool },
-  { id: "goals", label: "Goals", href: "/app/goals", icon: Target },
+  { id: "whiteboards", label: "Whiteboards", href: "#", icon: PenTool, soon: true },
+  { id: "goals", label: "Goals", href: "#", icon: Target, soon: true },
   { id: "reports", label: "Reports", href: "/reports", icon: BarChart3 },
   { id: "chat", label: "Chat", href: "/chat", icon: MessagesSquare, primary: true },
-  { id: "inbox", label: "Inbox", href: "/app/inbox", icon: Inbox, count: 3, primary: true },
+  { id: "inbox", label: "Inbox", href: "/inbox", icon: Inbox, primary: true },
 ];
 
 /** The colour a space is identified by, everywhere it appears. */

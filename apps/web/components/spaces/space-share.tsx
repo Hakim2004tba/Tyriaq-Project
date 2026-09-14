@@ -3,15 +3,13 @@
 import { useEffect, useState, useTransition } from "react";
 import { Check, Copy, Link2, RefreshCw, UserCheck, UserX } from "lucide-react";
 import { Avatar, Button, toast } from "@flow/ui";
-import { PermissionPicker } from "@/components/permissions/permission-badge";
-import { PERMISSION_META, type PermissionLevel } from "@/lib/data/permissions";
 import {
-  decideJoinRequest,
   getSpaceJoinLink,
   listJoinRequests,
   resetSpaceJoinLink,
   type JoinRequest,
 } from "@/lib/actions/space-link";
+import { ApproveDialog, type ApprovableProject } from "./approve-dialog";
 
 /**
  * The share link, and the queue it produces.
@@ -27,17 +25,21 @@ import {
  */
 export function SpaceShare({
   spaceId,
+  spaceName,
   canManage,
   initialRequests,
+  projects,
 }: {
   spaceId: string;
+  spaceName: string;
   canManage: boolean;
   initialRequests: JoinRequest[];
+  projects: ApprovableProject[];
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [requests, setRequests] = useState(initialRequests);
-  const [level, setLevel] = useState<PermissionLevel>("editor");
+  const [deciding, setDeciding] = useState<JoinRequest | null>(null);
   const [pending, startTransition] = useTransition();
 
   // The parent re-reads on refresh; keeping in step with it means an
@@ -85,29 +87,8 @@ export function SpaceShare({
     });
   }
 
-  function decide(request: JoinRequest, approve: boolean) {
-    // Optimistic: the row leaves the queue, and comes back if refused.
-    const previous = requests;
-    setRequests((current) => current.filter((r) => r.id !== request.id));
-
-    startTransition(async () => {
-      const result = await decideJoinRequest(request.id, approve, level);
-      if (result.error) {
-        setRequests(previous);
-        toast.error(result.error);
-        return;
-      }
-      toast.success(
-        approve
-          ? `${request.name} is in as ${PERMISSION_META[level].label.toLowerCase()}.`
-          : `${request.name}'s request was declined.`
-      );
-      // Refreshing the roster is the parent's job; ask for it.
-      void listJoinRequests(spaceId).then(setRequests);
-    });
-  }
-
   if (!canManage) return null;
+
 
   return (
     <div className="flex flex-col gap-3">
@@ -156,18 +137,7 @@ export function SpaceShare({
 
       {requests.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <p className="flex items-baseline justify-between gap-2">
-            <span className="text-body-sm font-medium text-text-primary">
-              Waiting on you
-            </span>
-            {/*
-              The level is chosen once, above the list, rather than per
-              row: approving five people from one link almost always
-              means five people at the same level, and a picker on every
-              row would be five decisions to make the same choice.
-            */}
-            <PermissionPicker level={level} source="space" onChange={setLevel} />
-          </p>
+          <p className="text-body-sm font-medium text-text-primary">Waiting on you</p>
 
           <ul className="flex flex-col divide-y divide-border rounded-md border border-warning/40">
             {requests.map((request) => (
@@ -180,33 +150,41 @@ export function SpaceShare({
                   </span>
                 </span>
 
-                <span className="flex shrink-0 items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={pending}
-                    onClick={() => decide(request, true)}
-                  >
-                    <UserCheck className="size-3.5" />
-                    Approve
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => decide(request, false)}
-                    disabled={pending}
-                    aria-label={`Decline ${request.name}`}
-                    className="flex size-7 items-center justify-center rounded-md text-text-muted
-                               transition-colors hover:bg-danger-subtle hover:text-danger
-                               focus-visible:outline-none focus-visible:shadow-focus"
-                  >
-                    <UserX className="size-4" />
-                  </button>
-                </span>
+                {/*
+                  One button, opening one decision.
+
+                  Approving used to happen inline with a level chosen
+                  above the list, which could not express "editor here,
+                  viewer there" — and that is the question an admin
+                  actually has when somebody new arrives.
+                */}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={() => setDeciding(request)}
+                  className="shrink-0"
+                >
+                  <UserCheck className="size-3.5" />
+                  Review
+                </Button>
               </li>
             ))}
           </ul>
         </div>
       )}
+
+      <ApproveDialog
+        request={deciding}
+        spaceName={spaceName}
+        projects={projects}
+        onOpenChange={(open) => !open && setDeciding(null)}
+        onDecided={(requestId) => {
+          setRequests((current) => current.filter((r) => r.id !== requestId));
+          // The roster above this changed too; ask the server for it.
+          void listJoinRequests(spaceId).then(setRequests);
+        }}
+      />
     </div>
   );
 }

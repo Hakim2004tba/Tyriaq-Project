@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Archive,
@@ -110,7 +111,16 @@ export function SpaceDetail({
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
+  const params = useSearchParams();
   const [membersOpen, setMembersOpen] = useState(false);
+
+  /*
+    `?members=1` opens the dialog on arrival — that is the link a join
+    notification carries, and the request it is about is inside.
+  */
+  useEffect(() => {
+    if (params.get("members")) setMembersOpen(true);
+  }, [params]);
   // Seeded from the database and kept in step optimistically while the
   // dialog is open; the server is the source of truth on the next load.
   const [members, setMembers] = useState<SpaceMemberEntry[]>(spaceMembers);
@@ -323,6 +333,7 @@ export function SpaceDetail({
         onChange={setMembers}
         canManage={canManageMembers}
         joinRequests={joinRequests}
+        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
       />
 
       <SpaceEditor open={editorOpen} onOpenChange={setEditorOpen} space={space} />

@@ -222,27 +222,45 @@ export function AppFrame({
         {nav.map((item) => {
           const Icon = item.icon;
           return (
-            <NavigationItem
-              key={item.id}
-              asChild
-              active={currentId === item.id}
-              collapsed={railCollapsed}
-              title={item.label}
-            >
-              <Link href={item.href} onClick={() => setDrawerOpen(false)}>
+            item.soon ? (
+              <NavigationItem
+                key={item.id}
+                active={false}
+                collapsed={railCollapsed}
+                title={`${item.label} — not built yet`}
+                className="cursor-default opacity-50"
+              >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 {!railCollapsed && (
                   <>
                     <span className="flex-1 truncate text-left">{item.label}</span>
-                    {item.count ? (
-                      <Badge variant="chrome" size="sm" className="tabular">
-                        {item.count > 99 ? "99+" : item.count}
-                      </Badge>
-                    ) : null}
+                    <Badge variant="chrome" size="sm">Soon</Badge>
                   </>
                 )}
-              </Link>
-            </NavigationItem>
+              </NavigationItem>
+            ) : (
+              <NavigationItem
+                key={item.id}
+                asChild
+                active={currentId === item.id}
+                collapsed={railCollapsed}
+                title={item.label}
+              >
+                <Link href={item.href} onClick={() => setDrawerOpen(false)}>
+                  <Icon className="size-4 shrink-0" aria-hidden="true" />
+                  {!railCollapsed && (
+                    <>
+                      <span className="flex-1 truncate text-left">{item.label}</span>
+                      {item.count ? (
+                        <Badge variant="chrome" size="sm" className="tabular">
+                          {item.count > 99 ? "99+" : item.count}
+                        </Badge>
+                      ) : null}
+                    </>
+                  )}
+                </Link>
+              </NavigationItem>
+            )
           );
         })}
       </SidebarSection>

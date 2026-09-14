@@ -82,9 +82,12 @@ export function linkFor(row: {
   if (row.documentId) return `/documents/${row.documentId}`;
   if (row.conversationId) return `/chat?c=${row.conversationId}`;
   if (row.projectSlug) return `/projects/${row.projectSlug}`;
-  // A join request leads to the space, where the queue is — clicking
-  // "somebody wants to join" should land on the decision, not on a list
-  // of spaces with a badge somewhere in it.
-  if (row.spaceSlug) return `/spaces/${row.spaceSlug}`;
+  /*
+    A join request leads to the space with its members dialog already
+    open. Landing on the space page alone was not enough: the queue lives
+    inside that dialog, so "somebody wants to join" arrived somewhere
+    that looked like it had nothing to do with the request.
+  */
+  if (row.spaceSlug) return `/spaces/${row.spaceSlug}?members=1`;
   return null;
 }

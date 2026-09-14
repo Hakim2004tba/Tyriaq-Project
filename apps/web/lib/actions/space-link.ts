@@ -154,21 +154,95 @@ export async function listJoinRequests(spaceId: string): Promise<JoinRequest[]> 
   }));
 }
 
+/**
+ * Approves or declines, and says what they may do where.
+ *
+ * `level` is the space-wide grant; `projectLevels` overrides it for
+ * named projects. A project left out of that map is not granted a row at
+ * all — the person simply inherits the space level there, which keeps
+ * following the space if it later changes.
+ */
 export async function decideJoinRequest(
   requestId: string,
   approve: boolean,
-  level: PermissionLevel = "editor"
+  level: PermissionLevel = "editor",
+  projectLevels: Record<string, PermissionLevel> = {}
 ): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("decide_space_join", {
     request_id: requestId,
     approve,
     level,
+    project_levels: projectLevels,
   });
 
   if (error) return { error: error.message };
   revalidatePath("/", "layout");
   return { message: approve ? "They are in." : "Request declined." };
+}
+
+export interface ProjectAccessRow {
+  projectId: string;
+  projectName: string;
+  /** Null means they inherit whatever the space grants. */
+  level: PermissionLevel | null;
+}
+
+/** Who can reach which project in this space, and how. */
+export async function getProjectAccess(
+  spaceId: string,
+  userId: string
+): Promise<ProjectAccessRow[]> {
+  const supabase = await createClient();
+
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("id, name")
+    .eq("space_id", spaceId)
+    .is("archived_at", null)
+    .order("name", { ascending: true });
+
+  const { data: rows } = await supabase
+    .from("project_members")
+    .select("project_id, level")
+    .eq("user_id", userId);
+
+  const byProject = new Map(
+    ((rows ?? []) as { project_id: string; level: PermissionLevel | null }[]).map((row) => [
+      row.project_id,
+      row.level,
+    ])
+  );
+
+  return ((projects ?? []) as { id: string; name: string }[]).map((project) => ({
+    projectId: project.id,
+    projectName: project.name,
+    level: byProject.get(project.id) ?? null,
+  }));
+}
+
+/**
+ * Changes one person's access to one project, afterwards.
+ *
+ * Passing null puts them back to inheriting the space level rather than
+ * removing them — those are different intentions, and a screen that
+ * conflated them would drop people off projects by accident.
+ */
+export async function setProjectLevel(
+  projectId: string,
+  userId: string,
+  level: PermissionLevel | null
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_project_level", {
+    p_project: projectId,
+    p_user: userId,
+    p_level: level,
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return {};
 }
 
 /* ------------------------------------------------------------------ */

@@ -26,6 +26,7 @@ import {
 import type { Member } from "@/lib/data/types";
 import { SpaceShare } from "./space-share";
 import type { JoinRequest } from "@/lib/actions/space-link";
+import type { ApprovableProject } from "./approve-dialog";
 
 export interface SpaceMemberEntry {
   member: Member;
@@ -53,6 +54,7 @@ export function SpaceMembersDialog({
   onChange,
   canManage,
   joinRequests = [],
+  projects = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,6 +65,7 @@ export function SpaceMembersDialog({
   onChange: (next: SpaceMemberEntry[]) => void;
   canManage: boolean;
   joinRequests?: JoinRequest[];
+  projects?: ApprovableProject[];
 }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<PermissionLevel>("editor");
@@ -178,7 +181,13 @@ export function SpaceMembersDialog({
             hand — arrives through the link, so it is what the dialog
             opens on.
           */}
-          <SpaceShare spaceId={spaceId} canManage={canManage} initialRequests={joinRequests} />
+          <SpaceShare
+            spaceId={spaceId}
+            spaceName={spaceName}
+            canManage={canManage}
+            initialRequests={joinRequests}
+            projects={projects}
+          />
 
           {canManage && (
             <>
