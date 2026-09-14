@@ -1,7 +1,8 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
-import { PermissionsWorkspace } from "@/components/permissions/permissions-workspace";
+import { getPermissionsOverview } from "@/lib/data/permissions-data";
+import { PermissionsLive } from "@/components/permissions/permissions-live";
 
 export const metadata: Metadata = {
   title: "People & permissions",
@@ -10,5 +11,6 @@ export const metadata: Metadata = {
 
 export default async function PeoplePage(): Promise<JSX.Element> {
   await requireUser();
-  return <PermissionsWorkspace />;
+  const overview = await getPermissionsOverview();
+  return <PermissionsLive overview={overview} />;
 }
