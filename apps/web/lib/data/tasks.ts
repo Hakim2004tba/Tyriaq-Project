@@ -87,7 +87,7 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
       // Unhinted on purpose: only one key from this column reaches
       // `profiles`, and naming it would tie the query to how this
       // particular database happened to be built.
-      .select("task_id, user_id, profiles(id, full_name)")
+      .select("task_id, user_id, profiles(id, full_name, avatar_url)")
       .in("task_id", ids),
     supabase
       .from("task_dependencies")
@@ -105,11 +105,12 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
   for (const row of (assigneeRows ?? []) as unknown as {
     task_id: string;
     user_id: string;
-    profiles: { id: string; full_name: string } | null;
+    profiles: { id: string; full_name: string; avatar_url: string | null } | null;
   }[]) {
     const person: Person = {
       id: row.user_id,
       name: row.profiles?.full_name || "Unknown",
+      avatarUrl: row.profiles?.avatar_url ?? null,
     };
     const list = assignees.get(row.task_id);
     if (list) list.push(person);

@@ -42,16 +42,44 @@ export async function createSpace(_prev: ActionResult, formData: FormData): Prom
   } = await supabase.auth.getUser();
   if (!user) return { error: "You are signed out." };
 
-  const { error } = await supabase.from("spaces").insert({
-    workspace_id: ws.id,
-    name,
-    slug,
-    description,
-    icon,
-    color,
-    created_by: user.id,
-  });
+  const { data: created, error } = await supabase
+    .from("spaces")
+    .insert({
+      workspace_id: ws.id,
+      name,
+      slug,
+      description,
+      icon,
+      color,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
+
+  /*
+    The creator joins their own space, as its admin.
+
+    Since a space became a boundary rather than a folder, membership is
+    what makes it visible — and without this row somebody who is not a
+    workspace admin would create a space and immediately lose sight of
+    it. The insert is separate rather than in a trigger because the
+    space has to exist first; if it fails, the space still exists and an
+    admin can add them, which is a better outcome than refusing to
+    create it at all.
+  */
+  if (created?.id) {
+    const { error: membershipError } = await supabase.from("space_members").insert({
+      space_id: created.id,
+      user_id: user.id,
+      workspace_id: ws.id,
+      level: "admin",
+      added_by: user.id,
+    });
+    if (membershipError) {
+      console.error("[tyriaq] space created without its creator:", membershipError);
+    }
+  }
 
   revalidatePath("/", "layout");
   return { message: `${name} created.` };

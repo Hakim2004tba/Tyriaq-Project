@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Avatar, Button, Card } from "@flow/ui";
+import { Button, Card } from "@flow/ui";
+import { AvatarPicker } from "@/components/profile/avatar-picker";
 import { signOut, updateProfile, type ActionResult } from "@/lib/auth/actions";
 import { FormMessage } from "@/app/(auth)/auth-card";
 import { Field, SubmitButton } from "@/app/(auth)/fields";
@@ -20,26 +21,22 @@ export function ProfileForm({
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-5 p-5">
-        <div className="flex items-center gap-4">
-          <Avatar name={fullName || email} src={avatarUrl || null} size="xl" />
-          <div className="min-w-0">
-            <p className="truncate text-h4 text-text-primary">{fullName || "Unnamed"}</p>
-            <p className="truncate text-body-sm text-text-muted">{email}</p>
-          </div>
+        <AvatarPicker name={fullName || email} initialUrl={avatarUrl || null} />
+
+        <div className="min-w-0">
+          <p className="truncate text-h4 text-text-primary">{fullName || "Unnamed"}</p>
+          <p className="truncate text-body-sm text-text-muted">{email}</p>
         </div>
 
         <form action={action} className="flex flex-col gap-4">
           <FormMessage error={state.error} message={state.message} />
           <Field label="Full name" name="fullName" autoComplete="name" defaultValue={fullName} />
-          <Field
-            label="Avatar URL"
-            name="avatarUrl"
-            type="url"
-            required={false}
-            defaultValue={avatarUrl}
-            placeholder="https://…"
-            hint="Leave empty to use your initials."
-          />
+          {/*
+            The picture is chosen above and saves itself; only the name
+            is left for this form. A URL field asked people to host an
+            image somewhere first, which is not something most people
+            have a way to do.
+          */}
           <div className="flex justify-end">
             <div className="w-40">
               <SubmitButton>Save changes</SubmitButton>

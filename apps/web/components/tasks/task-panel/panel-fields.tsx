@@ -144,7 +144,7 @@ export function AssigneesField({ task, roster }: { task: ProjectTask; roster: Pe
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <FieldButton>
-          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name }))} max={3} size="xs" />
+          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatarUrl }))} max={3} size="xs" />
           <span className="flex-1 truncate text-text-primary">
             {task.assignees.length === 0
               ? "Unassigned"

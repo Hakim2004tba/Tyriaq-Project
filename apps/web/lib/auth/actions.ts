@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { SUPABASE_URL } from "@/lib/supabase/config";
 
 export interface ActionResult {
   error?: string;
@@ -140,7 +141,6 @@ export async function updateProfile(
   formData: FormData
 ): Promise<ActionResult> {
   const fullName = String(formData.get("fullName") ?? "").trim();
-  const avatarUrl = String(formData.get("avatarUrl") ?? "").trim();
 
   if (!fullName) return { error: "Name cannot be empty." };
   if (fullName.length > 120) return { error: "Name is too long." };
@@ -153,11 +153,51 @@ export async function updateProfile(
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, avatar_url: avatarUrl || null })
+    /*
+      The picture is NOT touched here.
+
+      It is chosen by its own control, which saves as soon as a file
+      lands — and this form once carried an `avatarUrl` field, so
+      submitting a name would have quietly cleared a picture set a
+      moment earlier.
+    */
+    .update({ full_name: fullName })
     .eq("id", user.id);
 
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
   return { message: "Profile updated." };
+}
+
+/**
+ * Records a picture the browser has already uploaded.
+ *
+ * Separate from `updateProfile` because it is not part of a form: the
+ * picker saves the moment a file lands, so the face on screen is the
+ * face stored, without anybody having to remember to press Save
+ * afterwards.
+ *
+ * The URL is checked against the project's own storage, so this cannot
+ * be used to point somebody's avatar at an arbitrary address — which
+ * would make every page that renders it call out to a stranger's server.
+ */
+export async function saveAvatar(url: string | null): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You are signed out." };
+
+  if (url !== null) {
+    const expected = `${SUPABASE_URL}/storage/v1/object/public/avatars/${user.id}/`;
+    if (!url.startsWith(expected)) return { error: "That is not a picture you uploaded." };
+    if (url.length > 500) return { error: "That address is too long." };
+  }
+
+  const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/", "layout");
+  return { message: url ? "Picture saved." : "Picture removed." };
 }

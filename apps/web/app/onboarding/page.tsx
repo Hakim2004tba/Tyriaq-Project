@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getWorkspaces, requireUser } from "@/lib/auth/session";
+import { getProfile, getWorkspaces, requireUser } from "@/lib/auth/session";
 import { OnboardingForm } from "./onboarding-form";
 
 export const metadata: Metadata = { title: "Create your workspace" };
@@ -14,5 +14,6 @@ export default async function OnboardingPage(): Promise<JSX.Element> {
   const workspaces = await getWorkspaces();
   if (workspaces.length > 0) redirect("/dashboard");
 
-  return <OnboardingForm email={user.email ?? ""} />;
+  const profile = await getProfile();
+  return <OnboardingForm email={user.email ?? ""} fullName={profile?.fullName ?? ""} />;
 }

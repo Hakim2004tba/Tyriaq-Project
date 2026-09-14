@@ -18,6 +18,19 @@ values (:'ws', '22222222-2222-2222-2222-222222222222', 'member');
 insert into public.spaces (workspace_id, name, slug, created_by)
 values (:'ws', 'Product', 'product', auth.uid());
 select id as sp from public.spaces where slug = 'product' \gset
+
+/*
+  Bob is put in the SPACE, not only the workspace.
+
+  Workspace membership stopped implying visibility when spaces became a
+  boundary — see 12-space-isolation. Without this, Bob can see none of
+  Alice's work, and the assertions below stop testing what they were
+  written to test: that a colleague who CAN see the work still cannot
+  act under somebody else's name.
+*/
+insert into public.space_members (space_id, user_id, workspace_id, level)
+values (:'sp', '22222222-2222-2222-2222-222222222222', :'ws', 'editor');
+
 select id as pj from public.create_project(:'sp', 'Website', 'website', '', 'violet') \gset
 select id as t1 from public.create_task(:'pj', 'Design the hero') \gset
 

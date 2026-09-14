@@ -174,7 +174,7 @@ export function CalendarTask({
               {task.attachments}
             </span>
           ) : null}
-          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name }))} max={2} size="xs" />
+          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatarUrl }))} max={2} size="xs" />
         </span>
       </div>
     </article>

@@ -174,7 +174,7 @@ function TaskCard({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <PriorityFlag value={task.priority} compact />
-          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name }))} max={2} size="xs" />
+          <AvatarGroup people={task.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatarUrl }))} max={2} size="xs" />
         </div>
       </div>
     </article>

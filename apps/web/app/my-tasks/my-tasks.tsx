@@ -3,11 +3,15 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, CircleDashed } from "lucide-react";
-import { AvatarGroup, Badge, EmptyState, SectionCard } from "@flow/ui";
+import { Badge, EmptyState, SectionCard } from "@flow/ui";
 import { cn } from "@flow/utils";
 import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
 import { TaskStoreProvider, useTasks } from "@/components/tasks/task-store";
-import { Due, Priority as PriorityFlag } from "@/app/projects/[slug]/views/shared";
+import {
+  AssigneeControl,
+  DueControl,
+  PriorityControl,
+} from "@/app/projects/[slug]/views/row-controls";
 import {
   TASK_STATUS_META,
   TASK_STATUS_ORDER,
@@ -201,19 +205,19 @@ function TaskRow({
           </Badge>
         )}
 
-        <span className="hidden shrink-0 sm:block">
-          <Due offset={task.dueOffset} done={done} />
-        </span>
+        {/*
+          The same controls as the project list, for the same reason:
+          this is where somebody triages their own week, and "push that
+          to Thursday" should not mean opening the task, finding the
+          field, and coming back.
+        */}
+        <DueControl task={task} className="hidden shrink-0 sm:inline-flex" />
 
         <span className="hidden shrink-0 md:block">
-          <PriorityFlag value={task.priority} compact />
+          <PriorityControl task={task} compact />
         </span>
 
-        <AvatarGroup
-          people={task.assignees.map((a) => ({ id: a.id, name: a.name }))}
-          max={2}
-          size="xs"
-        />
+        <AssigneeControl task={task} people={store.people} />
       </div>
     </li>
   );

@@ -104,7 +104,11 @@ export function AssigneeControl({ task, people }: { task: ProjectTask; people: P
         >
           {task.assignees.length > 0 ? (
             <AvatarGroup
-              people={task.assignees.map((person) => ({ id: person.id, name: person.name }))}
+              people={task.assignees.map((person) => ({
+                id: person.id,
+                name: person.name,
+                avatarUrl: person.avatarUrl,
+              }))}
               max={2}
               size="xs"
             />
@@ -131,7 +135,7 @@ export function AssigneeControl({ task, people }: { task: ProjectTask; people: P
                 store.toggleAssignee(task.id, person.id);
               }}
             >
-              <Avatar name={person.name} size="xs" />
+              <Avatar name={person.name} src={person.avatarUrl ?? undefined} size="xs" />
               <span className="flex-1 truncate">{person.name}</span>
               {assigned.has(person.id) && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
             </DropdownMenuItem>

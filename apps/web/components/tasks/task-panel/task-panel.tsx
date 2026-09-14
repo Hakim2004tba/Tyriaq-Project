@@ -189,7 +189,7 @@ export function TaskPanel({
                 {task.assignees.length > 0 && (
                   <span className="ml-1 shrink-0">
                     <AvatarGroup
-                      people={task.assignees.map((a) => ({ id: a.id, name: a.name }))}
+                      people={task.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatarUrl }))}
                       max={3}
                       size="xs"
                     />

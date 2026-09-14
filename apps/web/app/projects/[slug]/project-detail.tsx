@@ -286,7 +286,7 @@ export function ProjectDetail({
             tasks={tasks}
             details={taskDetails}
             workspaceId={workspaceId}
-            people={workspaceMembers.map((m) => ({ id: m.id, name: m.name }))}
+            people={workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))}
             currentUser={currentUser}
           />
         </div>

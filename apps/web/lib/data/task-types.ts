@@ -21,6 +21,14 @@ export type TaskStatus = "todo" | "in_progress" | "review" | "done" | "blocked";
 export interface Person {
   id: string;
   name: string;
+  /**
+   * Their photo, if they have set one.
+   *
+   * Carried on Person rather than looked up per avatar: a board draws
+   * hundreds of these, and a component that fetched a picture by id
+   * would make a round trip per face.
+   */
+  avatarUrl?: string | null;
 }
 
 export interface ProjectTask {
