@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { PermissionLevel } from "@/lib/data/permissions";
 import type { SpaceColor } from "@/lib/data/types";
+import { reportReadError } from "@/lib/data/report";
 import type { ActionResult } from "./workspace";
 
 /**
@@ -127,41 +128,61 @@ export async function resetSpaceJoinLink(spaceId: string): Promise<ActionResult 
   return result;
 }
 
-/** Everyone waiting on a decision for this space. */
+/**
+ * Everyone waiting on a decision for this space.
+ *
+ * Two queries and no embed, deliberately. Two columns here reach
+ * `profiles` — who asked, and who decided — so an embed has to be
+ * hinted, and an unhinted one makes PostgREST refuse the ENTIRE query
+ * rather than the join. That is how this shipped showing "nobody has
+ * asked" while somebody was waiting, and it is the third time in this
+ * project that an ambiguous embed has silently emptied a list.
+ *
+ * Reading the names separately cannot fail that way. It costs one extra
+ * round trip on a list that is almost always empty or tiny.
+ */
 export async function listJoinRequests(spaceId: string): Promise<JoinRequest[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("space_join_requests")
-    .select("id, user_id, note, created_at, profiles(id, full_name, avatar_url)")
+    .select("id, user_id, note, created_at")
     .eq("space_id", spaceId)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
-  return ((data ?? []) as unknown as {
-    id: string; user_id: string; note: string; created_at: string;
-    profiles: { id: string; full_name: string; avatar_url: string | null } | null;
-  }[]).map((row) => ({
+  // Silence is how the ambiguity above went unnoticed: a failed read and
+  // an empty queue look identical on screen unless one of them says so.
+  reportReadError("listJoinRequests", error);
+
+  const rows = (data ?? []) as { id: string; user_id: string; note: string; created_at: string }[];
+  if (rows.length === 0) return [];
+
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", rows.map((row) => row.user_id));
+  reportReadError("listJoinRequests:profiles", profileError);
+
+  const byId = new Map(
+    ((profiles ?? []) as { id: string; full_name: string; avatar_url: string | null }[]).map(
+      (profile) => [profile.id, profile]
+    )
+  );
+
+  return rows.map((row) => ({
     id: row.id,
     userId: row.user_id,
-    name: row.profiles?.full_name || "Someone",
-    // Addresses belong to accounts, and a requester is not in the
-    // workspace yet — so there is nothing to show but the name they
-    // signed up with.
+    name: byId.get(row.user_id)?.full_name || "Someone",
+    // A requester is not in the workspace yet, so there is no address to
+    // show them by — only the name they signed up with.
     email: "",
-    avatarUrl: row.profiles?.avatar_url ?? null,
+    avatarUrl: byId.get(row.user_id)?.avatar_url ?? null,
     note: row.note,
     createdAt: row.created_at,
   }));
 }
 
-/**
- * Approves or declines, and says what they may do where.
- *
- * `level` is the space-wide grant; `projectLevels` overrides it for
- * named projects. A project left out of that map is not granted a row at
- * all — the person simply inherits the space level there, which keeps
- * following the space if it later changes.
- */
 export async function decideJoinRequest(
   requestId: string,
   approve: boolean,
