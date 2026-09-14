@@ -67,16 +67,39 @@ export async function getSpaceJoinLink(spaceId: string): Promise<ActionResult & 
     .maybeSingle();
   if (existing?.token) return { url: joinUrl(existing.token) };
 
+  /*
+    The workspace is read from the space rather than passed in.
+
+    Other membership tables take a placeholder here and have a trigger
+    correct it; this table has no such trigger, so a placeholder was
+    simply a foreign key to a workspace that does not exist — and the
+    failure came back as "only an admin can share a space", to a person
+    who was the owner.
+  */
+  const { data: space } = await supabase
+    .from("spaces")
+    .select("workspace_id")
+    .eq("id", spaceId)
+    .maybeSingle();
+  if (!space) return { error: "That space no longer exists." };
+
   const { data, error } = await supabase
     .from("space_invite_links")
-    .insert({ space_id: spaceId, workspace_id: spaceId, created_by: user.id })
+    .insert({ space_id: spaceId, workspace_id: space.workspace_id, created_by: user.id })
     .select("token")
     .single();
 
-  // The insert policy is `can_manage_space`, so a member who is not an
-  // admin gets a refusal here rather than a link that would not work.
   if (error || !data) {
-    return { error: "Only a space or workspace admin can share a space." };
+    // The insert policy is `can_manage_space`, so this IS usually a
+    // permission refusal — but not always, and saying so blindly sent
+    // the last one to the wrong person.
+    console.error("[tyriaq] could not mint a space link:", error);
+    return {
+      error:
+        error?.code === "42501"
+          ? "Only a space or workspace admin can share a space."
+          : "Could not make a link. Please try again.",
+    };
   }
   return { url: joinUrl(data.token) };
 }
