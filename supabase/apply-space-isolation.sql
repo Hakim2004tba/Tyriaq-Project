@@ -432,3 +432,21 @@ create trigger space_members_protect_owner
   before delete on public.space_members
   for each row execute function public.space_members_protect_owner();
 
+
+/* ------------------------------------------------------------------ */
+/* Tell the API about the new functions                                */
+/* ------------------------------------------------------------------ */
+
+/*
+  PostgREST answers RPC calls from a cached picture of the schema, and it
+  usually reloads on its own — but not always, and a function it has not
+  noticed yet comes back as:
+
+    Could not find the function public.remove_from_workspace(...)
+    in the schema cache
+
+  which reads like the SQL failed when it did not. This asks for the
+  reload explicitly, so the last statement of the file makes the first
+  three usable.
+*/
+notify pgrst, 'reload schema';
