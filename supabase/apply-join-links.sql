@@ -1,14 +1,13 @@
 -- Tyriaq — joining a space by link.
 --
--- Run this in the Supabase SQL editor, IN TWO PASSES.
+-- Run this in the Supabase SQL editor. Select all of it and press Run;
+-- it finishes with "Success. No rows returned".
 --
--- Pass 1: select everything down to the line that says STOP, and run it.
--- Pass 2: select everything after that line, and run that.
---
--- The split is not fussiness. Postgres will not let a statement use an
--- enum value that was added in the same transaction, and the SQL editor
--- runs whatever you select as one transaction. Running it all at once
--- fails with "unsafe use of new value of enum type".
+-- (The three `add value` lines below extend an enum, which Postgres
+-- normally refuses to USE in the same transaction that added it. Nothing
+-- here uses them at run time — they appear only inside function bodies,
+-- which are checked when the function is called, long afterwards. So one
+-- pass is safe.)
 
 -- ============================================================
 -- 20260908000000_join_notification_kinds.sql
@@ -17,11 +16,6 @@ alter type public.notification_kind add value if not exists 'space_join_request'
 alter type public.notification_kind add value if not exists 'space_join_approved';
 alter type public.notification_kind add value if not exists 'space_join_declined';
 
--- ============================================================
---                          S T O P
---        Run everything above first. Then select from
---        here to the end and run that separately.
--- ============================================================
 
 -- ============================================================
 -- 20260908000100_space_join_requests.sql
