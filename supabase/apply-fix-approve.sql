@@ -1,51 +1,16 @@
--- Tyriaq — per-project access, decided when somebody is let in
+-- Tyriaq — fix approving somebody into a space.
 --
--- A space membership grants the same level across every project in the
--- space. That is the right default and the wrong answer often enough:
--- the new contractor should edit the one project they were hired for and
--- only read the rest.
+-- Run this in the Supabase SQL editor: select all, press Run.
 --
--- So `project_members` gains a LEVEL that overrides the space's for that
--- project. Null means "whatever the space says", which is different from
--- any explicit level — it follows the space when the space changes,
--- where a copied value would silently stop tracking it.
-
-alter table public.project_members
-  add column if not exists level public.permission_level;
-
-comment on column public.project_members.level is
-  'Overrides the space level for this project. Null inherits.';
-
-/*
-  What somebody may do in one project, after both grants are considered.
-
-  The project wins when it says anything, because it is the more specific
-  grant — that is the whole point of having one. A workspace admin is an
-  admin everywhere regardless; there is no level below that worth
-  computing for them.
-*/
-create or replace function public.project_level(p_project uuid, p_user uuid default auth.uid())
-returns public.permission_level
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select coalesce(
-    (select 'admin'::public.permission_level
-       from public.projects pr
-       join public.workspace_members wm
-         on wm.workspace_id = pr.workspace_id and wm.user_id = p_user
-      where pr.id = p_project and wm.role in ('owner', 'admin')),
-    (select pm.level from public.project_members pm
-      where pm.project_id = p_project and pm.user_id = p_user and pm.level is not null),
-    (select sm.level from public.space_members sm
-       join public.projects pr on pr.space_id = sm.space_id
-      where pr.id = p_project and sm.user_id = p_user)
-  );
-$$;
-
-grant execute on function public.project_level(uuid, uuid) to authenticated;
+-- Approving failed with:
+--   column "role" is of type public.project_role but expression is of
+--   type text
+--
+-- A CASE over bare literals is `text`, and Postgres will not coerce text
+-- into an enum column. Both functions now cast explicitly.
+--
+-- Safe to run whether or not apply-project-access.sql went in first:
+-- these are create-or-replace over the same signatures.
 
 /*
   Approval, now able to say which projects and at what level.
@@ -59,6 +24,8 @@ grant execute on function public.project_level(uuid, uuid) to authenticated;
   functions matching the same call is what broke notify_user, and once is
   enough to learn that.
 */
+-- The three-argument original, if it is still around from the first
+-- version of this feature. Harmless when it is already gone.
 drop function if exists public.decide_space_join(uuid, boolean, public.permission_level);
 
 create or replace function public.decide_space_join(
