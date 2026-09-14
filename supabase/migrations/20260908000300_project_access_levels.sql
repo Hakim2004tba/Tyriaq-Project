@@ -134,8 +134,17 @@ begin
     end loop;
   end if;
 
+  /*
+    Every CASE below is cast.
+
+    A CASE over bare literals has type `text` — unlike a bare literal on
+    its own, which is `unknown` and coerces to whatever the column or
+    parameter needs. Postgres will not put text into an enum, and says so
+    one column at a time, so they are all done together here rather than
+    discovered in sequence.
+  */
   update public.space_join_requests
-  set status = case when approve then 'approved' else 'declined' end,
+  set status = (case when approve then 'approved' else 'declined' end)::public.join_request_status,
       granted_level = case when approve then level end,
       decided_by = auth.uid(),
       decided_at = now()
@@ -146,7 +155,7 @@ begin
 
   perform public.notify_user(
     request.user_id, request.workspace_id,
-    case when approve then 'space_join_approved' else 'space_join_declined' end,
+    (case when approve then 'space_join_approved' else 'space_join_declined' end)::public.notification_kind,
     case when approve then 'You are in ' || space_name
          else 'Your request to join ' || space_name || ' was declined' end,
     null, null, null, null, null, null, null, request.space_id

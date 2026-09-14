@@ -1,16 +1,38 @@
 -- Tyriaq — fix approving somebody into a space.
 --
 -- Run this in the Supabase SQL editor: select all, press Run.
+-- It finishes with "Success. No rows returned".
 --
--- Approving failed with:
---   column "role" is of type public.project_role but expression is of
---   type text
+-- Two problems, both found by executing the flow against a local
+-- Postgres rather than in production:
 --
--- A CASE over bare literals is `text`, and Postgres will not coerce text
--- into an enum column. Both functions now cast explicitly.
+--   1. Enum casts. A CASE over bare literals has type `text`, and
+--      Postgres will not put text into an enum column — it refuses one
+--      column at a time, which is why this appeared as three separate
+--      errors: project_role, then join_request_status, then
+--      notification_kind. All of them are cast now.
 --
--- Safe to run whether or not apply-project-access.sql went in first:
--- these are create-or-replace over the same signatures.
+--   2. actor_name() could return null, and `null || ' did a thing'` is
+--      null, which violates the NOT NULL on notifications.title — and
+--      that refusal took down the write that fired the trigger. So
+--      adding somebody to a workspace could fail with a constraint
+--      error about notifications.
+--
+-- Safe to run more than once, and safe whether or not the earlier files
+-- went in.
+
+create or replace function public.actor_name()
+returns text
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(
+    (select nullif(p.full_name, '') from public.profiles p where p.id = auth.uid()),
+    'Somebody'
+  );
+$$;
 
 /*
   Approval, now able to say which projects and at what level.
@@ -24,8 +46,6 @@
   functions matching the same call is what broke notify_user, and once is
   enough to learn that.
 */
--- The three-argument original, if it is still around from the first
--- version of this feature. Harmless when it is already gone.
 drop function if exists public.decide_space_join(uuid, boolean, public.permission_level);
 
 create or replace function public.decide_space_join(
@@ -101,8 +121,17 @@ begin
     end loop;
   end if;
 
+  /*
+    Every CASE below is cast.
+
+    A CASE over bare literals has type `text` — unlike a bare literal on
+    its own, which is `unknown` and coerces to whatever the column or
+    parameter needs. Postgres will not put text into an enum, and says so
+    one column at a time, so they are all done together here rather than
+    discovered in sequence.
+  */
   update public.space_join_requests
-  set status = case when approve then 'approved' else 'declined' end,
+  set status = (case when approve then 'approved' else 'declined' end)::public.join_request_status,
       granted_level = case when approve then level end,
       decided_by = auth.uid(),
       decided_at = now()
@@ -113,7 +142,7 @@ begin
 
   perform public.notify_user(
     request.user_id, request.workspace_id,
-    case when approve then 'space_join_approved' else 'space_join_declined' end,
+    (case when approve then 'space_join_approved' else 'space_join_declined' end)::public.notification_kind,
     case when approve then 'You are in ' || space_name
          else 'Your request to join ' || space_name || ' was declined' end,
     null, null, null, null, null, null, null, request.space_id

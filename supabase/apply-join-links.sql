@@ -396,7 +396,7 @@ begin
   end if;
 
   update public.space_join_requests
-  set status = case when approve then 'approved' else 'declined' end,
+  set status = (case when approve then 'approved' else 'declined' end)::public.join_request_status,
       granted_level = case when approve then level end,
       decided_by = auth.uid(),
       decided_at = now()
@@ -407,7 +407,7 @@ begin
 
   perform public.notify_user(
     request.user_id, request.workspace_id,
-    case when approve then 'space_join_approved' else 'space_join_declined' end,
+    (case when approve then 'space_join_approved' else 'space_join_declined' end)::public.notification_kind,
     case when approve then 'You are in ' || space_name
          else 'Your request to join ' || space_name || ' was declined' end,
     null, null, null, null, null, null, null, request.space_id
