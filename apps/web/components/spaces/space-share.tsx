@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Check, Copy, Link2, RefreshCw, UserCheck, UserX } from "lucide-react";
+import { Check, Copy, Link2, RefreshCw, UserCheck } from "lucide-react";
 import { Avatar, Button, toast } from "@flow/ui";
 import {
   getSpaceJoinLink,

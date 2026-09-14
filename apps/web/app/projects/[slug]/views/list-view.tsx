@@ -3,6 +3,8 @@
 import { useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
+  ChevronRight,
+  CornerDownRight,
   GripVertical,
   Link2,
   MessageSquare,
@@ -11,7 +13,7 @@ import {
   Plus,
   SplitSquareHorizontal,
 } from "lucide-react";
-import { AvatarGroup, Badge, Button, EmptyState, Progress } from "@flow/ui";
+import { Badge, Button, EmptyState, Progress } from "@flow/ui";
 import { cn } from "@flow/utils";
 import {
   TASK_STATUS_META,
@@ -22,7 +24,8 @@ import {
 } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { useTasks } from "@/components/tasks/task-store";
-import { Due, Priority as PriorityFlag, Tag } from "./shared";
+import { Tag } from "./shared";
+import { AssigneeControl, DueControl, PriorityControl, StatusControl } from "./row-controls";
 import { EMPTY_FILTERS, TaskToolbar, type SortKey, type TaskFilters } from "./task-toolbar";
 
 const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -60,7 +63,29 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<DropTarget | null>(null);
   const [composing, setComposing] = useState<TaskStatus | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [addingTo, setAddingTo] = useState<string | null>(null);
   const composeRef = useRef<HTMLInputElement>(null);
+
+  /*
+    Subtasks, by parent.
+
+    They are deliberately kept OUT of the status groups above — a subtask
+    lives with its parent, not in the column its own status would put it
+    in, or one piece of work appears twice on the same screen and every
+    count on the page is wrong. Here they hang under the row they belong
+    to, and each one is editable exactly like a task, because it is one.
+  */
+  const childrenOf = useMemo(() => {
+    const map = new Map<string, ProjectTask[]>();
+    for (const task of store.tasks) {
+      if (!task.parentId) continue;
+      const list = map.get(task.parentId);
+      if (list) list.push(task);
+      else map.set(task.parentId, [task]);
+    }
+    return map;
+  }, [store.tasks]);
 
   const people = useMemo(() => project.members, [project.members]);
   const tags = useMemo(
@@ -282,6 +307,8 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                   {rows.map((t) => {
                     const isDragging = dragId === t.id;
                     const showLine = drop?.status === status && drop.beforeId === t.id;
+                    const kids = childrenOf.get(t.id) ?? [];
+                    const isExpanded = expanded.has(t.id);
                     return (
                       <li
                         key={t.id}
@@ -336,7 +363,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                             }
                           }}
                           aria-label={`${t.title} — ${meta.label}. Alt with arrow keys moves this task.`}
-                          className="flex w-full cursor-pointer items-center gap-2.5 px-2 py-2.5 text-left
+                          className="group flex w-full cursor-pointer items-center gap-2.5 px-2 py-2.5 text-left
                                      transition-colors duration-fast hover:bg-white/[0.025]
                                      focus-visible:outline-none focus-visible:bg-white/[0.04]"
                         >
@@ -350,7 +377,49 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                             <GripVertical className="size-4" />
                           </span>
 
-                          <span className={cn("size-2 shrink-0 rounded-full", meta.accent)} aria-hidden="true" />
+                          <StatusControl task={t} />
+
+                          {/*
+                            Always present, even at zero, because it is
+                            also how a subtask gets ADDED from here —
+                            and it fades when there is nothing under it
+                            so a full list still reads at a glance.
+                          */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpanded((current) => {
+                                const next = new Set(current);
+                                if (next.has(t.id)) next.delete(t.id);
+                                else next.add(t.id);
+                                return next;
+                              });
+                              // Expanding a task with nothing under it
+                              // can only mean one thing.
+                              if (kids.length === 0 && !isExpanded) setAddingTo(t.id);
+                            }}
+                            aria-expanded={isExpanded}
+                            aria-label={
+                              kids.length > 0
+                                ? `${isExpanded ? "Hide" : "Show"} ${kids.length} subtask${kids.length === 1 ? "" : "s"}`
+                                : `Add a subtask to ${t.title}`
+                            }
+                            className={cn(
+                              "flex size-5 shrink-0 items-center justify-center rounded text-text-muted",
+                              "transition-colors hover:bg-white/10 hover:text-text-primary",
+                              "focus-visible:outline-none focus-visible:shadow-focus",
+                              kids.length === 0 && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            )}
+                          >
+                            <ChevronRight
+                              className={cn(
+                                "size-3.5 transition-transform duration-fast",
+                                isExpanded && "rotate-90"
+                              )}
+                              aria-hidden="true"
+                            />
+                          </button>
 
                           <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2.5">
                             <span
@@ -391,7 +460,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                                 ) : null}
                               </span>
                               <span className="sm:hidden">
-                                <Due offset={t.dueOffset} done={status === "done"} />
+                                <DueControl task={t} />
                               </span>
                             </span>
                           </div>
@@ -401,25 +470,121 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                               Milestone
                             </Badge>
                           )}
+                          {/*
+                            Editable in place. Changing a due date or an
+                            assignee is the most common edit anybody
+                            makes, and opening the task to do it is four
+                            actions for a one-word answer.
+                          */}
                           <span className="hidden shrink-0 sm:block">
-                            <AvatarGroup
-                              people={t.assignees.map((a) => ({ id: a.id, name: a.name }))}
-                              max={2}
-                              size="xs"
-                            />
+                            <AssigneeControl task={t} people={people} />
                           </span>
-                          <Due
-                            offset={t.dueOffset}
-                            done={status === "done"}
-                            className="hidden w-24 text-right sm:block"
-                          />
+                          <DueControl task={t} className="hidden w-24 sm:inline-flex" />
                           <span className="hidden w-16 shrink-0 justify-end sm:flex">
-                            <PriorityFlag value={t.priority} />
+                            <PriorityControl task={t} />
                           </span>
                           <span className="shrink-0 sm:hidden">
-                            <PriorityFlag value={t.priority} compact />
+                            <PriorityControl task={t} compact />
                           </span>
                         </div>
+
+                        {/*
+                          Subtasks, under the thing they belong to.
+
+                          Indented and quieter, but carrying the same
+                          controls: a subtask is a task — same table,
+                          same fields — and having to open the parent to
+                          reassign one was the whole complaint.
+                        */}
+                        {isExpanded && (
+                          <ul className="border-t border-border bg-surface-muted/30">
+                            {kids.map((kid) => (
+                              <li key={kid.id} className="border-b border-border/60 last:border-b-0">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => onOpenTask(kid.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      onOpenTask(kid.id);
+                                    }
+                                  }}
+                                  className="flex w-full cursor-pointer items-center gap-2.5 py-2 pl-10 pr-2 text-left
+                                             transition-colors duration-fast hover:bg-white/[0.025]
+                                             focus-visible:outline-none focus-visible:bg-white/[0.04]"
+                                >
+                                  <CornerDownRight
+                                    className="size-3.5 shrink-0 text-text-muted"
+                                    aria-hidden="true"
+                                  />
+                                  <StatusControl task={kid} />
+
+                                  <span
+                                    className={cn(
+                                      "min-w-0 flex-1 truncate text-body-sm",
+                                      kid.status === "done"
+                                        ? "text-text-muted line-through"
+                                        : "text-text-secondary"
+                                    )}
+                                  >
+                                    {kid.title}
+                                  </span>
+
+                                  <span className="hidden shrink-0 sm:block">
+                                    <AssigneeControl task={kid} people={people} />
+                                  </span>
+                                  <DueControl task={kid} className="hidden w-24 sm:inline-flex" />
+                                  <span className="hidden w-16 shrink-0 justify-end sm:flex">
+                                    <PriorityControl task={kid} />
+                                  </span>
+                                  <span className="shrink-0 sm:hidden">
+                                    <PriorityControl task={kid} compact />
+                                  </span>
+                                </div>
+                              </li>
+                            ))}
+
+                            <li>
+                              {addingTo === t.id ? (
+                                <input
+                                  autoFocus
+                                  placeholder="Subtask, then Enter"
+                                  aria-label={`New subtask in ${t.title}`}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      const value = e.currentTarget.value.trim();
+                                      if (value) store.addSubtask(t.id, value);
+                                      e.currentTarget.value = "";
+                                    } else if (e.key === "Escape") {
+                                      setAddingTo(null);
+                                    }
+                                  }}
+                                  onBlur={() => setAddingTo(null)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mx-2 my-1.5 h-7 w-[calc(100%-1rem)] rounded-md border border-primary/60
+                                             bg-surface px-2.5 text-caption text-text-primary shadow-focus
+                                             placeholder:text-text-muted focus-visible:outline-none"
+                                />
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAddingTo(t.id);
+                                  }}
+                                  className="flex w-full items-center gap-1.5 py-1.5 pl-10 text-caption text-text-muted
+                                             transition-colors hover:text-text-primary
+                                             focus-visible:outline-none focus-visible:bg-white/[0.04]"
+                                >
+                                  <Plus className="size-3" aria-hidden="true" />
+                                  Add subtask
+                                </button>
+                              )}
+                            </li>
+                          </ul>
+                        )}
                       </li>
                     );
                   })}

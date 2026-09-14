@@ -419,8 +419,42 @@ export function TaskStoreProvider({
     });
   }, []);
 
+  /**
+   * Applies a patch, and keeps a parent's counts honest.
+   *
+   * A subtask can now be completed from the list without opening its
+   * parent, and when it is, the parent's "2/3" and the checklist inside
+   * its panel both have to move. They used to be recounted only by the
+   * paths that went through the panel, so editing from the list left
+   * the row claiming the old number.
+   */
   const patchLocal = useCallback((id: string, patch: Partial<ProjectTask>) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    setTasks((prev) => {
+      const next = prev.map((t) => (t.id === id ? { ...t, ...patch } : t));
+      const changed = next.find((t) => t.id === id);
+      return changed?.parentId && patch.status !== undefined
+        ? recountRef.current(next, changed.parentId)
+        : next;
+    });
+
+    if (patch.status === undefined) return;
+    const child = tasksRef.current.find((t) => t.id === id);
+    if (!child?.parentId) return;
+    const parentId = child.parentId;
+    const done = patch.status === "done";
+    setDetails((prev) => {
+      const detail = prev[parentId];
+      if (!detail) return prev;
+      return {
+        ...prev,
+        [parentId]: {
+          ...detail,
+          subtaskItems: detail.subtaskItems.map((item) =>
+            item.id === id ? { ...item, done } : item
+          ),
+        },
+      };
+    });
   }, []);
 
   const updateTask = useCallback(
@@ -607,6 +641,14 @@ export function TaskStoreProvider({
         : t
     );
   }, []);
+
+  /*
+    `patchLocal` is declared above `recount` and needs it, so it reads it
+    through a ref rather than the whole file being reordered around one
+    dependency.
+  */
+  const recountRef = useRef(recount);
+  recountRef.current = recount;
 
   const toggleSubtask = useCallback(
     (taskId: string, subtaskId: string) => {
