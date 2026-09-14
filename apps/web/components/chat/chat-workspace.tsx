@@ -36,6 +36,7 @@ import {
   signChatFile,
   toggleReaction,
 } from "@/lib/actions/chat";
+import { applyReaction } from "@/lib/data/chat-types";
 import type { ChatContext, ChatMessage, Conversation } from "@/lib/data/chat-types";
 import { formatRelative, type Person } from "@/lib/data/task-types";
 import { Composer } from "./composer";
@@ -593,27 +594,6 @@ export function ChatWorkspace({
         }}
       />
     </div>
-  );
-}
-
-/** Local mirror of a reaction toggle, so the chip moves under the cursor. */
-function applyReaction(
-  reactions: ChatMessage["reactions"],
-  emoji: string,
-  add: boolean,
-  mine: boolean
-): ChatMessage["reactions"] {
-  const existing = reactions.find((r) => r.emoji === emoji);
-  if (add) {
-    if (!existing) return [...reactions, { emoji, count: 1, mine }];
-    return reactions.map((r) =>
-      r.emoji === emoji ? { ...r, count: r.count + 1, mine: mine || r.mine } : r
-    );
-  }
-  if (!existing) return reactions;
-  if (existing.count <= 1) return reactions.filter((r) => r.emoji !== emoji);
-  return reactions.map((r) =>
-    r.emoji === emoji ? { ...r, count: r.count - 1, mine: mine ? false : r.mine } : r
   );
 }
 

@@ -318,3 +318,88 @@ export async function searchMessages(query: string): Promise<{
     })),
   };
 }
+
+/**
+ * The project's own channel, loaded in one call.
+ *
+ * Opened on demand: a project that nobody has ever talked in has no
+ * conversation row, and creating one for every project at creation time
+ * would fill the chat sidebar with empty channels nobody asked for.
+ * The first time somebody opens the Chat tab, this makes it.
+ *
+ * Returns the messages too, so the tab does not pay two round trips
+ * before it can render anything.
+ */
+export async function loadProjectChannel(projectId: string): Promise<{
+  conversationId?: string;
+  messages?: import("@/lib/data/chat-types").ChatMessage[];
+  joined?: boolean;
+  error?: string;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+
+  const opened = await openProjectConversation(projectId);
+  if (opened.error || !opened.id) return { error: opened.error ?? "Could not open the channel." };
+
+  const supabase = await createClient();
+  const { data: membership } = await supabase
+    .from("conversation_members")
+    .select("user_id")
+    .eq("conversation_id", opened.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const { data: workspace } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const { getMessages } = await import("@/lib/data/chat");
+  const messages = await getMessages(
+    opened.id,
+    user.id,
+    workspace?.role === "owner" || workspace?.role === "admin"
+  );
+
+  return { conversationId: opened.id, messages, joined: Boolean(membership) };
+}
+
+/**
+ * Starts a conversation in the project's channel about one task.
+ *
+ * The message carries the task as a REFERENCE rather than a copy of its
+ * title, so the line in the channel keeps showing the task's current
+ * name and status — including after somebody renames it, which is
+ * usually the moment the discussion was about.
+ */
+export async function discussTask(
+  taskId: string
+): Promise<ActionResult & { conversationId?: string }> {
+  const supabase = await createClient();
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, title, project_id")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!task) return { error: "That task no longer exists." };
+
+  const opened = await openProjectConversation(task.project_id);
+  if (opened.error || !opened.id) return { error: opened.error ?? "Could not open the channel." };
+
+  // Joining first: posting in a channel you have only been reading is
+  // what the membership row means, and the send would be refused
+  // without it.
+  await joinConversation(opened.id);
+
+  const sent = await sendMessage({
+    conversationId: opened.id,
+    body: `#${task.title}`,
+    taskRefs: [task.id],
+  });
+  if (sent.error) return { error: sent.error };
+
+  return { conversationId: opened.id, message: "Posted to the project channel." };
+}

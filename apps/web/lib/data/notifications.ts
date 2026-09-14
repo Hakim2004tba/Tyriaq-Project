@@ -37,7 +37,7 @@ export async function getNotifications(limit = 40): Promise<NotificationFeed> {
       supabase
         .from("notifications")
         .select(
-          "id, kind, title, body, created_at, read_at, actor_id, task_id, document_id, conversation_id, project_id, actor:profiles!actor_id(full_name), tasks(projects(slug)), projects(slug)"
+          "id, kind, title, body, created_at, read_at, actor_id, task_id, document_id, conversation_id, project_id, space_id, actor:profiles!actor_id(full_name), tasks(projects(slug)), projects(slug), spaces(slug)"
         )
         .order("created_at", { ascending: false })
         .limit(limit),
@@ -56,9 +56,10 @@ export async function getNotifications(limit = 40): Promise<NotificationFeed> {
     created_at: string; read_at: string | null;
     actor: { full_name: string } | null;
     task_id: string | null; document_id: string | null;
-    conversation_id: string | null; project_id: string | null;
+    conversation_id: string | null; project_id: string | null; space_id: string | null;
     tasks: { projects: { slug: string } | null } | null;
     projects: { slug: string } | null;
+    spaces: { slug: string } | null;
   }[]).map((row) => ({
     id: row.id,
     kind: row.kind,
@@ -75,6 +76,7 @@ export async function getNotifications(limit = 40): Promise<NotificationFeed> {
       projectSlug: row.tasks?.projects?.slug ?? row.projects?.slug ?? null,
       documentId: row.document_id,
       conversationId: row.conversation_id,
+      spaceSlug: row.spaces?.slug ?? null,
     }),
   }));
 

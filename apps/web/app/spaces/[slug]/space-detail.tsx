@@ -36,6 +36,7 @@ import {
   SpaceMembersDialog,
   type SpaceMemberEntry,
 } from "@/components/spaces/space-members-dialog";
+import type { JoinRequest } from "@/lib/actions/space-link";
 import { deleteSpace, setSpaceArchived } from "@/lib/actions/space";
 import {
   PROJECT_STATUS_META,
@@ -94,6 +95,7 @@ export function SpaceDetail({
   canDelete,
   workspaceMembers,
   canManageMembers,
+  joinRequests,
   spaceMembers,
 }: {
   space: Space;
@@ -103,6 +105,7 @@ export function SpaceDetail({
   canDelete: boolean;
   workspaceMembers: Member[];
   canManageMembers: boolean;
+  joinRequests: JoinRequest[];
   spaceMembers: SpaceMemberEntry[];
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
@@ -170,7 +173,12 @@ export function SpaceDetail({
             <div className="flex shrink-0 items-center gap-2">
               {/* Members sit beside Edit because they are a property of
                   the space, not of the project list below it. */}
-              <Button variant="secondary" size="md" onClick={() => setMembersOpen(true)}>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => setMembersOpen(true)}
+                className={cn(joinRequests.length > 0 && "border-warning/50")}
+              >
                 {members.length > 0 ? (
                   <AvatarGroup
                     people={members.map((entry) => ({
@@ -187,6 +195,17 @@ export function SpaceDetail({
                 <span className="hidden sm:inline">
                   {members.length > 0 ? `${members.length} member${members.length === 1 ? "" : "s"}` : "Members"}
                 </span>
+                {/*
+                  Somebody is waiting. This is the only place in the
+                  space that says so, and a request nobody sees is the
+                  failure the whole join flow exists to avoid — so it is
+                  on the button rather than inside the dialog it opens.
+                */}
+                {joinRequests.length > 0 && (
+                  <Badge variant="warning" size="sm">
+                    {joinRequests.length} waiting
+                  </Badge>
+                )}
               </Button>
 
               <Button variant="secondary" size="md" onClick={() => setEditorOpen(true)}>
@@ -303,6 +322,7 @@ export function SpaceDetail({
         entries={members}
         onChange={setMembers}
         canManage={canManageMembers}
+        joinRequests={joinRequests}
       />
 
       <SpaceEditor open={editorOpen} onOpenChange={setEditorOpen} space={space} />

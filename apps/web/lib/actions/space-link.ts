@@ -1,0 +1,205 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
+import type { PermissionLevel } from "@/lib/data/permissions";
+import type { SpaceColor } from "@/lib/data/types";
+import type { ActionResult } from "./workspace";
+
+/**
+ * Join links, and the requests they produce.
+ *
+ * A space admin copies one link and sends it however they already talk
+ * to people. Whoever opens it asks to join; an admin approves, and
+ * approval does the whole thing at once — workspace membership if they
+ * need it, then the space at the chosen level.
+ *
+ * The link is not an entry. Holding it lets you ASK, which is cheap and
+ * reversible: a link that got forwarded produces requests somebody has
+ * to look at, never members nobody chose.
+ */
+
+// Not exported: a "use server" module may only export async functions,
+// and every export becomes a callable endpoint.
+function siteUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined);
+  return (configured ?? "http://localhost:3000").replace(/\/+$/, "");
+}
+
+function joinUrl(token: string): string {
+  return `${siteUrl()}/join/${token}`;
+}
+
+export interface JoinRequest {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  note: string;
+  createdAt: string;
+}
+
+/**
+ * The space's link, minted on first use.
+ *
+ * Creating it on demand rather than with the space means a space that
+ * nobody ever shares never has a live token — and the button that asks
+ * for one is the same button that copies it, so there is no separate
+ * "generate" step to explain.
+ */
+export async function getSpaceJoinLink(spaceId: string): Promise<ActionResult & { url?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("space_invite_links")
+    .select("token")
+    .eq("space_id", spaceId)
+    .is("revoked_at", null)
+    .maybeSingle();
+  if (existing?.token) return { url: joinUrl(existing.token) };
+
+  const { data, error } = await supabase
+    .from("space_invite_links")
+    .insert({ space_id: spaceId, workspace_id: spaceId, created_by: user.id })
+    .select("token")
+    .single();
+
+  // The insert policy is `can_manage_space`, so a member who is not an
+  // admin gets a refusal here rather than a link that would not work.
+  if (error || !data) {
+    return { error: "Only a space or workspace admin can share a space." };
+  }
+  return { url: joinUrl(data.token) };
+}
+
+/**
+ * Turns off the current link and mints a new one.
+ *
+ * One live link per space is a partial unique index, so the old row has
+ * to be revoked before the new one can exist — which is exactly the
+ * behaviour worth having: the link sent last week stops working, and
+ * there is no second one still open that nobody remembers.
+ */
+export async function resetSpaceJoinLink(spaceId: string): Promise<ActionResult & { url?: string }> {
+  const supabase = await createClient();
+
+  const { error: revokeError } = await supabase
+    .from("space_invite_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("space_id", spaceId)
+    .is("revoked_at", null);
+  if (revokeError) return { error: "Only a space or workspace admin can do that." };
+
+  const result = await getSpaceJoinLink(spaceId);
+  if (result.url) return { ...result, message: "New link ready — the old one no longer works." };
+  return result;
+}
+
+/** Everyone waiting on a decision for this space. */
+export async function listJoinRequests(spaceId: string): Promise<JoinRequest[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("space_join_requests")
+    .select("id, user_id, note, created_at, profiles(id, full_name, avatar_url)")
+    .eq("space_id", spaceId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  return ((data ?? []) as unknown as {
+    id: string; user_id: string; note: string; created_at: string;
+    profiles: { id: string; full_name: string; avatar_url: string | null } | null;
+  }[]).map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    name: row.profiles?.full_name || "Someone",
+    // Addresses belong to accounts, and a requester is not in the
+    // workspace yet — so there is nothing to show but the name they
+    // signed up with.
+    email: "",
+    avatarUrl: row.profiles?.avatar_url ?? null,
+    note: row.note,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function decideJoinRequest(
+  requestId: string,
+  approve: boolean,
+  level: PermissionLevel = "editor"
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decide_space_join", {
+    request_id: requestId,
+    approve,
+    level,
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { message: approve ? "They are in." : "Request declined." };
+}
+
+/* ------------------------------------------------------------------ */
+/* The other side of the link                                          */
+/* ------------------------------------------------------------------ */
+
+export interface JoinPreview {
+  spaceId: string;
+  spaceName: string;
+  spaceIcon: string;
+  spaceColor: SpaceColor;
+  workspaceName: string;
+  inviterName: string;
+  memberCount: number;
+  revoked: boolean;
+  alreadyMember: boolean;
+  pending: boolean;
+}
+
+export async function previewJoinLink(token: string): Promise<JoinPreview | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("space_link_preview", { link_token: token });
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | {
+        space_id: string; space_name: string; space_icon: string; space_color: SpaceColor;
+        workspace_name: string; inviter_name: string; member_count: number;
+        is_revoked: boolean; already_member: boolean; pending_request: boolean;
+      }
+    | undefined;
+  if (!row) return null;
+
+  return {
+    spaceId: row.space_id,
+    spaceName: row.space_name,
+    spaceIcon: row.space_icon,
+    spaceColor: row.space_color,
+    workspaceName: row.workspace_name,
+    inviterName: row.inviter_name,
+    memberCount: row.member_count,
+    revoked: row.is_revoked,
+    alreadyMember: row.already_member,
+    pending: row.pending_request,
+  };
+}
+
+export async function requestToJoin(token: string, note: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_space_join", {
+    link_token: token,
+    request_note: note.trim().slice(0, 300),
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { message: "Asked. You will hear when somebody decides." };
+}

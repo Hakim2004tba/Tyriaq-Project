@@ -163,3 +163,31 @@ export function dayLabel(iso: string): string {
 export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
+
+/**
+ * Mirrors a reaction toggle locally, so the chip moves under the cursor.
+ *
+ * Shared by both places chat is rendered — the standalone workspace and
+ * a project's own channel — because two copies of "what a click does to
+ * a count" is two chances for them to disagree.
+ */
+export function applyReaction(
+  reactions: ChatMessage["reactions"],
+  emoji: string,
+  add: boolean,
+  mine: boolean
+): ChatMessage["reactions"] {
+  const existing = reactions.find((r) => r.emoji === emoji);
+  if (add) {
+    if (!existing) return [...reactions, { emoji, count: 1, mine }];
+    return reactions.map((r) =>
+      r.emoji === emoji ? { ...r, count: r.count + 1, mine: mine || r.mine } : r
+    );
+  }
+  if (!existing) return reactions;
+  if (existing.count <= 1) return reactions.filter((r) => r.emoji !== emoji);
+  return reactions.map((r) =>
+    r.emoji === emoji ? { ...r, count: r.count - 1, mine: mine ? false : r.mine } : r
+  );
+}
+

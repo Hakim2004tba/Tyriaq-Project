@@ -2,12 +2,14 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Link2,
+  MessageSquarePlus,
   MoreHorizontal,
   Star,
   Trash2,
@@ -33,6 +35,7 @@ import { cn } from "@flow/utils";
 import { SPACE_COLOR } from "@/components/shell";
 import { initialsOf } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
+import { discussTask } from "@/lib/actions/chat";
 import { useTasks } from "../task-store";
 import { useDraft } from "../use-draft";
 import {
@@ -96,6 +99,9 @@ export function TaskPanel({
   const store = useTasks();
   const [propsOpen, setPropsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [discussing, setDiscussing] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   /**
    * A link straight to this task, open.
@@ -213,6 +219,33 @@ export function TaskPanel({
                     onClick={copyLink}
                   >
                     {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />}
+                  </IconButton>
+                  {/*
+                    Discussing a task belongs next to copying a link to
+                    it: both are "get somebody else's attention on this",
+                    and the difference is only whether you already know
+                    where to send it.
+                  */}
+                  <IconButton
+                    label="Discuss in the project channel"
+                    size="sm"
+                    disabled={discussing}
+                    onClick={() => {
+                      setDiscussing(true);
+                      void discussTask(task.id).then((result) => {
+                        setDiscussing(false);
+                        if (result.error) {
+                          toast.error(result.error);
+                          return;
+                        }
+                        // Straight into the channel: posting and then
+                        // being left on the task is a dead end.
+                        onClose();
+                        router.push(`${pathname}?view=chat`);
+                      });
+                    }}
+                  >
+                    <MessageSquarePlus className="size-4" />
                   </IconButton>
                   <IconButton
                     label={task.starred ? "Remove from starred" : "Star task"}

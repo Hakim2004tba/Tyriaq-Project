@@ -24,6 +24,8 @@ import {
   setSpaceMemberLevel,
 } from "@/lib/actions/space-member";
 import type { Member } from "@/lib/data/types";
+import { SpaceShare } from "./space-share";
+import type { JoinRequest } from "@/lib/actions/space-link";
 
 export interface SpaceMemberEntry {
   member: Member;
@@ -50,6 +52,7 @@ export function SpaceMembersDialog({
   entries,
   onChange,
   canManage,
+  joinRequests = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,6 +62,7 @@ export function SpaceMembersDialog({
   entries: SpaceMemberEntry[];
   onChange: (next: SpaceMemberEntry[]) => void;
   canManage: boolean;
+  joinRequests?: JoinRequest[];
 }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<PermissionLevel>("editor");
@@ -165,6 +169,17 @@ export function SpaceMembersDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
+          {/*
+            The link comes first, above the search.
+
+            Searching only finds people already in the workspace, which
+            is the case that needs no help. Everybody else — the new
+            hire, the contractor, the person whose address nobody has to
+            hand — arrives through the link, so it is what the dialog
+            opens on.
+          */}
+          <SpaceShare spaceId={spaceId} canManage={canManage} initialRequests={joinRequests} />
+
           {canManage && (
             <>
               <div className="flex flex-wrap items-center gap-2">

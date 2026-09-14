@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, GanttChartSquare, KanbanSquare, List } from "lucide-react";
+import { CalendarDays, GanttChartSquare, KanbanSquare, List, MessageSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@flow/ui";
 import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
@@ -12,9 +12,10 @@ import type { Project } from "@/lib/data/types";
 import { BoardView } from "./views/board-view";
 import { CalendarView } from "./views/calendar-view";
 import { GanttView } from "./views/gantt/gantt-view";
+import { ChatView } from "./views/chat-view";
 import { ListView } from "./views/list-view";
 
-const VIEWS = ["list", "board", "calendar", "gantt"] as const;
+const VIEWS = ["list", "board", "calendar", "gantt", "chat"] as const;
 type View = (typeof VIEWS)[number];
 
 const TABS: { id: View; label: string; icon: LucideIcon }[] = [
@@ -22,6 +23,17 @@ const TABS: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "board", label: "Board", icon: KanbanSquare },
   { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "gantt", label: "Gantt", icon: GanttChartSquare },
+  /*
+    Chat sits at the end of the same strip rather than in a side panel.
+
+    A panel would mean choosing between reading the board and reading the
+    conversation about it; a tab means the conversation is part of the
+    project the same way the board is, reachable by a link
+    (`?view=chat`), and it inherits everything the other tabs have —
+    this project's tasks in the `#` picker, and a message that can become
+    a task on this board without anybody being asked which project.
+  */
+  { id: "chat", label: "Chat", icon: MessageSquare },
 ];
 
 function isView(v: string | null): v is View {
@@ -131,6 +143,14 @@ export function ProjectWorkspace({
           {view === "board" && <BoardView project={project} onOpenTask={setTask} />}
           {view === "calendar" && <CalendarView project={project} onOpenTask={setTask} />}
           {view === "gantt" && <GanttView project={project} onOpenTask={setTask} />}
+          {view === "chat" && (
+            <ChatView
+              project={project}
+              people={people}
+              viewer={currentUser}
+              onOpenTask={setTask}
+            />
+          )}
         </div>
 
         <TaskPanel

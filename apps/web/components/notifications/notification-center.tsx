@@ -12,6 +12,7 @@ import {
   ListPlus,
   MessageSquare,
   Settings2,
+  UserPlus,
   Users,
 } from "lucide-react";
 import {
@@ -44,6 +45,9 @@ const KIND_ICON: Record<NotificationKind, typeof Bell> = {
   project_added: FolderKanban,
   workspace_added: Users,
   message_received: MessageSquare,
+  space_join_request: UserPlus,
+  space_join_approved: Users,
+  space_join_declined: Users,
 };
 
 const KIND_TONE: Record<NotificationKind, string> = {
@@ -57,6 +61,11 @@ const KIND_TONE: Record<NotificationKind, string> = {
   project_added: "bg-surface-elevated text-text-secondary",
   workspace_added: "bg-surface-elevated text-text-secondary",
   message_received: "bg-info-subtle text-info",
+  // A request is the only kind that asks the reader to DO something, so
+  // it gets the one tone nothing else uses.
+  space_join_request: "bg-warning-subtle text-warning",
+  space_join_approved: "bg-success-subtle text-success",
+  space_join_declined: "bg-surface-elevated text-text-secondary",
 };
 
 /**

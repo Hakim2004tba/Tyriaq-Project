@@ -8,7 +8,10 @@ export type NotificationKind =
   | "task_overdue"
   | "project_added"
   | "workspace_added"
-  | "message_received";
+  | "message_received"
+  | "space_join_request"
+  | "space_join_approved"
+  | "space_join_declined";
 
 export interface AppNotification {
   id: string;
@@ -33,6 +36,9 @@ export const NOTIFICATION_KINDS: NotificationKind[] = [
   "project_added",
   "workspace_added",
   "message_received",
+  "space_join_request",
+  "space_join_approved",
+  "space_join_declined",
 ];
 
 /**
@@ -50,6 +56,9 @@ export const KIND_META: Record<NotificationKind, { label: string; description: s
   project_added: { label: "Added to a project", description: "Somebody brings you onto a project" },
   workspace_added: { label: "Added to a workspace", description: "Somebody brings you into a workspace" },
   message_received: { label: "New messages", description: "Any message in a conversation you are in" },
+  space_join_request: { label: "Someone asks to join a space", description: "A request waiting for you to approve or decline" },
+  space_join_approved: { label: "My request was approved", description: "You are in a space you asked to join" },
+  space_join_declined: { label: "My request was declined", description: "A space you asked to join said no" },
 };
 
 /**
@@ -64,6 +73,7 @@ export function linkFor(row: {
   projectSlug: string | null;
   documentId: string | null;
   conversationId: string | null;
+  spaceSlug?: string | null;
 }): string | null {
   // A task inside its project, with the details panel already open —
   // clicking "you were assigned this" should land on the task itself,
@@ -72,5 +82,9 @@ export function linkFor(row: {
   if (row.documentId) return `/documents/${row.documentId}`;
   if (row.conversationId) return `/chat?c=${row.conversationId}`;
   if (row.projectSlug) return `/projects/${row.projectSlug}`;
+  // A join request leads to the space, where the queue is — clicking
+  // "somebody wants to join" should land on the decision, not on a list
+  // of spaces with a badge somewhere in it.
+  if (row.spaceSlug) return `/spaces/${row.spaceSlug}`;
   return null;
 }

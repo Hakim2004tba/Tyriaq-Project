@@ -534,13 +534,15 @@ CREATE TABLE notifications (
   kind            ENUM(
                     'task_assigned','task_mentioned','comment_mention','task_status',
                     'task_completed','due_soon','task_overdue','project_added',
-                    'workspace_added','message_received'
+                    'workspace_added','message_received',
+                    'space_join_request','space_join_approved','space_join_declined'
                   ) NOT NULL,
   title           VARCHAR(255) NOT NULL,
   body            TEXT         NULL,
   task_id         CHAR(36)     NULL,
   project_id      CHAR(36)     NULL,
   document_id     CHAR(36)     NULL,
+  space_id        CHAR(36)     NULL,
   conversation_id CHAR(36)     NULL,
   message_id      CHAR(36)     NULL,
   comment_id      CHAR(36)     NULL,
@@ -571,6 +573,7 @@ CREATE TABLE notifications (
   CONSTRAINT notifications_task_fk    FOREIGN KEY (task_id)         REFERENCES tasks (id)          ON DELETE CASCADE,
   CONSTRAINT notifications_project_fk FOREIGN KEY (project_id)      REFERENCES projects (id)       ON DELETE CASCADE,
   CONSTRAINT notifications_doc_fk     FOREIGN KEY (document_id)     REFERENCES documents (id)      ON DELETE CASCADE,
+  CONSTRAINT notifications_space_fk   FOREIGN KEY (space_id)        REFERENCES spaces (id)         ON DELETE CASCADE,
   CONSTRAINT notifications_conv_fk    FOREIGN KEY (conversation_id) REFERENCES conversations (id)  ON DELETE CASCADE,
   CONSTRAINT notifications_msg_fk     FOREIGN KEY (message_id)      REFERENCES messages (id)       ON DELETE CASCADE,
   CONSTRAINT notifications_comment_fk FOREIGN KEY (comment_id)      REFERENCES task_comments (id)  ON DELETE CASCADE
@@ -627,3 +630,76 @@ CREATE TABLE workspace_invitations (
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+/* ==================================================================== */
+/* Joining a space by link                                              */
+/* ==================================================================== */
+
+/*
+  A space admin shares one link; whoever opens it asks to join, and an
+  admin approves. The link is not an entry — holding it lets you ASK,
+  which is why a forwarded link produces requests somebody has to look
+  at rather than members nobody chose.
+*/
+CREATE TABLE space_invite_links (
+  id           CHAR(36)    NOT NULL,
+  space_id     CHAR(36)    NOT NULL,
+  workspace_id CHAR(36)    NOT NULL,
+  -- Was `encode(gen_random_bytes(24), 'hex')`; generated in Node now,
+  -- from the same kind of source, like the workspace invitation token.
+  token        VARCHAR(64) NOT NULL,
+  created_by   CHAR(36)    NOT NULL,
+  created_at   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  revoked_at   DATETIME(3) NULL,
+  /*
+    "One live link per space."
+
+    Postgres said this with a partial unique index (`where revoked_at is
+    null`). The same trick as the other two partial indexes in this
+    file: a generated column that is NULL once the row no longer
+    counts, so revoked links never collide and a space can be re-shared.
+  */
+  live_space CHAR(36) GENERATED ALWAYS AS (
+    CASE WHEN revoked_at IS NULL THEN space_id END
+  ) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY space_invite_links_token_unique (token),
+  UNIQUE KEY space_invite_links_live_unique (live_space),
+  KEY space_invite_links_workspace_idx (workspace_id),
+  CONSTRAINT space_links_space_fk   FOREIGN KEY (space_id)     REFERENCES spaces (id)     ON DELETE CASCADE,
+  CONSTRAINT space_links_ws_fk      FOREIGN KEY (workspace_id) REFERENCES workspaces (id) ON DELETE CASCADE,
+  CONSTRAINT space_links_creator_fk FOREIGN KEY (created_by)   REFERENCES profiles (id)   ON DELETE CASCADE
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE space_join_requests (
+  id            CHAR(36)     NOT NULL,
+  space_id      CHAR(36)     NOT NULL,
+  workspace_id  CHAR(36)     NOT NULL,
+  user_id       CHAR(36)     NOT NULL,
+  -- "Hi, I'm the new designer" — optional, and the only thing the
+  -- person asking controls besides asking.
+  note          VARCHAR(300) NOT NULL DEFAULT '',
+  status        ENUM('pending','approved','declined') NOT NULL DEFAULT 'pending',
+  granted_level ENUM('viewer','commenter','editor','admin') NULL,
+  decided_by    CHAR(36)     NULL,
+  decided_at    DATETIME(3)  NULL,
+  created_at    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  /*
+    "One PENDING request per person per space."
+
+    Pending only, so a declined request does not lock somebody out
+    forever — circumstances change, and a permanent no from one click
+    would be a support problem rather than a policy.
+  */
+  pending_space CHAR(36) GENERATED ALWAYS AS (
+    CASE WHEN status = 'pending' THEN space_id END
+  ) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY space_join_requests_pending_unique (pending_space, user_id),
+  KEY space_join_requests_space_idx (space_id, status),
+  KEY space_join_requests_user_idx (user_id),
+  CONSTRAINT space_requests_space_fk   FOREIGN KEY (space_id)     REFERENCES spaces (id)     ON DELETE CASCADE,
+  CONSTRAINT space_requests_ws_fk      FOREIGN KEY (workspace_id) REFERENCES workspaces (id) ON DELETE CASCADE,
+  CONSTRAINT space_requests_user_fk    FOREIGN KEY (user_id)      REFERENCES profiles (id)   ON DELETE CASCADE,
+  CONSTRAINT space_requests_decider_fk FOREIGN KEY (decided_by)   REFERENCES profiles (id)   ON DELETE SET NULL
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

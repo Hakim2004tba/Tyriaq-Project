@@ -9,6 +9,7 @@ import {
   getWorkspaceMembers,
 } from "@/lib/data/queries";
 import { getSpaceMembers } from "@/lib/actions/space-member";
+import { listJoinRequests } from "@/lib/actions/space-link";
 import { SpaceDetail } from "./space-detail";
 
 export async function generateMetadata({
@@ -40,8 +41,13 @@ export default async function SpacePage({
   // want: an existence check would leak that the slug is taken.
   if (!space) notFound();
 
-  // Read after the space, since it is keyed by the space's id.
-  const memberRows = await getSpaceMembers(space.id);
+  // Read after the space, since both are keyed by its id. The request
+  // queue comes back empty for anybody who cannot approve, because the
+  // policy behind it answers `can_manage_space`.
+  const [memberRows, joinRequests] = await Promise.all([
+    getSpaceMembers(space.id),
+    listJoinRequests(space.id),
+  ]);
   const byId = new Map(workspaceMembers.map((m) => [m.id, m]));
 
   return (
@@ -53,6 +59,7 @@ export default async function SpacePage({
       canDelete={workspace?.role === "owner" || workspace?.role === "admin"}
       workspaceMembers={workspaceMembers}
       canManageMembers={workspace?.role === "owner" || workspace?.role === "admin"}
+      joinRequests={joinRequests}
       spaceMembers={memberRows.map((row) => ({
         member: byId.get(row.userId) ?? {
           id: row.userId,
