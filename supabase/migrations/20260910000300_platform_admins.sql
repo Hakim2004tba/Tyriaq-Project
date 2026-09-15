@@ -30,13 +30,6 @@ alter table public.platform_admins enable row level security;
   reason for a customer to be able to learn that a staff list exists, let
   alone who is on it.
 */
-drop policy if exists "platform admins read the list" on public.platform_admins;
-create policy "platform admins read the list"
-  on public.platform_admins for select
-  to authenticated
-  using (exists (
-    select 1 from public.platform_admins a where a.user_id = (select auth.uid())
-  ));
 
 /*
   No insert, update or delete policy at all.
@@ -60,6 +53,22 @@ as $$
 $$;
 
 grant execute on function public.is_platform_admin() to authenticated;
+
+/*
+  Through the function, NOT an inline `exists` over this same table.
+
+  A policy on platform_admins that reads platform_admins re-enters
+  itself, and Postgres refuses the whole query with "infinite recursion
+  detected in policy". `is_platform_admin()` is SECURITY DEFINER, so it
+  runs as the table's owner and is not subject to the policy — breaking
+  the cycle is the entire reason the function exists, and the same trick
+  keeps every other policy in this schema from recursing.
+*/
+drop policy if exists "platform admins read the list" on public.platform_admins;
+create policy "platform admins read the list"
+  on public.platform_admins for select
+  to authenticated
+  using (public.is_platform_admin());
 
 /*
   To make somebody staff, run this as the database owner:

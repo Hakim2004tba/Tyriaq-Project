@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { savePlan } from "@/lib/actions/admin";
 import { Archive, Check, MoreHorizontal, Pencil, Plus, Users } from "lucide-react";
 import {
   Button,
@@ -126,8 +127,26 @@ export function PlansBoard({ plans }: { plans: AdminPlan[] }) {
         }}
         onSave={(values) => {
           if (editing) {
+            const previous = rows;
             setRows((prev) => prev.map((p) => (p.id === editing.id ? { ...p, ...values } : p)));
-            toast.success(`${values.name} updated — in this prototype only.`);
+            void savePlan({
+              id: editing.id,
+              name: values.name,
+              // Whole units on screen, minor units in the database.
+              priceCents: Math.round(values.price * 100),
+              memberLimit: values.memberLimit,
+              projectLimit: editing.id === "free" ? 2 : null,
+              storageLimitMb:
+                values.storageLimitGb === null ? null : values.storageLimitGb * 1024,
+              features: editing.features,
+            }).then((result) => {
+              if (result.error) {
+                setRows(previous);
+                toast.error(result.error);
+                return;
+              }
+              toast.success(`${values.name} saved.`);
+            });
           } else {
             setRows((prev) => [
               ...prev,
@@ -139,7 +158,13 @@ export function PlansBoard({ plans }: { plans: AdminPlan[] }) {
                 ...values,
               } as AdminPlan,
             ]);
-            toast.success(`${values.name} created — in this prototype only.`);
+            /*
+              Creating a plan is deliberately local-only for now: a plan
+              row needs an id that the code refers to by name (`free`,
+              `team`), and letting somebody type one from here would let
+              them create a plan nothing in the product knows about.
+            */
+            toast.info(`${values.name} is not saved — new plans are added in SQL for now.`);
           }
           setEditing(null);
           setCreating(false);

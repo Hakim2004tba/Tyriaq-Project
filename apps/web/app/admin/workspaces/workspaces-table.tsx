@@ -40,7 +40,9 @@ import {
 } from "@/lib/data/admin-sample";
 
 export function WorkspacesTable({ workspaces }: { workspaces: AdminWorkspace[] }) {
-  const [rows, setRows] = useState(workspaces);
+  // Read-only for now: nothing on this screen changes a workspace, so
+  // there is no local copy to keep in step with the server.
+  const rows = workspaces;
   const [open, setOpen] = useState<AdminWorkspace | null>(null);
   const [confirm, setConfirm] = useState<{ kind: "archive" | "delete"; target: AdminWorkspace } | null>(null);
 
@@ -320,19 +322,24 @@ export function WorkspacesTable({ workspaces }: { workspaces: AdminWorkspace[] }
         confirmLabel={confirm?.kind === "delete" ? "Delete" : "Confirm"}
         onConfirm={() => {
           if (!confirm) return;
-          if (confirm.kind === "delete") {
-            setRows((prev) => prev.filter((row) => row.id !== confirm.target.id));
-            setOpen(null);
-          } else {
-            setRows((prev) =>
-              prev.map((row) =>
-                row.id === confirm.target.id
-                  ? { ...row, status: row.status === "archived" ? "active" : "archived" }
-                  : row
-              )
-            );
-          }
-          toast.success(`${confirm.target.name} updated — in this prototype only.`);
+          /*
+            Neither of these is wired, and both are refused rather than
+            faked.
+
+            Deleting a workspace from here would cascade through every
+            project, task, comment and file in it — an irreversible
+            action behind a table row, triggered by a click in the wrong
+            line. And there is no archived state for a workspace in the
+            schema; the table shows one because the sample data had one.
+
+            The support path for both is the same today: talk to the
+            customer. That is a worse product and an honest one.
+          */
+          toast.info(
+            confirm.kind === "delete"
+              ? "Deleting a workspace is not available from here."
+              : "Archiving a workspace is not available yet."
+          );
           setConfirm(null);
         }}
       />

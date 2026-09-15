@@ -4,14 +4,13 @@ import { ChartFrame } from "@/components/reports/charts/chart-frame";
 import { DonutChart } from "@/components/reports/charts/donut-chart";
 import { LineChart } from "@/components/reports/charts/line-chart";
 import { CATEGORICAL } from "@/components/reports/charts/palette";
-import {
-  KPIS,
-  PLANS,
-  REVENUE_SERIES,
-  SUBSCRIPTION_SERIES,
-  USER_SERIES,
-  formatMoney,
-} from "@/lib/data/admin-sample";
+import { PLAN_META, type PlanId } from "@/lib/data/admin-sample";
+
+/** A point on a growth line: a day, and the running total that day. */
+export interface SeriesPoint {
+  date: string;
+  value: number;
+}
 
 /**
  * The overview's charts.
@@ -21,38 +20,45 @@ import {
  * the page itself on the server means it still exports metadata and
  * renders its lists without shipping them.
  */
-export function GrowthChart() {
-  const labels = USER_SERIES.map((p) => p.date);
+/**
+ * People and workspaces over time.
+ *
+ * Both are counts of the same kind of thing, so they share one scale
+ * honestly — which the previous version could not do: it drew users
+ * against revenue, two quantities with no common unit, and scaled one of
+ * them by a made-up divisor to make the lines sit together.
+ */
+export function GrowthChart({
+  users,
+  workspaces,
+}: {
+  users: SeriesPoint[];
+  workspaces: SeriesPoint[];
+}) {
+  const labels = users.map((point) => point.date);
 
   return (
     <ChartFrame
-      title="Users and revenue"
-      subtitle="Last 30 days"
+      title="Users and workspaces"
+      subtitle={`Last ${Math.max(labels.length - 1, 0)} days`}
       legend={[
         { label: "Users", color: CATEGORICAL[2] },
-        { label: "Revenue (USD)", color: CATEGORICAL[1] },
+        { label: "Workspaces", color: CATEGORICAL[1] },
       ]}
       table={{
-        columns: ["Date", "Users", "Revenue"],
-        rows: labels.map((date, i) => [date, USER_SERIES[i]!.value, formatMoney(REVENUE_SERIES[i]!.value)]),
+        columns: ["Date", "Users", "Workspaces"],
+        rows: labels.map((date, i) => [date, users[i]?.value ?? 0, workspaces[i]?.value ?? 0]),
       }}
     >
-      {/*
-        Two measures of very different magnitude on ONE scale would flatten
-        the smaller into the axis, and a second y-axis lets a designer make
-        any two lines cross wherever they like. Revenue is scaled onto the
-        same footing instead — the shapes stay comparable, and the tooltip
-        and the table carry the real figures.
-      */}
       <LineChart
         labels={labels}
         series={[
-          { key: "users", label: "Users", color: CATEGORICAL[2], values: USER_SERIES.map((p) => p.value) },
+          { key: "users", label: "Users", color: CATEGORICAL[2], values: users.map((p) => p.value) },
           {
-            key: "revenue",
-            label: "Revenue",
+            key: "workspaces",
+            label: "Workspaces",
             color: CATEGORICAL[1],
-            values: REVENUE_SERIES.map((p) => Math.round(p.value / 6)),
+            values: workspaces.map((p) => p.value),
           },
         ]}
         height={240}
@@ -62,45 +68,54 @@ export function GrowthChart() {
   );
 }
 
-export function PlanDonut() {
+export function PlanDonut({
+  distribution,
+}: {
+  distribution: { plan: PlanId; count: number }[];
+}) {
+  const total = distribution.reduce((sum, slice) => sum + slice.count, 0);
+
   return (
     <ChartFrame
       title="Plan distribution"
-      subtitle={`${KPIS.subscriptions.value.toLocaleString()} active subscriptions`}
-      table={{ columns: ["Plan", "Subscribers"], rows: PLANS.map((p) => [p.name, p.subscribers]) }}
+      subtitle={`${total.toLocaleString()} ${total === 1 ? "workspace" : "workspaces"}`}
+      table={{
+        columns: ["Plan", "Workspaces"],
+        rows: distribution.map((slice) => [PLAN_META[slice.plan]?.label ?? slice.plan, slice.count]),
+      }}
     >
       <DonutChart
-        slices={PLANS.map((plan, i) => ({
-          key: plan.id,
-          label: plan.name,
-          value: plan.subscribers,
+        slices={distribution.map((slice, i) => ({
+          key: slice.plan,
+          label: PLAN_META[slice.plan]?.label ?? slice.plan,
+          value: slice.count,
           color: CATEGORICAL[i] ?? "#5B5570",
         }))}
-        centerLabel="subscriptions"
-        centerValue={PLANS.reduce((n, p) => n + p.subscribers, 0).toLocaleString()}
+        centerLabel={total === 1 ? "workspace" : "workspaces"}
+        centerValue={total.toLocaleString()}
       />
     </ChartFrame>
   );
 }
 
-export function SubscriptionChart() {
+export function WorkspaceChart({ workspaces }: { workspaces: SeriesPoint[] }) {
   return (
     <ChartFrame
-      title="Subscription growth"
-      subtitle="Paid subscriptions, last 30 days"
+      title="Workspace growth"
+      subtitle={`Workspaces created, last ${Math.max(workspaces.length - 1, 0)} days`}
       table={{
-        columns: ["Date", "Subscriptions"],
-        rows: SUBSCRIPTION_SERIES.map((p) => [p.date, p.value]),
+        columns: ["Date", "Workspaces"],
+        rows: workspaces.map((point) => [point.date, point.value]),
       }}
     >
       <LineChart
-        labels={SUBSCRIPTION_SERIES.map((p) => p.date)}
+        labels={workspaces.map((point) => point.date)}
         series={[
           {
-            key: "subs",
-            label: "Subscriptions",
+            key: "workspaces",
+            label: "Workspaces",
             color: CATEGORICAL[5],
-            values: SUBSCRIPTION_SERIES.map((p) => p.value),
+            values: workspaces.map((point) => point.value),
           },
         ]}
         height={190}

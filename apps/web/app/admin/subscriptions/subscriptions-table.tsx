@@ -14,6 +14,7 @@ import {
 import { cn } from "@flow/utils";
 import { DataTable, type Column, type Filter } from "@/components/admin/data-table";
 import { ConfirmDialog, notWired } from "@/components/admin/confirm-dialog";
+import { setWorkspacePlan } from "@/lib/actions/admin";
 import { PlanBadge, StatusBadge } from "@/components/admin/status-badge";
 import {
   PLANS,
@@ -101,10 +102,40 @@ export function SubscriptionsTable({ subscriptions }: { subscriptions: AdminSubs
                 <Receipt className="size-4" />
                 View invoices
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => notWired("Plan change started")}>
-                <ArrowUpDown className="size-4" />
-                Change plan
-              </DropdownMenuItem>
+              {/*
+                The plans are listed rather than opening a form: there
+                are five of them, and a submenu is fewer decisions than a
+                dialog with a select in it.
+              */}
+              {PLANS.filter((plan) => plan.id !== row.plan).map((plan) => (
+                <DropdownMenuItem
+                  key={plan.id}
+                  onSelect={() => {
+                    const previous = rows;
+                    setRows((current) =>
+                      current.map((item) =>
+                        item.id === row.id ? { ...item, plan: plan.id, status: "active" } : item
+                      )
+                    );
+                    void setWorkspacePlan({
+                      workspaceId: row.id,
+                      planId: plan.id,
+                      status: "active",
+                      seats: Math.max(1, row.amount > 0 ? Math.round(row.amount / Math.max(plan.price, 1)) : 1),
+                    }).then((result) => {
+                      if (result.error) {
+                        setRows(previous);
+                        toast.error(result.error);
+                        return;
+                      }
+                      toast.success(`Moved to ${plan.name}.`);
+                    });
+                  }}
+                >
+                  <ArrowUpDown className="size-4" />
+                  Move to {plan.name}
+                </DropdownMenuItem>
+              ))}
               <DropdownMenuSeparator />
               {row.status === "cancelled" ? (
                 <DropdownMenuItem onSelect={() => notWired("Subscription reactivated")}>
@@ -168,11 +199,27 @@ export function SubscriptionsTable({ subscriptions }: { subscriptions: AdminSubs
         confirmLabel="Cancel subscription"
         onConfirm={() => {
           if (!cancelling) return;
+          const target = cancelling;
+          const previous = rows;
           setRows((prev) =>
-            prev.map((row) => (row.id === cancelling.id ? { ...row, status: "cancelled" } : row))
+            prev.map((row) => (row.id === target.id ? { ...row, status: "cancelled" } : row))
           );
-          toast.success("Subscription cancelled — in this prototype only.");
           setCancelling(null);
+
+          // The row id IS the workspace id — one subscription per
+          // workspace, so the primary key is the workspace.
+          void setWorkspacePlan({
+            workspaceId: target.id,
+            planId: target.plan,
+            status: "cancelled",
+          }).then((result) => {
+            if (result.error) {
+              setRows(previous);
+              toast.error(result.error);
+              return;
+            }
+            toast.success("Subscription cancelled. The workspace is on Free.");
+          });
         }}
       />
     </>

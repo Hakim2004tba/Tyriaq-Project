@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { setUserSuspended } from "@/lib/actions/admin";
 import {
   Ban,
   CheckCircle2,
@@ -254,20 +255,43 @@ export function UsersTable({ users }: { users: AdminUser[] }) {
         }
         onConfirm={() => {
           if (!confirm) return;
+          const targets = confirm.targets;
+
           if (confirm.kind === "delete") {
-            const ids = new Set(confirm.targets.map((t) => t.id));
-            setRows((prev) => prev.filter((row) => !ids.has(row.id)));
-            setOpen(null);
-          } else {
-            apply(confirm.targets, confirm.kind === "suspend" ? "suspended" : "active");
+            /*
+              Deleting an account is not offered for real, and saying so
+              is better than doing something else quietly. It would have
+              to decide what happens to everything they wrote, and
+              "suspended" is the reversible answer to almost every reason
+              somebody reaches for delete.
+            */
+            toast.info("Deleting accounts is not available — suspend instead.");
+            setConfirm(null);
+            return;
           }
+
+          const suspending = confirm.kind === "suspend";
+          apply(targets, suspending ? "suspended" : "active");
           confirm.clear?.();
-          toast.success(
-            `${confirm.targets.length} ${confirm.targets.length === 1 ? "account" : "accounts"} ${
-              confirm.kind === "delete" ? "deleted" : confirm.kind === "suspend" ? "suspended" : "reactivated"
-            } — in this prototype only.`
-          );
           setConfirm(null);
+
+          void Promise.all(
+            targets.map((target) => setUserSuspended(target.id, suspending))
+          ).then((results) => {
+            const failed = results.filter((result) => result.error);
+            if (failed.length > 0) {
+              // Put them back: the table was showing a state the server
+              // refused.
+              apply(targets, suspending ? "active" : "suspended");
+              toast.error(failed[0]!.error ?? "Could not change those accounts.");
+              return;
+            }
+            toast.success(
+              `${targets.length} ${targets.length === 1 ? "account" : "accounts"} ${
+                suspending ? "suspended" : "restored"
+              }.`
+            );
+          });
         }}
       />
     </>

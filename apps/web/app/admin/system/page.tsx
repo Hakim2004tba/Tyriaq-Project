@@ -1,126 +1,128 @@
 import type { JSX } from "react";
 import { AlertTriangle, Info } from "lucide-react";
-import { cn } from "@flow/utils";
-import { AdminPage, PageHeader, SampleDataNote } from "@/components/admin/page-header";
+import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { AUDIT, RECENT_ERRORS, SERVICES, formatWhen } from "@/lib/data/admin-sample";
+import { getSystemHealth } from "@/lib/data/admin";
 
 export const metadata = { title: "System" };
 
-export default function AdminSystemPage(): JSX.Element {
-  const degraded = SERVICES.filter((s) => s.state !== "operational");
+/**
+ * What can actually be measured from inside this process.
+ *
+ * The previous version drew six services with uptime percentages, p95
+ * latencies and a list of recent errors — all invented. None of it was
+ * reachable from here: this is a serverless function that can talk to
+ * the database and read its own environment, and nothing else.
+ *
+ * So the page answers only what it can: is the database reachable and
+ * how fast, how much is stored in it, and which optional pieces are
+ * configured. Everything removed was a number that would have been read
+ * as fact.
+ */
+export default async function AdminSystemPage(): Promise<JSX.Element> {
+  const health = await getSystemHealth();
+
+  const checks = [
+    {
+      name: "Database",
+      detail: health?.databaseReachable
+        ? `Answered in ${health.latencyMs} ms`
+        : "Could not be reached from this request",
+      state: health?.databaseReachable ? "operational" : "down",
+    },
+    {
+      name: "Back-office access",
+      detail: health?.serviceRoleConfigured
+        ? "Service-role key present"
+        : "SUPABASE_SERVICE_ROLE_KEY is missing — this panel cannot read platform data",
+      state: health?.serviceRoleConfigured ? "operational" : "down",
+    },
+    {
+      name: "Email",
+      detail: health?.mailConfigured
+        ? "RESEND_API_KEY present"
+        : "No provider — mail is written to the log instead of sent",
+      state: health?.mailConfigured ? "operational" : "degraded",
+    },
+    {
+      name: "Daily digest",
+      detail: health?.cronConfigured
+        ? "CRON_SECRET present; runs at 07:00 UTC"
+        : "No CRON_SECRET — the scheduled run is unauthenticated",
+      state: health?.cronConfigured ? "operational" : "degraded",
+    },
+  ] as const;
+
+  const unwell = checks.filter((check) => check.state !== "operational");
 
   return (
     <AdminPage>
-      <PageHeader
-        title="System"
-        subtitle="Service health, background work and recent errors"
-      />
+      <PageHeader title="System" subtitle="What this deployment can and cannot do" />
 
       {/*
-        The banner leads with the exception, not the summary. "5 of 6
-        operational" is a number nobody acts on; "storage is degraded" is.
+        The banner leads with the exception, not the summary. "3 of 4
+        operational" is a number nobody acts on; "email is not
+        configured" is.
       */}
-      {degraded.length > 0 ? (
+      {unwell.length > 0 ? (
         <div className="flex items-start gap-2.5 rounded-lg border border-warning/40 bg-warning-subtle px-3 py-2.5">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
           <p className="min-w-0 text-body-sm text-text-primary">
-            {degraded.map((s) => s.name).join(", ")}{" "}
-            {degraded.length === 1 ? "is" : "are"} degraded —{" "}
-            <span className="text-text-secondary">{degraded[0]!.detail.toLowerCase()}</span>.
+            {unwell.map((check) => check.name).join(", ")}{" "}
+            {unwell.length === 1 ? "needs" : "need"} attention —{" "}
+            <span className="text-text-secondary">{unwell[0]!.detail}</span>.
           </p>
         </div>
       ) : (
         <div className="flex items-center gap-2.5 rounded-lg border border-success/40 bg-success-subtle px-3 py-2.5">
           <Info className="size-4 shrink-0 text-success" aria-hidden="true" />
-          <p className="text-body-sm text-text-primary">Everything is operational.</p>
+          <p className="text-body-sm text-text-primary">Everything this page can check is fine.</p>
         </div>
       )}
 
-      <SampleDataNote />
-
-      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {SERVICES.map((service) => (
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {checks.map((check) => (
           <li
-            key={service.id}
-            className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 shadow-card"
+            key={check.name}
+            className="flex items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3 shadow-card"
           >
-            <div className="flex items-start justify-between gap-2">
-              <h2 className="truncate text-body font-medium text-text-primary">{service.name}</h2>
-              <StatusBadge status={service.state} />
-            </div>
-            <p className="text-body-sm text-text-secondary">{service.detail}</p>
-            <dl className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2.5 text-caption">
-              <div>
-                <dt className="text-text-muted">Uptime (30 d)</dt>
-                <dd className="tabular text-text-primary">{service.uptime}</dd>
-              </div>
-              <div className="text-right">
-                <dt className="text-text-muted">Latency</dt>
-                <dd
-                  className={cn(
-                    "tabular",
-                    service.latencyMs > 300 ? "text-warning" : "text-text-primary"
-                  )}
-                >
-                  {service.latencyMs} ms
-                </dd>
-              </div>
-            </dl>
+            <span className="min-w-0 flex-1">
+              <span className="block text-body-sm font-medium text-text-primary">{check.name}</span>
+              <span className="mt-0.5 block text-caption text-text-muted">{check.detail}</span>
+            </span>
+            <StatusBadge status={check.state} />
           </li>
         ))}
       </ul>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <section className="min-w-0 rounded-xl border border-border bg-surface p-4 shadow-card">
-          <h2 className="mb-3 text-body font-medium text-text-primary">Recent errors</h2>
-          <ul className="flex flex-col divide-y divide-border">
-            {RECENT_ERRORS.map((error) => (
-              <li key={error.id} className="flex items-start gap-2.5 py-2.5">
-                <span
-                  className={cn(
-                    "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full",
-                    error.level === "error"
-                      ? "bg-danger-subtle text-danger"
-                      : "bg-warning-subtle text-warning"
-                  )}
-                  aria-hidden="true"
-                >
-                  <AlertTriangle className="size-3" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-body-sm text-text-primary">{error.message}</span>
-                  <span className="block truncate text-caption text-text-muted">
-                    {error.service} · {formatWhen(error.at)}
-                  </span>
-                </span>
-                <span className="shrink-0 rounded-md bg-surface-elevated px-1.5 py-0.5 text-caption tabular text-text-secondary">
-                  ×{error.count}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-card">
+        <h2 className="text-body font-medium text-text-primary">What is in the database</h2>
+        <p className="mt-0.5 text-caption text-text-muted">
+          Counted now, across every workspace.
+        </p>
+        <ul className="mt-3 grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          {(health?.rows ?? []).map((row) => (
+            <li key={row.table} className="rounded-lg border border-border bg-surface-muted px-3 py-2.5">
+              <p className="text-caption capitalize text-text-muted">{row.table}</p>
+              <p className="mt-0.5 text-h4 tabular text-text-primary">
+                {row.count.toLocaleString()}
+              </p>
+            </li>
+          ))}
+          <li className="rounded-lg border border-border bg-surface-muted px-3 py-2.5">
+            <p className="text-caption text-text-muted">Attachments</p>
+            <p className="mt-0.5 text-h4 tabular text-text-primary">
+              {(health?.storageMb ?? 0).toLocaleString()} MB
+            </p>
+          </li>
+        </ul>
+      </section>
 
-        <section className="min-w-0 rounded-xl border border-border bg-surface p-4 shadow-card">
-          <h2 className="mb-3 text-body font-medium text-text-primary">System activity</h2>
-          <ul className="flex flex-col divide-y divide-border">
-            {AUDIT.filter((a) => a.kind === "system" || a.result !== "success")
-              .slice(0, 6)
-              .map((entry) => (
-                <li key={entry.id} className="flex items-start gap-2.5 py-2.5">
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body-sm text-text-primary">{entry.action}</span>
-                    <span className="block truncate text-caption text-text-muted">
-                      {entry.target} · {entry.admin}
-                    </span>
-                  </span>
-                  <StatusBadge status={entry.result} />
-                </li>
-              ))}
-          </ul>
-        </section>
-      </div>
+      <p className="text-caption text-text-muted">
+        Uptime history, request latency and error tracking are not here because this process cannot
+        measure them. They belong to the hosting dashboard and to whatever error tracker gets
+        added — a graph drawn from numbers this page made up would be read as fact.
+      </p>
     </AdminPage>
   );
 }

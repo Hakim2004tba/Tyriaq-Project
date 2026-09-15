@@ -1,7 +1,6 @@
 import type { JSX } from "react";
 import Link from "next/link";
 import {
-  ArrowUpRight,
   Building2,
   CreditCard,
   DollarSign,
@@ -11,19 +10,17 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Avatar } from "@flow/ui";
-import { cn } from "@flow/utils";
 import { AdminPage, PageHeader, SampleDataNote } from "@/components/admin/page-header";
 import { PlanBadge, StatusBadge } from "@/components/admin/status-badge";
-import { GrowthChart, PlanDonut, SubscriptionChart } from "./overview-charts";
+import { GrowthChart, PlanDonut, WorkspaceChart } from "./overview-charts";
+import { formatMoney, formatWhen } from "@/lib/data/admin-sample";
 import {
-  AUDIT,
-  KPIS,
-  SERVICES,
-  USERS,
-  WORKSPACES,
-  formatMoney,
-  formatWhen,
-} from "@/lib/data/admin-sample";
+  getAdminAudit,
+  getAdminOverview,
+  getAdminUsers,
+  getAdminWorkspaces,
+  getSystemHealth,
+} from "@/lib/data/admin";
 
 export const metadata = { title: "Overview" };
 
@@ -31,37 +28,61 @@ interface KpiCard {
   label: string;
   icon: typeof Users;
   value: number;
-  previous: number;
   format: (n: number) => string;
-  /** True where down is the good direction — churn, not signups. */
-  invert?: boolean;
 }
 
-const KPI_CARDS: KpiCard[] = [
-  { label: "Total users", icon: Users, ...KPIS.totalUsers, format: (n: number) => n.toLocaleString() },
-  { label: "Active users", icon: UserCheck, ...KPIS.activeUsers, format: (n: number) => n.toLocaleString() },
-  { label: "Workspaces", icon: Building2, ...KPIS.workspaces, format: (n: number) => n.toLocaleString() },
-  { label: "Active subscriptions", icon: CreditCard, ...KPIS.subscriptions, format: (n: number) => n.toLocaleString() },
-  { label: "MRR", icon: DollarSign, ...KPIS.mrr, format: formatMoney },
-  { label: "New users", icon: UserPlus, ...KPIS.newUsers, format: (n: number) => n.toLocaleString() },
-  { label: "Churned", icon: UserMinus, ...KPIS.churned, format: (n: number) => n.toLocaleString(), invert: true },
-];
+export default async function AdminOverview(): Promise<JSX.Element> {
+  const [overview, users, workspaces, audit, health] = await Promise.all([
+    getAdminOverview(),
+    getAdminUsers(),
+    getAdminWorkspaces(),
+    getAdminAudit(),
+    getSystemHealth(),
+  ]);
 
-export default function AdminOverview(): JSX.Element {
+  /*
+    No month-on-month arrows.
+
+    The sample data carried a "previous" figure for every number, and
+    computing a real one means keeping history this schema does not keep
+    — a count of users a month ago cannot be recovered from a table of
+    users that exist now. A green arrow with a made-up denominator is
+    worse than no arrow, so the cards state the figure and stop.
+  */
+  const KPI_CARDS: KpiCard[] = [
+    { label: "Total users", icon: Users, value: overview?.totalUsers ?? 0, format: (n) => n.toLocaleString() },
+    { label: "Active users", icon: UserCheck, value: overview?.activeUsers ?? 0, format: (n) => n.toLocaleString() },
+    { label: "Workspaces", icon: Building2, value: overview?.workspaces ?? 0, format: (n) => n.toLocaleString() },
+    { label: "Subscriptions", icon: CreditCard, value: overview?.subscriptions ?? 0, format: (n) => n.toLocaleString() },
+    { label: "MRR", icon: DollarSign, value: overview?.mrr ?? 0, format: formatMoney },
+    { label: "New users", icon: UserPlus, value: overview?.newUsers ?? 0, format: (n) => n.toLocaleString() },
+    { label: "Churned", icon: UserMinus, value: overview?.churned ?? 0, format: (n) => n.toLocaleString() },
+  ];
+
+  const recentUsers = [...(users ?? [])]
+    .sort((a, b) => b.joined.localeCompare(a.joined))
+    .slice(0, 5);
+  const recentWorkspaces = [...(workspaces ?? [])]
+    .sort((a, b) => b.created.localeCompare(a.created))
+    .slice(0, 5);
+
   return (
     <AdminPage>
       <PageHeader
         title="Overview"
         subtitle={`Platform-wide, updated ${formatWhen(new Date().toISOString())}`}
       />
-      <SampleDataNote />
+      {!overview && (
+        <SampleDataNote>
+          SUPABASE_SERVICE_ROLE_KEY is not set, so these figures cannot be read. Every number below
+          is zero rather than invented.
+        </SampleDataNote>
+      )}
 
       {/* ----------------------------- KPI row ---------------------------- */}
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         {KPI_CARDS.map((kpi) => {
           const Icon = kpi.icon;
-          const delta = kpi.previous === 0 ? 0 : Math.round(((kpi.value - kpi.previous) / kpi.previous) * 100);
-          const good = kpi.invert ? delta <= 0 : delta >= 0;
           return (
             <li
               key={kpi.label}
@@ -74,11 +95,6 @@ export default function AdminOverview(): JSX.Element {
                 <span className="truncate text-caption text-text-muted">{kpi.label}</span>
               </span>
               <span className="text-h2 tabular text-text-primary">{kpi.format(kpi.value)}</span>
-              <span className={cn("flex items-center gap-1 text-caption", good ? "text-success" : "text-danger")}>
-                <ArrowUpRight className={cn("size-3 shrink-0", delta < 0 && "rotate-90")} aria-hidden="true" />
-                {delta > 0 ? "+" : ""}
-                {delta}% this month
-              </span>
             </li>
           );
         })}
@@ -87,16 +103,19 @@ export default function AdminOverview(): JSX.Element {
       {/* ----------------------------- charts ----------------------------- */}
       <div className="grid gap-4 xl:grid-cols-3">
         <section className="rounded-xl border border-border bg-surface p-4 shadow-card xl:col-span-2">
-          <GrowthChart />
+          <GrowthChart
+            users={overview?.userSeries ?? []}
+            workspaces={overview?.workspaceSeries ?? []}
+          />
         </section>
         <section className="rounded-xl border border-border bg-surface p-4 shadow-card">
-          <PlanDonut />
+          <PlanDonut distribution={overview?.planDistribution ?? []} />
         </section>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <section className="rounded-xl border border-border bg-surface p-4 shadow-card xl:col-span-2">
-          <SubscriptionChart />
+          <WorkspaceChart workspaces={overview?.workspaceSeries ?? []} />
         </section>
 
         {/* ---------------------------- system --------------------------- */}
@@ -107,15 +126,41 @@ export default function AdminOverview(): JSX.Element {
               Details
             </Link>
           </div>
+          {/*
+            What can be measured from here, and nothing else. Uptime
+            percentages and CPU graphs were sample data: this process has
+            no way to know either, and a dial reading 99.98% because
+            somebody typed it is worse than no dial.
+          */}
           <ul className="flex flex-col gap-2">
-            {SERVICES.slice(0, 5).map((service) => (
-              <li key={service.id} className="flex items-center gap-2.5">
+            {[
+              {
+                name: "Database",
+                detail: health?.databaseReachable ? `${health.latencyMs} ms` : "unreachable",
+                state: health?.databaseReachable ? "operational" : "down",
+              },
+              {
+                name: "Email",
+                detail: health?.mailConfigured ? "provider configured" : "not configured",
+                state: health?.mailConfigured ? "operational" : "degraded",
+              },
+              {
+                name: "Daily digest",
+                detail: health?.cronConfigured ? "scheduled" : "no CRON_SECRET",
+                state: health?.cronConfigured ? "operational" : "degraded",
+              },
+              {
+                name: "Back-office access",
+                detail: health?.serviceRoleConfigured ? "service role present" : "key missing",
+                state: health?.serviceRoleConfigured ? "operational" : "down",
+              },
+            ].map((service) => (
+              <li key={service.name} className="flex items-center gap-2.5">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-body-sm text-text-primary">{service.name}</span>
                   <span className="block truncate text-caption text-text-muted">{service.detail}</span>
                 </span>
-                <span className="shrink-0 text-caption tabular text-text-muted">{service.uptime}</span>
-                <StatusBadge status={service.state} />
+                <StatusBadge status={service.state as "operational" | "degraded" | "down"} />
               </li>
             ))}
           </ul>
@@ -132,9 +177,9 @@ export default function AdminOverview(): JSX.Element {
             </Link>
           </div>
           <ul className="flex flex-col divide-y divide-border">
-            {USERS.slice(0, 5).map((user) => (
+            {recentUsers.map((user) => (
               <li key={user.id} className="flex items-center gap-2.5 py-2">
-                <Avatar name={user.name} size="sm" />
+                <Avatar name={user.name} src={undefined} size="sm" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-body-sm text-text-primary">{user.name}</span>
                   <span className="block truncate text-caption text-text-muted">{user.email}</span>
@@ -153,7 +198,7 @@ export default function AdminOverview(): JSX.Element {
             </Link>
           </div>
           <ul className="flex flex-col divide-y divide-border">
-            {WORKSPACES.slice(0, 5).map((workspace) => (
+            {recentWorkspaces.map((workspace) => (
               <li key={workspace.id} className="flex items-center gap-2.5 py-2">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-caption font-semibold text-text-secondary ring-1 ring-inset ring-border">
                   {workspace.name.slice(0, 1)}
@@ -178,7 +223,7 @@ export default function AdminOverview(): JSX.Element {
             </Link>
           </div>
           <ul className="flex flex-col divide-y divide-border">
-            {AUDIT.slice(0, 5).map((entry) => (
+            {(audit ?? []).slice(0, 5).map((entry) => (
               <li key={entry.id} className="flex items-start gap-2.5 py-2">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-body-sm text-text-primary">{entry.action}</span>
