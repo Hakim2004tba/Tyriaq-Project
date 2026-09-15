@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentWorkspace } from "@/lib/data/queries";
+import { checkPlanAllows } from "./billing";
 import { sendMail } from "@/lib/mail/send";
 import { layout } from "@/lib/mail/templates";
 import type { ActionResult } from "./workspace";
@@ -88,6 +89,14 @@ export async function inviteToWorkspace(
   if (!user) return { error: "Sign in first." };
   const ws = await getCurrentWorkspace();
   if (!ws) return { error: "No workspace selected." };
+
+  // Checked when the invitation is SENT rather than when it is accepted:
+  // discovering the workspace is full after somebody has made an account
+  // and clicked a link is a bad way to meet a product.
+  const room = await checkPlanAllows("member");
+  if (!room.allowed) {
+    return { error: `${room.reason ?? "Your plan is full."} Upgrade to invite more people.` };
+  }
 
   const supabase = await createClient();
 

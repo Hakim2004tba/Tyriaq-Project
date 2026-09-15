@@ -17,11 +17,19 @@ export function UpgradeCard() {
         <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
         Tyriaq Pro
       </p>
+      {/*
+        What the paid plans actually give.
+
+        This advertised "automations and advanced reporting" — neither of
+        which exists. An upsell for a feature that is not there is the
+        fastest way to teach somebody that the rest of the product's
+        claims are decoration too.
+      */}
       <p className="mt-1 text-caption leading-[17px] text-text-secondary">
-        Unlimited spaces, automations and advanced reporting.
+        More people, more projects, and room for your files.
       </p>
       <Link
-        href="/app/settings/workspace/billing"
+        href="/settings/billing"
         className="mt-3 flex h-8 items-center justify-center rounded-md bg-brand text-label font-medium text-white
                    shadow-glow-sm transition-all duration-fast hover:bg-brand-hover hover:shadow-glow-md
                    focus-visible:outline-none focus-visible:shadow-focus"

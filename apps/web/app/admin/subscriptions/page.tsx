@@ -4,11 +4,24 @@ import { ChartFrame } from "@/components/reports/charts/chart-frame";
 import { DonutChart } from "@/components/reports/charts/donut-chart";
 import { CATEGORICAL } from "@/components/reports/charts/palette";
 import { SubscriptionsTable } from "./subscriptions-table";
-import { PLANS, SUBSCRIPTIONS, formatMoney } from "@/lib/data/admin-sample";
+import { PLANS, SUBSCRIPTIONS as SAMPLE_SUBSCRIPTIONS, formatMoney } from "@/lib/data/admin-sample";
+import { getRealSubscriptions } from "@/lib/data/admin-billing";
 
 export const metadata = { title: "Subscriptions" };
 
-export default function AdminSubscriptionsPage(): JSX.Element {
+export default async function AdminSubscriptionsPage(): Promise<JSX.Element> {
+  /*
+    Real rows when there are any, and the sample set when there are not.
+
+    A back office that renders an empty table on the day the product has
+    no paying customers is correct and useless — the sample data is what
+    makes the screen reviewable before anybody has paid. Which it is
+    saying at the top, so nobody mistakes one for the other.
+  */
+  const real = await getRealSubscriptions();
+  const live = real !== null && real.length > 0;
+  const SUBSCRIPTIONS = live ? real : SAMPLE_SUBSCRIPTIONS;
+
   const by = (status: string) => SUBSCRIPTIONS.filter((s) => s.status === status);
   const active = by("active");
 
@@ -28,7 +41,14 @@ export default function AdminSubscriptionsPage(): JSX.Element {
   return (
     <AdminPage>
       <PageHeader title="Subscriptions" subtitle="Billing across every workspace" />
-      <SampleDataNote />
+      {/* The note appears only when the table is showing made-up rows —
+          leaving it on real data would teach staff to ignore it. */}
+      {!live && (
+        <SampleDataNote>
+          No workspace has a subscription yet, so this shows sample rows. Real ones appear here as
+          soon as one does.
+        </SampleDataNote>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <ul className="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">

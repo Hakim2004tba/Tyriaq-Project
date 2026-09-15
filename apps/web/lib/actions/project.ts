@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/data/queries";
+import { checkPlanAllows } from "./billing";
 import { slugify, type ProjectStatus, type SpaceColor } from "@/lib/data/types";
 import type { ActionResult } from "./workspace";
 
@@ -31,6 +32,18 @@ export async function createProject(_prev: ActionResult, formData: FormData): Pr
 
   const base = slugify(name);
   if (!base) return { error: "Use at least one letter or number." };
+
+  /*
+    The plan's limit, checked before anything is written.
+
+    Checked here rather than in a policy because the answer has to be a
+    sentence: "the Free plan allows 2 projects" is something somebody
+    can act on, where a refused insert is an error they cannot read.
+  */
+  const room = await checkPlanAllows("project");
+  if (!room.allowed) {
+    return { error: `${room.reason ?? "Your plan is full."} Upgrade to add more.` };
+  }
 
   const supabase = await createClient();
 

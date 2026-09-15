@@ -55,14 +55,17 @@ export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boo
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/settings/profile">
+          <Link href="/settings/people">
             <Settings className="size-4" />
-            Settings
+            People &amp; permissions
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Sparkles className="size-4" />
-          Upgrade to Pro
+        {/* Was a menu item that did nothing at all when clicked. */}
+        <DropdownMenuItem asChild>
+          <Link href="/settings/billing">
+            <Sparkles className="size-4" />
+            Plan &amp; billing
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* A form, not an onClick: sign-out clears an httpOnly cookie,

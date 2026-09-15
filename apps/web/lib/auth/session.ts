@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -107,4 +107,30 @@ export async function requireWorkspace() {
   const workspaces = await getWorkspaces();
   if (workspaces.length === 0) redirect("/onboarding");
   return workspaces;
+}
+
+/**
+ * Whether the caller may open the back office.
+ *
+ * Reads `platform_admins`, which no session can write — the first staff
+ * member is added with SQL by somebody holding the database credentials,
+ * so there is no path from a browser to granting yourself the admin
+ * panel.
+ */
+export async function isPlatformAdmin(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("is_platform_admin");
+  if (error) {
+    // Before the migration is applied the function does not exist, and
+    // the safe reading of "I cannot tell" is no.
+    console.error("[tyriaq] could not check platform admin:", error.message);
+    return false;
+  }
+  return data === true;
+}
+
+/** The back office, or a 404 for everybody else. */
+export async function requirePlatformAdmin(): Promise<void> {
+  const allowed = await isPlatformAdmin();
+  if (!allowed) notFound();
 }

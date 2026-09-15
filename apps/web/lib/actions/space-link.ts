@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { mailPerson } from "@/lib/mail/notify";
+import { checkPlanAllows } from "./billing";
 import type { PermissionLevel } from "@/lib/data/permissions";
 import type { SpaceColor } from "@/lib/data/types";
 import { reportReadError } from "@/lib/data/report";
@@ -190,6 +191,18 @@ export async function decideJoinRequest(
   level: PermissionLevel = "editor",
   projectLevels: Record<string, PermissionLevel> = {}
 ): Promise<ActionResult> {
+  /*
+    Approving somebody adds them to the workspace, so it is the same
+    limit — and the same reason to say so before the decision rather
+    than after it.
+  */
+  if (approve) {
+    const room = await checkPlanAllows("member");
+    if (!room.allowed) {
+      return { error: `${room.reason ?? "Your plan is full."} Upgrade to let more people in.` };
+    }
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.rpc("decide_space_join", {
     request_id: requestId,
