@@ -42,44 +42,25 @@ export async function createSpace(_prev: ActionResult, formData: FormData): Prom
   } = await supabase.auth.getUser();
   if (!user) return { error: "You are signed out." };
 
-  const { data: created, error } = await supabase
-    .from("spaces")
-    .insert({
-      workspace_id: ws.id,
-      name,
-      slug,
-      description,
-      icon,
-      color,
-      created_by: user.id,
-    })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
-
   /*
-    The creator joins their own space, as its admin.
+    Through the RPC, not a direct insert.
 
-    Since a space became a boundary rather than a folder, membership is
-    what makes it visible — and without this row somebody who is not a
-    workspace admin would create a space and immediately lose sight of
-    it. The insert is separate rather than in a trigger because the
-    space has to exist first; if it fails, the space still exists and an
-    admin can add them, which is a better outcome than refusing to
-    create it at all.
+    The space and its first membership have to be written together: a
+    space is only visible to its members, so a creator without that row
+    cannot see what they just made — and cannot add themselves either,
+    because adding somebody to a space requires already being able to
+    manage it. Doing the two separately is what made "new row violates
+    row-level security policy for table spaces" appear on a form that
+    was, in fact, allowed to insert.
   */
-  if (created?.id) {
-    const { error: membershipError } = await supabase.from("space_members").insert({
-      space_id: created.id,
-      user_id: user.id,
-      workspace_id: ws.id,
-      level: "admin",
-      added_by: user.id,
-    });
-    if (membershipError) {
-      console.error("[tyriaq] space created without its creator:", membershipError);
-    }
-  }
+  const { error } = await supabase.rpc("create_space", {
+    space_name: name,
+    space_slug: slug,
+    space_description: description,
+    space_icon: icon,
+    space_color: color,
+  });
+  if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
   return { message: `${name} created.` };
