@@ -72,6 +72,40 @@ export async function setMutedKinds(kinds: NotificationKind[]): Promise<ActionRe
 }
 
 /**
+ * Whether email leaves the building, and when.
+ *
+ * Two switches rather than one: "tell me the moment somebody names me"
+ * and "send me the rest once a day" are different appetites, and a
+ * single on/off makes people turn everything off to stop the noisy half.
+ */
+export async function setEmailPreferences(input: {
+  digest?: boolean;
+  mentions?: boolean;
+}): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+  const ws = await getCurrentWorkspace();
+  if (!ws) return { error: "No workspace selected." };
+
+  const supabase = await createClient();
+  const patch: Record<string, boolean> = {};
+  if (input.digest !== undefined) patch.email_digest = input.digest;
+  if (input.mentions !== undefined) patch.email_mentions = input.mentions;
+  if (Object.keys(patch).length === 0) return {};
+
+  const { error } = await supabase
+    .from("notification_preferences")
+    .upsert(
+      { user_id: user.id, workspace_id: ws.id, ...patch },
+      { onConflict: "user_id,workspace_id" }
+    );
+
+  if (error) return { error: error.message };
+  refresh();
+  return { message: "Saved." };
+}
+
+/**
  * Runs the due-date sweep.
  *
  * Deadlines pass without anything being written, so no trigger can fire

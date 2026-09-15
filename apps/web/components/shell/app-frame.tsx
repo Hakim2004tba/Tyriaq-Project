@@ -36,6 +36,7 @@ import {
 import { useSession } from "@/components/auth/session-provider";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { CommandBar } from "./command-bar";
+import { CommandPalette } from "./command-palette";
 import { SpaceTree } from "./space-tree";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { UpgradeCard } from "./upgrade-card";
@@ -86,6 +87,7 @@ export function AppFrame({
   const session = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -310,6 +312,11 @@ export function AppFrame({
         </>
       )}
 
+      {/* Mounted on the frame rather than the top bar: ⌘K has to work on
+          a page scrolled past the header, and on mobile where the field
+          is not rendered at all. */}
+      <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
+
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar className="sticky top-0 z-30">
           {isMobile && (
@@ -321,14 +328,14 @@ export function AppFrame({
 
           <div className="hidden min-w-0 flex-1 justify-center md:flex">
             <div className="w-full max-w-lg">
-              <CommandBar />
+              <CommandBar onOpen={() => setSearchOpen(true)} />
             </div>
           </div>
 
           <div className="ml-auto flex items-center gap-1">
             {/* On mobile the palette collapses to its icon — the field
                 would leave no room for the workspace switcher. */}
-            <IconButton label="Search" className="md:hidden">
+            <IconButton label="Search" className="md:hidden" onClick={() => setSearchOpen(true)}>
               <Search className="size-[18px]" />
             </IconButton>
 

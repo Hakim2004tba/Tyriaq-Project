@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { Kbd } from "@flow/ui";
 
@@ -9,27 +8,15 @@ import { Kbd } from "@flow/ui";
  *
  * Rendered as a button, not an input: search in Tyriaq opens a command
  * palette rather than filtering in place, and a real <input> here would
- * promise inline typing it doesn't deliver. ⌘K / Ctrl-K focuses it from
- * anywhere, which is why the hint is part of the control.
+ * promise inline typing it doesn't deliver.
+ *
+ * The ⌘K shortcut is handled by the palette rather than here — this
+ * button is hidden on small screens, and the shortcut has to work there
+ * too. The hint stays because this is where people look for it.
  */
 export function CommandBar({ onOpen }: { onOpen?: () => void }) {
-  const ref = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        ref.current?.focus();
-        onOpen?.();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onOpen]);
-
   return (
     <button
-      ref={ref}
       type="button"
       onClick={onOpen}
       className="group flex h-9 w-full items-center gap-2.5 rounded-md border border-border bg-surface-muted px-3 text-left

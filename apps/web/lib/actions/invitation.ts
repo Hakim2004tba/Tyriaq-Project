@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentWorkspace } from "@/lib/data/queries";
+import { sendMail } from "@/lib/mail/send";
+import { layout } from "@/lib/mail/templates";
 import type { ActionResult } from "./workspace";
 
 /**
@@ -117,8 +119,32 @@ export async function inviteToWorkspace(
     return { error: error.message };
   }
 
+  const url = invitationUrl(data!.token);
+
+  /*
+    The link is shown AND sent. Showing it is what makes invitations work
+    with no mail provider configured; sending it is what makes them work
+    without the inviter having to copy anything into WhatsApp.
+  */
+  const workspaceName = ws.name;
+  const { text, html } = layout({
+    heading: `You have been invited to ${workspaceName}`,
+    intro: "Open the link below to join. It expires in 14 days.",
+    action: { label: `Join ${workspaceName}`, href: url },
+    footer: "You are receiving this because somebody invited you to a Tyriaq workspace.",
+  });
+  const mail = await sendMail({
+    to: address,
+    subject: `Join ${workspaceName} on Tyriaq`,
+    text,
+    html,
+  });
+
   revalidatePath("/", "layout");
-  return { message: "Invitation ready to send.", url: invitationUrl(data!.token) };
+  return {
+    message: mail.sent ? "Invitation sent." : "Invitation ready to send.",
+    url,
+  };
 }
 
 export async function revokeInvitation(id: string): Promise<ActionResult> {

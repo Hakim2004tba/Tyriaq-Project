@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { mailPerson } from "@/lib/mail/notify";
 import type { PermissionLevel } from "@/lib/data/permissions";
 import type { SpaceColor } from "@/lib/data/types";
 import { reportReadError } from "@/lib/data/report";
@@ -198,6 +199,32 @@ export async function decideJoinRequest(
   });
 
   if (error) return { error: error.message };
+
+  // The person who asked is waiting on exactly this answer.
+  const { data: request } = await supabase
+    .from("space_join_requests")
+    .select("user_id, space_id, spaces(name, slug)")
+    .eq("id", requestId)
+    .maybeSingle();
+  const row = request as unknown as
+    | { user_id: string; space_id: string; spaces: { name: string; slug: string } | null }
+    | null;
+
+  if (row) {
+    const name = row.spaces?.name ?? "the space";
+    await mailPerson({
+      userId: row.user_id,
+      subject: approve ? `You are in ${name}` : `Your request to join ${name}`,
+      heading: approve ? `You are in ${name}` : `Your request to join ${name} was declined`,
+      intro: approve
+        ? "Everything in that space is now open to you."
+        : "If you think that is a mistake, ask whoever shared the link.",
+      ...(approve && row.spaces?.slug
+        ? { action: { label: `Open ${name}`, href: `/spaces/${row.spaces.slug}` } }
+        : {}),
+    });
+  }
+
   revalidatePath("/", "layout");
   return { message: approve ? "They are in." : "Request declined." };
 }
@@ -318,6 +345,34 @@ export async function requestToJoin(token: string, note: string): Promise<Action
   });
 
   if (error) return { error: error.message };
+
+  /*
+    The people who can approve it are mailed straight away rather than
+    left to the digest. A request nobody has seen is somebody waiting,
+    and "tomorrow morning" is a poor answer to a person who has just
+    been told to sit tight.
+  */
+  const preview = await previewJoinLink(token);
+  if (preview) {
+    const { data: approvers } = await supabase
+      .from("space_members")
+      .select("user_id")
+      .eq("space_id", preview.spaceId)
+      .eq("level", "admin");
+
+    const asker = await getCurrentUser();
+    for (const row of (approvers ?? []) as { user_id: string }[]) {
+      if (row.user_id === asker?.id) continue;
+      await mailPerson({
+        userId: row.user_id,
+        subject: `Somebody wants to join ${preview.spaceName}`,
+        heading: `Somebody asked to join ${preview.spaceName}`,
+        intro: note.trim() ? `They said: “${note.trim().slice(0, 300)}”` : undefined,
+        action: { label: "Review the request", href: `/spaces/${preview.spaceId}?members=1` },
+      });
+    }
+  }
+
   revalidatePath("/", "layout");
   return { message: "Asked. You will hear when somebody decides." };
 }

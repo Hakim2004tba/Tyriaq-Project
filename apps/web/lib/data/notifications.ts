@@ -21,9 +21,18 @@ export interface NotificationFeed {
   items: AppNotification[];
   unread: number;
   mutedKinds: NotificationKind[];
+  /** Whether mail leaves the building at all, and how promptly. */
+  emailDigest: boolean;
+  emailMentions: boolean;
 }
 
-export const EMPTY_FEED: NotificationFeed = { items: [], unread: 0, mutedKinds: [] };
+export const EMPTY_FEED: NotificationFeed = {
+  items: [],
+  unread: 0,
+  mutedKinds: [],
+  emailDigest: true,
+  emailMentions: true,
+};
 
 export async function getNotifications(limit = 40): Promise<NotificationFeed> {
   if (!isSupabaseConfigured) return EMPTY_FEED;
@@ -44,7 +53,7 @@ export async function getNotifications(limit = 40): Promise<NotificationFeed> {
       // `head: true` asks for the number without the rows — the badge
       // needs a count, not forty records it will not render.
       supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
-      supabase.from("notification_preferences").select("muted_kinds"),
+      supabase.from("notification_preferences").select("muted_kinds, email_digest, email_mentions"),
     ]);
 
   reportReadError("getNotifications", error);
@@ -80,8 +89,24 @@ export async function getNotifications(limit = 40): Promise<NotificationFeed> {
     }),
   }));
 
-  const muted = ((prefs ?? []) as unknown as { muted_kinds: NotificationKind[] }[])
-    .flatMap((row) => row.muted_kinds ?? []);
+  const rows = (prefs ?? []) as unknown as {
+    muted_kinds: NotificationKind[] | null;
+    email_digest: boolean | null;
+    email_mentions: boolean | null;
+  }[];
+  const muted = rows.flatMap((row) => row.muted_kinds ?? []);
 
-  return { items, unread: count ?? 0, mutedKinds: Array.from(new Set(muted)) };
+  /*
+    Off only if it is off everywhere. Preferences are per workspace and
+    this screen is one switch — reading it as "on unless every workspace
+    says otherwise" keeps the switch honest for the common case of one
+    workspace, without pretending the column is global.
+  */
+  return {
+    items,
+    unread: count ?? 0,
+    mutedKinds: Array.from(new Set(muted)),
+    emailDigest: rows.length === 0 || rows.some((row) => row.email_digest !== false),
+    emailMentions: rows.length === 0 || rows.some((row) => row.email_mentions !== false),
+  };
 }
