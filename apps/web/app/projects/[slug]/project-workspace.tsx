@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@flow/ui";
 import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
 import { TaskStoreProvider } from "@/components/tasks/task-store";
+import type { CustomField, CustomFieldValue } from "@flow/types";
 import type { Person, ProjectTask, TaskDetail } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { BoardView } from "./views/board-view";
@@ -62,6 +63,8 @@ export function ProjectWorkspace({
   details,
   people,
   workspaceId,
+  customFields,
+  fieldValues,
   currentUser,
 }: {
   project: Project;
@@ -69,6 +72,8 @@ export function ProjectWorkspace({
   details: Record<string, TaskDetail>;
   people: Person[];
   workspaceId: string;
+  customFields: CustomField[];
+  fieldValues: Record<string, Record<string, CustomFieldValue>>;
   currentUser: Person;
 }) {
   const router = useRouter();
@@ -118,6 +123,8 @@ export function ProjectWorkspace({
       details={details}
       people={people}
       workspaceId={workspaceId}
+      customFields={customFields}
+      fieldValues={fieldValues}
       currentUser={currentUser}
       projectId={project.id}
     >

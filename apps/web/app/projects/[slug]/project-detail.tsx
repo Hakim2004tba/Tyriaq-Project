@@ -35,6 +35,7 @@ import { cn } from "@flow/utils";
 import { SPACE_COLOR } from "@/components/shell";
 import { ProjectEditor } from "@/components/projects/project-editor";
 import { ProjectWorkspace } from "./project-workspace";
+import type { CustomField, CustomFieldValue } from "@flow/types";
 import type { Person, ProjectTask, TaskDetail } from "@/lib/data/task-types";
 import {
   addProjectMember,
@@ -69,6 +70,8 @@ export function ProjectDetail({
   tasks,
   taskDetails,
   workspaceId,
+  customFields,
+  fieldValues,
   currentUser,
 }: {
   project: Project;
@@ -78,6 +81,8 @@ export function ProjectDetail({
   tasks: ProjectTask[];
   taskDetails: Record<string, TaskDetail>;
   workspaceId: string;
+  customFields: CustomField[];
+  fieldValues: Record<string, Record<string, CustomFieldValue>>;
   currentUser: Person;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
@@ -287,6 +292,8 @@ export function ProjectDetail({
             details={taskDetails}
             workspaceId={workspaceId}
             people={workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))}
+            customFields={customFields}
+            fieldValues={fieldValues}
             currentUser={currentUser}
           />
         </div>

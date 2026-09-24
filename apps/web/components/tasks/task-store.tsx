@@ -29,6 +29,7 @@ import {
   setTaskStarred,
   updateTask as updateTaskAction,
 } from "@/lib/actions/task";
+import type { CustomField, CustomFieldValue } from "@flow/types";
 import { createClient } from "@/lib/supabase/client";
 import {
   attachmentKind,
@@ -116,6 +117,17 @@ export interface TaskStore {
   toggleAssignee: (taskId: string, personId: string) => void;
   /** Everyone who can be put on a task, or mentioned in a comment. */
   people: Person[];
+
+  /**
+   * The team's own columns, and what each task holds for them.
+   *
+   * Kept here rather than fetched by the panel so that opening a task
+   * costs nothing — the definitions are the same for every task on the
+   * board, and the values arrive with the tasks.
+   */
+  customFields: CustomField[];
+  fieldValues: Record<string, Record<string, CustomFieldValue>>;
+  setFieldValue: (taskId: string, fieldId: string, value: CustomFieldValue) => void;
 }
 
 const Ctx = createContext<TaskStore | null>(null);
@@ -176,11 +188,16 @@ export function TaskStoreProvider({
   projectId,
   workspaceId,
   currentUser,
+  customFields = [],
+  fieldValues: seedFieldValues = {},
   children,
 }: {
   tasks: ProjectTask[];
   details: Record<string, TaskDetail>;
   people: Person[];
+  /** Definitions and values for the team's own columns. */
+  customFields?: CustomField[];
+  fieldValues?: Record<string, Record<string, CustomFieldValue>>;
   /** Scopes the realtime channel; collaboration rows all carry it. */
   workspaceId: string | null;
   /** Where `addTask` puts a new task; the calendar passes the project of
@@ -191,6 +208,25 @@ export function TaskStoreProvider({
 }) {
   const [tasks, setTasks] = useState<ProjectTask[]>(seed);
   const [details, setDetails] = useState<Record<string, TaskDetail>>(seedDetails);
+  const [fieldValues, setFieldValues] =
+    useState<Record<string, Record<string, CustomFieldValue>>>(seedFieldValues);
+
+  /*
+    Local only. The write itself belongs to the component that made it,
+    which is already inside a transition and already knows how to put a
+    refused value back — this keeps every other view in step with it.
+  */
+  const setFieldValueLocal = useCallback(
+    (taskId: string, fieldId: string, value: CustomFieldValue) => {
+      setFieldValues((current) => {
+        const forTask = { ...(current[taskId] ?? {}) };
+        if (value === null || value === undefined || value === "") delete forTask[fieldId];
+        else forTask[fieldId] = value;
+        return { ...current, [taskId]: forTask };
+      });
+    },
+    []
+  );
 
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
@@ -1124,6 +1160,9 @@ export function TaskStoreProvider({
       topLevel: tasks.filter((t) => !t.parentId),
       details,
       people,
+      customFields,
+      fieldValues,
+      setFieldValue: setFieldValueLocal,
       orderOf: (status) => tasks.filter((t) => t.status === status && !t.parentId),
       getTask: (id) => tasks.find((t) => t.id === id),
       getDetail: (id) => details[id],
@@ -1150,7 +1189,7 @@ export function TaskStoreProvider({
       addDependency,
       removeDependency,
     }),
-    [tasks, details, people, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, setEstimate, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
+    [tasks, details, people, customFields, fieldValues, setFieldValueLocal, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, setEstimate, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

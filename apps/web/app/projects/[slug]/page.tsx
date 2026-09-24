@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/queries";
 import { getProjectTasks } from "@/lib/data/tasks";
 import { getCollaboration } from "@/lib/data/collaboration";
+import { getFieldValues, getProjectFields } from "@/lib/data/custom-fields";
 import { getCurrentUser, getProfile } from "@/lib/auth/session";
 import { ProjectDetail } from "./project-detail";
 
@@ -52,6 +53,10 @@ export default async function ProjectPage({
     refused.
   */
   const isAdmin = workspace?.role === "owner" || workspace?.role === "admin";
+  const [customFields, fieldValues] = await Promise.all([
+    getProjectFields(project.id),
+    getFieldValues(tasks.map((t) => t.id)),
+  ]);
   const collaboration = await getCollaboration(
     tasks.map((t) => t.id),
     user?.id ?? "",
@@ -80,6 +85,8 @@ export default async function ProjectPage({
       tasks={tasks}
       taskDetails={details}
       workspaceId={project.workspaceId}
+      customFields={customFields}
+      fieldValues={fieldValues}
       currentUser={{ id: user?.id ?? "", name: profile?.fullName || "You" }}
     />
   );

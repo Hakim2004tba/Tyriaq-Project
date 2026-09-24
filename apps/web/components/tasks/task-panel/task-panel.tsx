@@ -36,6 +36,7 @@ import { SPACE_COLOR } from "@/components/shell";
 import { initialsOf } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { discussTask } from "@/lib/actions/chat";
+import { CustomFieldsSection } from "./custom-fields-section";
 import { useTasks } from "../task-store";
 import { useDraft } from "../use-draft";
 import {
@@ -346,6 +347,27 @@ export function TaskPanel({
                       <span className="truncate">{project.spaceName}</span>
                     </Link>
                   </Field>
+
+                  {/*
+                    The team's own columns sit with the built-in ones
+                    rather than in a tab of their own. To the person
+                    filling them in there is no difference between
+                    "Priority" and "Client" — both are properties of the
+                    task, and separating them by who invented them is a
+                    distinction only the product cares about.
+                  */}
+                  {store.customFields.length > 0 && (
+                    <div className="mt-4 border-t border-border pt-4">
+                      <CustomFieldsSection
+                        taskId={task.id}
+                        fields={store.customFields.filter(
+                          (field) => field.projectId === null || field.projectId === task.projectId
+                        )}
+                        values={store.fieldValues[task.id] ?? {}}
+                        onChange={(fieldId, value) => store.setFieldValue(task.id, fieldId, value)}
+                      />
+                    </div>
+                  )}
 
                   <div className="mt-4 border-t border-border pt-4">
                     <TimeSection task={task} detail={detail} />

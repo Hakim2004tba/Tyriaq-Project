@@ -13,7 +13,7 @@ import {
   Plus,
   SplitSquareHorizontal,
 } from "lucide-react";
-import { Badge, Button, EmptyState, Progress } from "@flow/ui";
+import { Badge, Button, CustomFieldBadge, EmptyState, Progress } from "@flow/ui";
 import { cn } from "@flow/utils";
 import {
   TASK_STATUS_META,
@@ -224,6 +224,12 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
   function exportCsv() {
     const rows: (string | number)[][] = [];
 
+    // A column per field, so the export carries what the team actually
+    // tracks rather than only what Tyriaq invented.
+    const exported = store.customFields.filter(
+      (field) => field.projectId === null || field.projectId === project.id
+    );
+
     const line = (task: ProjectTask, parent: ProjectTask | null) => [
       parent ? parent.title : task.title,
       parent ? task.title : "",
@@ -237,6 +243,21 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
       store.getDetail(task.id)?.estimateMinutes
         ? (store.getDetail(task.id)!.estimateMinutes / 60).toFixed(1)
         : "",
+      ...exported.map((field) => {
+        const value = (store.fieldValues[task.id] ?? {})[field.id];
+        if (value === undefined || value === null) return "";
+        if (Array.isArray(value)) {
+          // Option ids mean nothing in a spreadsheet; the labels do.
+          return value
+            .map((id) => field.options?.find((option) => option.id === id)?.label ?? id)
+            .join(", ");
+        }
+        if (field.fieldType === "select") {
+          return field.options?.find((option) => option.id === value)?.label ?? String(value);
+        }
+        if (typeof value === "boolean") return value ? "yes" : "";
+        return String(value);
+      }),
     ];
 
     for (const status of TASK_STATUS_ORDER) {
@@ -249,7 +270,11 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
     downloadCsv(
       csvFilename(project.name, "tasks"),
       toCsv(
-        ["Task", "Subtask", "Status", "Priority", "Assignees", "Start", "Due", "Tags", "Milestone", "Estimate (h)"],
+        [
+          "Task", "Subtask", "Status", "Priority", "Assignees",
+          "Start", "Due", "Tags", "Milestone", "Estimate (h)",
+          ...exported.map((field) => field.name),
+        ],
         rows
       )
     );
@@ -540,6 +565,29 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
 
                             <span className="flex min-w-0 items-center gap-2">
                               {t.tags?.slice(0, 2).map((tag) => <Tag key={tag}>{tag}</Tag>)}
+
+                              {/*
+                                Only fields with a value, and only two of
+                                them. A row that shows every column a
+                                team has defined stops being a list of
+                                work and becomes a spreadsheet — the
+                                panel is where all of them live.
+                              */}
+                              {store.customFields
+                                .filter(
+                                  (field) =>
+                                    (field.projectId === null || field.projectId === t.projectId) &&
+                                    (store.fieldValues[t.id] ?? {})[field.id] !== undefined
+                                )
+                                .slice(0, 2)
+                                .map((field) => (
+                                  <span key={field.id} className="hidden shrink-0 xl:inline-flex">
+                                    <CustomFieldBadge
+                                      field={field}
+                                      value={(store.fieldValues[t.id] ?? {})[field.id] ?? null}
+                                    />
+                                  </span>
+                                ))}
                               <span className="hidden items-center gap-2 text-caption tabular text-text-muted 2xl:flex">
                                 {t.subtasks && (
                                   <span className="inline-flex items-center gap-1">

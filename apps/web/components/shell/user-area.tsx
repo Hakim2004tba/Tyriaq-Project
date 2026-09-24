@@ -62,6 +62,12 @@ export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boo
         </DropdownMenuItem>
         {/* Was a menu item that did nothing at all when clicked. */}
         <DropdownMenuItem asChild>
+          <Link href="/settings/fields">
+            <Settings className="size-4" />
+            Custom fields
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/settings/billing">
             <Sparkles className="size-4" />
             Plan &amp; billing
