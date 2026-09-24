@@ -51,6 +51,23 @@ export function SignupForm() {
         />
         <PasswordField autoComplete="new-password" hint="At least 8 characters." />
         <SubmitButton>Create account</SubmitButton>
+
+        {/*
+          Consent by creating the account, stated at the point of
+          creating it — rather than a checkbox, which is one more thing
+          to click and no more informative about what was agreed to.
+        */}
+        <p className="text-caption leading-relaxed text-text-muted">
+          By creating an account you agree to our{" "}
+          <Link href="/terms" className="text-text-secondary underline hover:text-text-primary">
+            terms of service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-text-secondary underline hover:text-text-primary">
+            privacy policy
+          </Link>
+          .
+        </p>
       </form>
     </AuthCard>
   );
