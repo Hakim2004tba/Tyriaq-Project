@@ -43,10 +43,11 @@ type TaskRow = {
   tags: string[] | null;
   is_milestone: boolean;
   position: number;
+  estimate_minutes: number;
 };
 
 const TASK_COLUMNS =
-  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position";
+  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position, estimate_minutes";
 
 const EMPTY: TaskBundle = { tasks: [], details: {} };
 
@@ -146,6 +147,9 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
   const details: Record<string, TaskDetail> = {};
   for (const row of rows) {
     const detail = emptyDetail(row.description);
+    // Read from the row rather than left at zero, which is what made the
+    // panel's estimate unsettable.
+    detail.estimateMinutes = row.estimate_minutes ?? 0;
     detail.subtaskItems = (children.get(row.id) ?? []).map((c) => ({
       id: c.id,
       title: c.title,

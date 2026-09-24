@@ -397,6 +397,45 @@ export function TimeSection({ task, detail }: { task: ProjectTask; detail: TaskD
             {formatMinutes(logged)} {estimate > 0 && <span className="text-text-muted">of {formatMinutes(estimate)}</span>}
           </span>
         </div>
+
+        {/*
+          The estimate is editable here, which it has never been.
+
+          This section has compared logged time against an estimate since
+          time tracking was built, but the number came from a field
+          nothing could write — so it was always zero, the bar never
+          appeared, and the comparison could not fire.
+
+          Entered in HOURS because that is how people estimate; stored in
+          minutes because that is how time is logged.
+        */}
+        <div className="mt-2 flex items-baseline justify-between gap-3">
+          <label htmlFor={`estimate-${task.id}`} className="text-caption text-text-muted">
+            Estimate
+          </label>
+          <span className="flex items-baseline gap-1.5">
+            <input
+              id={`estimate-${task.id}`}
+              type="number"
+              min={0}
+              max={336}
+              step={0.5}
+              defaultValue={estimate > 0 ? estimate / 60 : ""}
+              placeholder="—"
+              onBlur={(event) => {
+                const hours = Number(event.target.value);
+                const next = Number.isFinite(hours) && hours > 0 ? Math.round(hours * 60) : 0;
+                if (next !== estimate) store.setEstimate(task.id, next);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+              className="w-16 rounded border border-border bg-surface px-1.5 py-0.5 text-right text-body-sm
+                         tabular text-text-primary outline-none focus-visible:shadow-focus"
+            />
+            <span className="text-caption text-text-muted">hours</span>
+          </span>
+        </div>
         {estimate > 0 && (
           <Progress
             value={(logged / estimate) * 100}

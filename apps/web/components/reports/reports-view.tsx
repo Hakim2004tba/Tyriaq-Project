@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarRange, Check, LayoutGrid, Plus, RotateCcw, Settings2 } from "lucide-react";
+import { CalendarRange, Check, Download, LayoutGrid, Plus, RotateCcw, Settings2 } from "lucide-react";
 import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   toast,
@@ -15,6 +16,7 @@ import {
 import { cn } from "@flow/utils";
 import type { ReportData } from "@/lib/data/analytics";
 import type { Person } from "@/lib/data/task-types";
+import { csvFilename, downloadCsv, toCsv } from "@/lib/data/csv";
 import { KpiCard } from "./charts/kpi-card";
 import { WIDGETS, WIDGET_META, WidgetCard, formatMinutes, type WidgetId } from "./widgets";
 
@@ -151,6 +153,77 @@ export function ReportsView({
             value={memberId ?? ""}
             onSelect={(id) => setParam("member", id || null)}
           />
+
+          {/*
+            One file with several sheets' worth of rows would need a
+            real spreadsheet library; instead each table exports on its
+            own, which is what somebody asking for "the numbers" usually
+            wants anyway — one of them, not all four.
+          */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="md">
+                <Download className="size-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Download as CSV</DropdownMenuLabel>
+              <DropdownMenuItem
+                onSelect={() =>
+                  downloadCsv(
+                    csvFilename("report", "by-project"),
+                    toCsv(
+                      ["Project", "Tasks", "Done", "Overdue", "Hours logged", "Progress %"],
+                      data.projects.map((row) => [
+                        row.name,
+                        row.total,
+                        row.done,
+                        row.overdue,
+                        (row.minutes / 60).toFixed(1),
+                        row.progress,
+                      ])
+                    )
+                  )
+                }
+              >
+                Projects
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  downloadCsv(
+                    csvFilename("report", "by-person"),
+                    toCsv(
+                      ["Person", "Assigned", "Completed", "Overdue", "Hours logged", "Completion %"],
+                      data.members.map((row) => [
+                        row.name,
+                        row.assigned,
+                        row.completed,
+                        row.overdue,
+                        (row.minutes / 60).toFixed(1),
+                        row.completionRate,
+                      ])
+                    )
+                  )
+                }
+              >
+                People
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  downloadCsv(
+                    csvFilename("report", "daily"),
+                    toCsv(
+                      ["Date", "Created", "Completed"],
+                      data.series.map((point) => [point.date, point.created, point.completed])
+                    )
+                  )
+                }
+              >
+                Day by day
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button
             variant={editing ? "primary" : "secondary"}

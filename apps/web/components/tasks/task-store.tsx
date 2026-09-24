@@ -104,6 +104,8 @@ export interface TaskStore {
   /** Opens a file in a new tab, or saves it — via a URL minted per click. */
   openAttachment: (attachmentId: string, download: boolean) => void;
   logTime: (taskId: string, minutes: number, note: string) => void;
+  /** How long the work is expected to take. 0 means nobody has said. */
+  setEstimate: (taskId: string, minutes: number) => void;
   toggleTag: (taskId: string, tag: string) => void;
   /** Personal bookmark; nobody else's view changes. */
   toggleStar: (taskId: string) => void;
@@ -1078,6 +1080,17 @@ export function TaskStoreProvider({
    * for real hours, so the entry is persisted and shows up in the task's
    * history and in "time by project" without a second copy anywhere.
    */
+  const setEstimate = useCallback(
+    (taskId: string, minutes: number) => {
+      const clean = Math.max(0, Math.min(20160, Math.round(minutes)));
+      commit(
+        () => patchDetail(taskId, (d) => ({ ...d, estimateMinutes: clean })),
+        () => updateTaskAction(taskId, { estimateMinutes: clean })
+      );
+    },
+    [commit, patchDetail]
+  );
+
   const logTime = useCallback(
     (taskId: string, minutes: number, note: string) => {
       const entry = {
@@ -1130,13 +1143,14 @@ export function TaskStoreProvider({
       removeAttachment,
       openAttachment,
       logTime,
+      setEstimate,
       toggleTag,
       toggleStar,
       toggleAssignee,
       addDependency,
       removeDependency,
     }),
-    [tasks, details, people, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
+    [tasks, details, people, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, setEstimate, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

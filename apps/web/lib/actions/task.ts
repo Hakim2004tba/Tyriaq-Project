@@ -73,6 +73,7 @@ export async function updateTask(
     dueOffset?: number | null;
     tags?: string[];
     milestone?: boolean;
+    estimateMinutes?: number;
   }
 ): Promise<ActionResult> {
   const row: Record<string, unknown> = {};
@@ -87,6 +88,12 @@ export async function updateTask(
   if (patch.priority !== undefined && PRIORITIES.includes(patch.priority)) row.priority = patch.priority;
   if (patch.tags !== undefined) row.tags = patch.tags.map((t) => t.trim()).filter(Boolean).slice(0, 20);
   if (patch.milestone !== undefined) row.is_milestone = patch.milestone;
+  if (patch.estimateMinutes !== undefined) {
+    // Clamped rather than refused: somebody typing 9999 hours meant
+    // something, and a form that rejects the whole save over one field
+    // loses the rest of what they wrote.
+    row.estimate_minutes = Math.max(0, Math.min(20160, Math.round(patch.estimateMinutes)));
+  }
 
   /*
     Dates are sent as a pair whenever either moves.

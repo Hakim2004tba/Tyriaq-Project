@@ -1,6 +1,16 @@
 "use client";
 
-import { ArrowDownUp, Check, ChevronDown, Columns3, Search, SlidersHorizontal, Users, X } from "lucide-react";
+import {
+  ArrowDownUp,
+  Check,
+  ChevronDown,
+  Columns3,
+  Download,
+  Search,
+  SlidersHorizontal,
+  Users,
+  X,
+} from "lucide-react";
 import {
   Avatar,
   Button,
@@ -85,6 +95,7 @@ export function TaskToolbar({
   totalCount,
   group,
   onGroupChange,
+  onExport,
 }: {
   filters: TaskFilters;
   onChange: (next: TaskFilters) => void;
@@ -99,6 +110,15 @@ export function TaskToolbar({
   /** Omit both to hide the grouping control entirely. */
   group?: GroupKey;
   onGroupChange?: (g: GroupKey) => void;
+  /**
+   * Exports what is on screen.
+   *
+   * Passed in rather than built here, because "what is on screen" is
+   * the filtered, sorted list the view already has — exporting from the
+   * toolbar's own knowledge would hand back a different set of rows
+   * than the one being looked at.
+   */
+  onExport?: () => void;
 }) {
   const count = activeFilterCount(filters);
 
@@ -270,6 +290,22 @@ export function TaskToolbar({
               Clear all
             </Button>
           </>
+        )}
+
+        {/*
+          Pushed to the right, because exporting is the last thing
+          somebody does on this screen rather than part of narrowing it
+          down. The label says what the file is, since "Export" alone
+          leaves people guessing at the format.
+        */}
+        {onExport && (
+          <Button variant="secondary" size="sm" onClick={onExport} className="ml-auto">
+            <Download className="size-3.5" />
+            <span className="hidden sm:inline">
+              Export {count > 0 ? `${resultCount} ` : ""}to CSV
+            </span>
+            <span className="sm:hidden">CSV</span>
+          </Button>
         )}
       </div>
 

@@ -18,6 +18,7 @@ import { cn } from "@flow/utils";
 import {
   TASK_STATUS_META,
   TASK_STATUS_ORDER,
+  toISODate,
   type Priority,
   type ProjectTask,
   type TaskStatus,
@@ -25,6 +26,8 @@ import {
 import type { Project } from "@/lib/data/types";
 import { useTasks } from "@/components/tasks/task-store";
 import { Tag } from "./shared";
+import { csvFilename, downloadCsv, toCsv } from "@/lib/data/csv";
+import { BulkBar } from "./bulk-bar";
 import { AssigneeControl, DueControl, PriorityControl, StatusControl } from "./row-controls";
 import { EMPTY_FILTERS, TaskToolbar, type SortKey, type TaskFilters } from "./task-toolbar";
 
@@ -64,6 +67,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
   const [drop, setDrop] = useState<DropTarget | null>(null);
   const [composing, setComposing] = useState<TaskStatus | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const composeRef = useRef<HTMLInputElement>(null);
 
@@ -185,8 +189,74 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
   */
   const projectIsEmpty = store.topLevel.length === 0;
 
+  /**
+   * The list as a spreadsheet.
+   *
+   * Exports what is ON SCREEN — filtered, sorted, grouped the way it is
+   * being looked at — and includes subtasks under their parent rather
+   * than dropping them, since a file missing half the work is worse
+   * than no file. The parent's title travels with each subtask so the
+   * relationship survives sorting in Excel, where row order means
+   * nothing.
+   */
+  function toggleSelected(id: string) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  /** Every task in one status group, selected or cleared together. */
+  function toggleGroupSelection(rows: ProjectTask[]) {
+    setSelected((current) => {
+      const next = new Set(current);
+      const allOn = rows.length > 0 && rows.every((task) => next.has(task.id));
+      for (const task of rows) {
+        if (allOn) next.delete(task.id);
+        else next.add(task.id);
+      }
+      return next;
+    });
+  }
+
+  function exportCsv() {
+    const rows: (string | number)[][] = [];
+
+    const line = (task: ProjectTask, parent: ProjectTask | null) => [
+      parent ? parent.title : task.title,
+      parent ? task.title : "",
+      TASK_STATUS_META[task.status].label,
+      task.priority,
+      task.assignees.map((person) => person.name).join(", "),
+      toISODate(task.startOffset) ?? "",
+      toISODate(task.dueOffset) ?? "",
+      (task.tags ?? []).join(", "),
+      task.milestone ? "yes" : "",
+      store.getDetail(task.id)?.estimateMinutes
+        ? (store.getDetail(task.id)!.estimateMinutes / 60).toFixed(1)
+        : "",
+    ];
+
+    for (const status of TASK_STATUS_ORDER) {
+      for (const task of sortRows(filtered.filter((t) => t.status === status))) {
+        rows.push(line(task, null));
+        for (const kid of childrenOf.get(task.id) ?? []) rows.push(line(kid, task));
+      }
+    }
+
+    downloadCsv(
+      csvFilename(project.name, "tasks"),
+      toCsv(
+        ["Task", "Subtask", "Status", "Priority", "Assignees", "Start", "Due", "Tags", "Milestone", "Estimate (h)"],
+        rows
+      )
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="group/list flex flex-col gap-4">
       <TaskToolbar
         filters={filters}
         onChange={setFilters}
@@ -196,6 +266,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
         tags={tags}
         resultCount={filtered.length}
         totalCount={store.topLevel.length}
+        onExport={exportCsv}
       />
 
       <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-2.5 shadow-card">
@@ -268,6 +339,28 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
               )}
             >
               <div className="flex items-center gap-2.5 px-4 py-2.5">
+                {/*
+                  Appears once something is selected, or on hover.
+                  Permanently visible checkboxes turn a list of work into
+                  a form, and most of the time nobody is selecting
+                  anything.
+                */}
+                <input
+                  type="checkbox"
+                  checked={rows.length > 0 && rows.every((task) => selected.has(task.id))}
+                  ref={(input) => {
+                    if (!input) return;
+                    const some = rows.some((task) => selected.has(task.id));
+                    const all = rows.length > 0 && rows.every((task) => selected.has(task.id));
+                    input.indeterminate = some && !all;
+                  }}
+                  onChange={() => toggleGroupSelection(rows)}
+                  aria-label={`Select every task in ${meta.label}`}
+                  className={cn(
+                    "size-4 shrink-0 cursor-pointer accent-[var(--color-primary,#7c5cff)]",
+                    selected.size === 0 && "opacity-0 focus-visible:opacity-100 group-hover/list:opacity-100"
+                  )}
+                />
                 <button
                   type="button"
                   onClick={() => toggleGroup(status)}
@@ -367,6 +460,20 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                                      transition-colors duration-fast hover:bg-white/[0.025]
                                      focus-visible:outline-none focus-visible:bg-white/[0.04]"
                         >
+                          <input
+                            type="checkbox"
+                            checked={selected.has(t.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => toggleSelected(t.id)}
+                            aria-label={`Select ${t.title}`}
+                            className={cn(
+                              "size-4 shrink-0 cursor-pointer accent-[var(--color-primary,#7c5cff)]",
+                              !selected.has(t.id) &&
+                                selected.size === 0 &&
+                                "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            )}
+                          />
+
                           <span
                             className={cn(
                               "flex size-5 shrink-0 items-center justify-center text-text-muted",
@@ -648,6 +755,17 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
             </section>
           );
         })}
+
+      {/*
+        Sticky at the bottom of the list rather than fixed to the
+        viewport: it belongs to this list, and a bar pinned to the window
+        would sit over the task panel when one is open.
+      */}
+      <BulkBar
+        ids={Array.from(selected)}
+        people={people}
+        onClear={() => setSelected(new Set())}
+      />
     </div>
   );
 }
