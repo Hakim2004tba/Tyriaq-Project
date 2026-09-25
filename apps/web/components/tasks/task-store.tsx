@@ -84,6 +84,8 @@ export interface TaskStore {
   getDetail: (id: string) => TaskDetail | undefined;
 
   setStatus: (id: string, status: TaskStatus) => void;
+  /** Moves a task into one of the board's own columns. */
+  setColumn: (id: string, statusId: string, category: TaskStatus) => void;
   /** Move `id` into `status`, positioned before `beforeId` (or last). */
   moveTask: (id: string, status: TaskStatus, beforeId: string | null) => void;
   /** Reposition without touching status — for boards grouped by
@@ -508,6 +510,7 @@ export function TaskStoreProvider({
             dueOffset: patch.dueOffset,
             tags: patch.tags,
             milestone: patch.milestone,
+            statusId: patch.statusId,
           })
       );
     },
@@ -515,7 +518,20 @@ export function TaskStoreProvider({
   );
 
   const setStatus = useCallback(
-    (id: string, status: TaskStatus) => updateTask(id, { status }),
+    (id: string, status: TaskStatus) => updateTask(id, { status, statusId: null }),
+    [updateTask]
+  );
+
+  /**
+   * Moves a task into one of the board's own columns.
+   *
+   * Only the column id is sent. The database derives the category from
+   * it, so the two can never disagree — which is the whole reason the
+   * category is still a column on `tasks` rather than a join away.
+   */
+  const setColumn = useCallback(
+    (id: string, statusId: string, category: TaskStatus) =>
+      updateTask(id, { statusId, status: category }),
     [updateTask]
   );
 
@@ -632,6 +648,9 @@ export function TaskStoreProvider({
             priority: task.priority,
             startOffset: task.startOffset,
             dueOffset: task.dueOffset,
+            // Set when the board has its own columns; the patch carries
+            // whichever one the task was created under.
+            statusId: task.statusId ?? null,
           });
           if (result.error || !result.id) return result;
           const realId = result.id;
@@ -1167,6 +1186,7 @@ export function TaskStoreProvider({
       getTask: (id) => tasks.find((t) => t.id === id),
       getDetail: (id) => details[id],
       setStatus,
+      setColumn,
       moveTask,
       reorderTask,
       updateTask,
@@ -1189,7 +1209,7 @@ export function TaskStoreProvider({
       addDependency,
       removeDependency,
     }),
-    [tasks, details, people, customFields, fieldValues, setFieldValueLocal, setStatus, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, setEstimate, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
+    [tasks, details, people, customFields, fieldValues, setFieldValueLocal, setStatus, setColumn, moveTask, reorderTask, updateTask, addTask, deleteTask, toggleSubtask, addSubtask, setDescription, addComment, editComment, deleteComment, attachFile, removeAttachment, openAttachment, logTime, setEstimate, toggleTag, toggleStar, toggleAssignee, addDependency, removeDependency]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

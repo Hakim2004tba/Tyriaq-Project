@@ -41,6 +41,7 @@ export async function createTask(input: {
   parentId?: string | null;
   startOffset?: number | null;
   dueOffset?: number | null;
+  statusId?: string | null;
 }): Promise<ActionResult & { id?: string }> {
   const title = input.title.trim();
   if (!title) return { error: "Give the task a title." };
@@ -58,8 +59,26 @@ export async function createTask(input: {
   });
 
   if (error) return { error: error.message };
+
+  /*
+    The column is set in a second statement rather than as an argument.
+
+    `create_task` is shared with every other path that makes a task and
+    knows nothing about board columns; teaching it would mean changing a
+    function four callers depend on for the benefit of one. The trigger
+    keeps `status` in step, so the pair is still consistent.
+  */
+  const id = (data as { id: string } | null)?.id;
+  if (id && input.statusId) {
+    const { error: columnError } = await supabase
+      .from("tasks")
+      .update({ status_id: input.statusId })
+      .eq("id", id);
+    if (columnError) console.error("[tyriaq] could not file the new task:", columnError.message);
+  }
+
   refresh();
-  return { id: (data as { id: string } | null)?.id };
+  return { id };
 }
 
 export async function updateTask(
@@ -74,6 +93,8 @@ export async function updateTask(
     tags?: string[];
     milestone?: boolean;
     estimateMinutes?: number;
+    /** Which board column, when the project defines its own. */
+    statusId?: string | null;
   }
 ): Promise<ActionResult> {
   const row: Record<string, unknown> = {};
@@ -88,6 +109,12 @@ export async function updateTask(
   if (patch.priority !== undefined && PRIORITIES.includes(patch.priority)) row.priority = patch.priority;
   if (patch.tags !== undefined) row.tags = patch.tags.map((t) => t.trim()).filter(Boolean).slice(0, 20);
   if (patch.milestone !== undefined) row.is_milestone = patch.milestone;
+  /*
+    Written as-is; the trigger derives `status` from it, so the two
+    cannot disagree. Sending both would let a caller claim a task is in
+    the "Delivered" column while reporting as not started.
+  */
+  if (patch.statusId !== undefined) row.status_id = patch.statusId;
   if (patch.estimateMinutes !== undefined) {
     // Clamped rather than refused: somebody typing 9999 hours meant
     // something, and a form that rejects the whole save over one field

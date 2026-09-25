@@ -44,10 +44,11 @@ type TaskRow = {
   is_milestone: boolean;
   position: number;
   estimate_minutes: number;
+  status_id: string | null;
 };
 
 const TASK_COLUMNS =
-  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position, estimate_minutes";
+  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position, estimate_minutes, status_id";
 
 const EMPTY: TaskBundle = { tasks: [], details: {} };
 
@@ -174,6 +175,7 @@ function toTask(
     parentId: row.parent_task_id,
     title: row.title,
     status: row.status,
+    statusId: row.status_id,
     priority: row.priority,
     assignees,
     startOffset: offsetFromISO(row.start_date),

@@ -35,6 +35,12 @@ export interface ProjectTask {
   id: string;
   title: string;
   status: TaskStatus;
+  /**
+   * The board column this task sits in, when the project defines its
+   * own. Null means it is simply in its category, which is every task
+   * on a board that has not been customised.
+   */
+  statusId?: string | null;
   priority: Priority;
   assignees: Person[];
   /**

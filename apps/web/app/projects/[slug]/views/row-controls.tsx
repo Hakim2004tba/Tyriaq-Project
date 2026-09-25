@@ -46,9 +46,17 @@ function stop(event: React.MouseEvent | React.KeyboardEvent) {
 /* Status                                                              */
 /* ------------------------------------------------------------------ */
 
-export function StatusControl({ task }: { task: ProjectTask }) {
+export function StatusControl({
+  task,
+  statuses = [],
+}: {
+  task: ProjectTask;
+  /** The board's own columns, when it has them. */
+  statuses?: { id: string; name: string; category: ProjectTask["status"]; color: string }[];
+}) {
   const store = useTasks();
   const meta = TASK_STATUS_META[task.status];
+  const current = statuses.find((status) => status.id === task.statusId);
 
   return (
     <DropdownMenu>
@@ -56,25 +64,54 @@ export function StatusControl({ task }: { task: ProjectTask }) {
         <button
           type="button"
           onClick={stop}
-          aria-label={`Status: ${meta.label}. Change it`}
+          aria-label={`Status: ${current?.name ?? meta.label}. Change it`}
           className="flex size-5 shrink-0 items-center justify-center rounded-full
                      transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:shadow-focus"
         >
-          <span className={cn("size-2 rounded-full", meta.accent)} aria-hidden="true" />
+          <span
+            className={cn(
+              "size-2 rounded-full",
+              current ? STATUS_DOT[current.color] ?? meta.accent : meta.accent
+            )}
+            aria-hidden="true"
+          />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="z-[60] w-44" onClick={stop}>
+      <DropdownMenuContent align="start" className="z-[60] w-48" onClick={stop}>
         <DropdownMenuLabel>Status</DropdownMenuLabel>
-        {TASK_STATUS_ORDER.map((status) => {
-          const item = TASK_STATUS_META[status];
-          return (
-            <DropdownMenuItem key={status} onSelect={() => store.setStatus(task.id, status)}>
-              <span className={cn("size-2 shrink-0 rounded-full", item.accent)} aria-hidden="true" />
-              <span className="flex-1">{item.label}</span>
-              {task.status === status && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
-            </DropdownMenuItem>
-          );
-        })}
+
+        {/*
+          The board's own columns when it has them, and the five
+          built-in ones when it does not — never both, or somebody would
+          be choosing between "Printing" and "In progress" without being
+          told they are the same thing.
+        */}
+        {statuses.length > 0
+          ? statuses.map((status) => (
+              <DropdownMenuItem
+                key={status.id}
+                onSelect={() => store.setColumn(task.id, status.id, status.category)}
+              >
+                <span
+                  className={cn("size-2 shrink-0 rounded-full", STATUS_DOT[status.color] ?? "bg-text-muted")}
+                  aria-hidden="true"
+                />
+                <span className="flex-1">{status.name}</span>
+                {task.statusId === status.id && (
+                  <Check className="size-3.5 shrink-0" aria-hidden="true" />
+                )}
+              </DropdownMenuItem>
+            ))
+          : TASK_STATUS_ORDER.map((status) => {
+              const item = TASK_STATUS_META[status];
+              return (
+                <DropdownMenuItem key={status} onSelect={() => store.setStatus(task.id, status)}>
+                  <span className={cn("size-2 shrink-0 rounded-full", item.accent)} aria-hidden="true" />
+                  <span className="flex-1">{item.label}</span>
+                  {task.status === status && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
+                </DropdownMenuItem>
+              );
+            })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -195,6 +232,16 @@ export function DueControl({ task, className }: { task: ProjectTask; className?:
 /* ------------------------------------------------------------------ */
 
 const PRIORITIES: Priority[] = ["urgent", "high", "medium", "low"];
+
+/** Semantic colour names from the database, as the dot's class. */
+const STATUS_DOT: Record<string, string> = {
+  neutral: "bg-text-muted",
+  info: "bg-info",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  success: "bg-success",
+  primary: "bg-primary",
+};
 
 export function PriorityControl({ task, compact }: { task: ProjectTask; compact?: boolean }) {
   const store = useTasks();

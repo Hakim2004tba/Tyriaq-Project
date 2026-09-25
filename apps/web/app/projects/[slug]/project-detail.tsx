@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
+  Columns3,
   MoreHorizontal,
   Pencil,
   Star,
@@ -34,8 +35,10 @@ import {
 import { cn } from "@flow/utils";
 import { SPACE_COLOR } from "@/components/shell";
 import { ProjectEditor } from "@/components/projects/project-editor";
+import { BoardColumnsDialog } from "@/components/projects/board-columns-dialog";
 import { ProjectWorkspace } from "./project-workspace";
 import type { CustomField, CustomFieldValue } from "@flow/types";
+import type { ProjectStatus, SavedView } from "@/lib/data/board";
 import type { Person, ProjectTask, TaskDetail } from "@/lib/data/task-types";
 import {
   addProjectMember,
@@ -72,6 +75,8 @@ export function ProjectDetail({
   workspaceId,
   customFields,
   fieldValues,
+  statuses,
+  savedViews,
   currentUser,
 }: {
   project: Project;
@@ -83,9 +88,12 @@ export function ProjectDetail({
   workspaceId: string;
   customFields: CustomField[];
   fieldValues: Record<string, Record<string, CustomFieldValue>>;
+  statuses: ProjectStatus[];
+  savedViews: SavedView[];
   currentUser: Person;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const status = PROJECT_STATUS_META[project.status];
@@ -202,6 +210,10 @@ export function ProjectDetail({
                   </IconButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={() => setColumnsOpen(true)}>
+                    <Columns3 className="size-4" />
+                    Board columns
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setEditorOpen(true)}>
                     <Pencil className="size-4" />
                     Edit project
@@ -294,6 +306,8 @@ export function ProjectDetail({
             people={workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))}
             customFields={customFields}
             fieldValues={fieldValues}
+            statuses={statuses}
+            savedViews={savedViews}
             currentUser={currentUser}
           />
         </div>
@@ -370,6 +384,14 @@ export function ProjectDetail({
           </SectionCard>
         </div>
       </div>
+
+      <BoardColumnsDialog
+        open={columnsOpen}
+        onOpenChange={setColumnsOpen}
+        projectId={project.id}
+        projectName={project.name}
+        statuses={statuses}
+      />
 
       <ProjectEditor open={editorOpen} onOpenChange={setEditorOpen} spaces={spaces} project={project} />
     </div>

@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@flow/ui";
 import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
 import { TaskStoreProvider } from "@/components/tasks/task-store";
 import type { CustomField, CustomFieldValue } from "@flow/types";
+import type { ProjectStatus, SavedView } from "@/lib/data/board";
 import type { Person, ProjectTask, TaskDetail } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { BoardView } from "./views/board-view";
@@ -65,6 +66,8 @@ export function ProjectWorkspace({
   workspaceId,
   customFields,
   fieldValues,
+  statuses,
+  savedViews,
   currentUser,
 }: {
   project: Project;
@@ -74,6 +77,8 @@ export function ProjectWorkspace({
   workspaceId: string;
   customFields: CustomField[];
   fieldValues: Record<string, Record<string, CustomFieldValue>>;
+  statuses: ProjectStatus[];
+  savedViews: SavedView[];
   currentUser: Person;
 }) {
   const router = useRouter();
@@ -146,7 +151,15 @@ export function ProjectWorkspace({
         </div>
 
         <div className="min-w-0 pt-4">
-          {view === "list" && <ListView project={project} onOpenTask={setTask} />}
+          {view === "list" && (
+            <ListView
+              project={project}
+              onOpenTask={setTask}
+              savedViews={savedViews.filter((saved) => saved.layout === "list")}
+              statuses={statuses}
+              viewerId={currentUser.id}
+            />
+          )}
           {view === "board" && <BoardView project={project} onOpenTask={setTask} />}
           {view === "calendar" && <CalendarView project={project} onOpenTask={setTask} />}
           {view === "gantt" && <GanttView project={project} onOpenTask={setTask} />}

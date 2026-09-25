@@ -28,6 +28,18 @@ import { useTasks } from "@/components/tasks/task-store";
 import { Tag } from "./shared";
 import { csvFilename, downloadCsv, toCsv } from "@/lib/data/csv";
 import { BulkBar } from "./bulk-bar";
+import { SavedViewsBar } from "./saved-views-bar";
+import type { ProjectStatus, SavedView } from "@/lib/data/board";
+
+/** Semantic colour names from the database, as the dot's class. */
+const STATUS_ACCENT: Record<string, string> = {
+  neutral: "bg-text-muted",
+  info: "bg-info",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  success: "bg-success",
+  primary: "bg-primary",
+};
 import { AssigneeControl, DueControl, PriorityControl, StatusControl } from "./row-controls";
 import { EMPTY_FILTERS, TaskToolbar, type SortKey, type TaskFilters } from "./task-toolbar";
 
@@ -36,6 +48,8 @@ const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2,
 /** Where a dragged row would land: before this task, or at the group's end. */
 interface DropTarget {
   status: TaskStatus;
+  /** The board column dropped into, when the project has its own. */
+  statusId: string | null;
   beforeId: string | null;
 }
 
@@ -58,16 +72,58 @@ interface DropTarget {
  * a row into a position a sort will immediately overwrite is a lie about
  * what the interface just did.
  */
-export function ListView({ project, onOpenTask }: { project: Project; onOpenTask: (id: string) => void }) {
+export function ListView({
+  project,
+  onOpenTask,
+  savedViews = [],
+  statuses = [],
+  viewerId = "",
+}: {
+  project: Project;
+  onOpenTask: (id: string) => void;
+  savedViews?: SavedView[];
+  /** The board's own columns. Empty means the five built-in ones. */
+  statuses?: ProjectStatus[];
+  viewerId?: string;
+}) {
   const store = useTasks();
-  const [collapsed, setCollapsed] = useState<Set<TaskStatus>>(new Set(["done"]));
+  /*
+    Keyed by COLUMN rather than category: a board with "Delivered" and
+    "Archived" both mapping to `done` must be able to collapse one
+    without the other.
+  */
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(["done"]));
   const [filters, setFilters] = useState<TaskFilters>(EMPTY_FILTERS);
   const [sort, setSort] = useState<SortKey>("manual");
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<DropTarget | null>(null);
-  const [composing, setComposing] = useState<TaskStatus | null>(null);
+  const [composing, setComposing] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [activeView, setActiveView] = useState<string | null>(null);
+
+  /**
+   * Applies a saved view, or clears back to everything.
+   *
+   * The config is whatever the toolbar held when it was saved, so this
+   * is a restore rather than an interpretation — and an unknown key
+   * from an older version is simply ignored instead of breaking the
+   * screen.
+   */
+  function applyView(view: SavedView | null) {
+    setActiveView(view?.id ?? null);
+    if (!view) {
+      setFilters(EMPTY_FILTERS);
+      setSort("manual");
+      return;
+    }
+    const config = view.config as {
+      filters?: TaskFilters;
+      sort?: SortKey;
+    };
+    setFilters({ ...EMPTY_FILTERS, ...(config.filters ?? {}) });
+    setSort(config.sort ?? "manual");
+  }
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const composeRef = useRef<HTMLInputElement>(null);
 
@@ -128,7 +184,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
   const dragEnabled = sort === "manual";
   const totalDone = store.topLevel.filter((t) => t.status === "done").length;
 
-  const toggleGroup = (s: TaskStatus) =>
+  const toggleGroup = (s: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(s)) next.delete(s);
@@ -137,7 +193,21 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
     });
 
   function commitDrop() {
-    if (dragId && drop) store.moveTask(dragId, drop.status, drop.beforeId);
+    if (dragId && drop) {
+      store.moveTask(dragId, drop.status, drop.beforeId);
+      /*
+        The column is set separately from the reorder.
+
+        `move_task` positions a task between two neighbours and knows
+        only about categories; sending the column afterwards keeps that
+        function unchanged, and the trigger makes sure the category it
+        just wrote and the column agree.
+      */
+      if (drop.statusId) {
+        const column = statuses.find((status) => status.id === drop.statusId);
+        if (column) store.setColumn(dragId, column.id, column.category);
+      }
+    }
     setDragId(null);
     setDrop(null);
   }
@@ -165,13 +235,16 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
     }
   }
 
-  function submitCompose(status: TaskStatus, value: string) {
+  function submitCompose(status: TaskStatus, value: string, statusId?: string | null) {
     const title = value.trim();
     if (!title) {
       setComposing(null);
       return;
     }
-    store.addTask(status, title);
+    // The column travels with the category, so a task typed into
+    // "Printing" lands in "Printing" rather than in whatever the first
+    // column of that category happens to be.
+    store.addTask(status, title, statusId ? { statusId } : undefined);
     // Stay in compose mode: adding tasks is almost always done in runs,
     // and making someone re-click "Add task" for each one is the fastest
     // way to make inline creation feel slower than a modal.
@@ -188,6 +261,35 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
     and there are no groups to show yet.
   */
   const projectIsEmpty = store.topLevel.length === 0;
+
+  /*
+    The columns to draw, from whichever source this board uses.
+
+    A project with its own statuses groups by those; one without groups
+    by the five built-in categories, exactly as before. Everything below
+    works from this list rather than from TASK_STATUS_ORDER, so the two
+    cases are one code path.
+  */
+  const columns =
+    statuses.length > 0
+      ? statuses.map((status) => ({
+          key: status.id,
+          label: status.name,
+          category: status.category,
+          statusId: status.id as string | null,
+          accent: STATUS_ACCENT[status.color] ?? TASK_STATUS_META[status.category].accent,
+        }))
+      : TASK_STATUS_ORDER.map((status) => ({
+          key: status,
+          label: TASK_STATUS_META[status].label,
+          category: status,
+          statusId: null as string | null,
+          accent: TASK_STATUS_META[status].accent,
+        }));
+
+  /** Which column a task belongs in, under either scheme. */
+  const columnOf = (task: ProjectTask) =>
+    statuses.length > 0 ? task.statusId ?? null : task.status;
 
   /**
    * The list as a spreadsheet.
@@ -282,6 +384,18 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
 
   return (
     <div className="group/list flex flex-col gap-4">
+      {/* Always rendered: it carries "Save this view", which is how the
+          first one ever gets made. */}
+      <SavedViewsBar
+        views={savedViews}
+        projectId={project.id}
+        layout="list"
+        currentConfig={{ filters, sort }}
+        activeId={activeView}
+        onApply={applyView}
+        viewerId={viewerId}
+      />
+
       <TaskToolbar
         filters={filters}
         onChange={setFilters}
@@ -334,25 +448,37 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
       )}
 
       {(anyResults || (projectIsEmpty && composing !== null)) &&
-        TASK_STATUS_ORDER.map((status) => {
-          const rows = sortRows(filtered.filter((t) => t.status === status));
-          const meta = TASK_STATUS_META[status];
-          const isOpen = !collapsed.has(status);
-          const isDropGroup = drop?.status === status;
+        columns.map((column) => {
+          /*
+            `status` here is the CATEGORY, which is what drag and drop,
+            keyboard moves and task creation all still speak — a custom
+            column is a label over one of the five, so those paths did
+            not have to learn a second vocabulary.
+          */
+          const status = column.category;
+          const rows = sortRows(
+            filtered.filter((t) => columnOf(t) === (column.statusId ?? column.category))
+          );
+          const meta = { ...TASK_STATUS_META[status], label: column.label, accent: column.accent };
+          const isOpen = !collapsed.has(column.key);
+          const isDropGroup =
+            drop?.status === status && drop.statusId === column.statusId;
 
           // A group with no matches still renders when a drag is in
           // flight — otherwise there is nowhere to drop a task to change
           // its status to something nothing currently has — and when it
           // is the group the first task is being typed into.
-          if (rows.length === 0 && !dragId && composing !== status) return null;
+          if (rows.length === 0 && !dragId && composing !== column.key) return null;
 
           return (
             <section
-              key={status}
+              key={column.key}
               onDragOver={(e) => {
                 if (!dragId) return;
                 e.preventDefault();
-                if (rows.length === 0) setDrop({ status, beforeId: null });
+                if (rows.length === 0) {
+                  setDrop({ status, statusId: column.statusId, beforeId: null });
+                }
               }}
               onDrop={(e) => {
                 e.preventDefault();
@@ -388,7 +514,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                 />
                 <button
                   type="button"
-                  onClick={() => toggleGroup(status)}
+                  onClick={() => toggleGroup(column.key)}
                   aria-expanded={isOpen}
                   className="flex flex-1 items-center gap-2.5 rounded text-left transition-colors duration-fast
                              hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
@@ -406,7 +532,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                 </button>
                 <button
                   type="button"
-                  onClick={() => setComposing(status)}
+                  onClick={() => setComposing(column.key)}
                   className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors
                              duration-fast hover:bg-white/5 hover:text-text-primary
                              focus-visible:outline-none focus-visible:shadow-focus"
@@ -424,7 +550,10 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
 
                   {rows.map((t) => {
                     const isDragging = dragId === t.id;
-                    const showLine = drop?.status === status && drop.beforeId === t.id;
+                    const showLine =
+                      drop?.status === status &&
+                      drop.statusId === column.statusId &&
+                      drop.beforeId === t.id;
                     const kids = childrenOf.get(t.id) ?? [];
                     const isExpanded = expanded.has(t.id);
                     return (
@@ -449,7 +578,11 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                           const group = sortRows(filtered.filter((x) => x.status === status));
                           const idx = group.findIndex((x) => x.id === t.id);
                           const next = below ? group[idx + 1] : group[idx];
-                          setDrop({ status, beforeId: next ? next.id : null });
+                          setDrop({
+                            status,
+                            statusId: column.statusId,
+                            beforeId: next ? next.id : null,
+                          });
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -509,7 +642,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                             <GripVertical className="size-4" />
                           </span>
 
-                          <StatusControl task={t} />
+                          <StatusControl task={t} statuses={statuses} />
 
                           {/*
                             Always present, even at zero, because it is
@@ -673,7 +806,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                                     className="size-3.5 shrink-0 text-text-muted"
                                     aria-hidden="true"
                                   />
-                                  <StatusControl task={kid} />
+                                  <StatusControl task={kid} statuses={statuses} />
 
                                   <span
                                     className={cn(
@@ -749,7 +882,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                     <li
                       onDragOver={(e) => {
                         e.preventDefault();
-                        setDrop({ status, beforeId: null });
+                        setDrop({ status, statusId: column.statusId, beforeId: null });
                       }}
                       onDrop={(e) => {
                         e.preventDefault();
@@ -757,7 +890,9 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                       }}
                       className={cn(
                         "h-8 border-t border-dashed transition-colors",
-                        drop?.status === status && drop.beforeId === null
+                        drop?.status === status &&
+                        drop.statusId === column.statusId &&
+                        drop.beforeId === null
                           ? "border-border-brand bg-primary-subtle"
                           : "border-transparent"
                       )}
@@ -768,7 +903,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
               )}
 
               {isOpen &&
-                (composing === status ? (
+                (composing === column.key ? (
                   <div className="border-t border-border px-4 py-2">
                     <input
                       ref={composeRef}
@@ -778,12 +913,12 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
-                          submitCompose(status, e.currentTarget.value);
+                          submitCompose(status, e.currentTarget.value, column.statusId);
                         } else if (e.key === "Escape") {
                           setComposing(null);
                         }
                       }}
-                      onBlur={(e) => submitCompose(status, e.currentTarget.value)}
+                      onBlur={(e) => submitCompose(status, e.currentTarget.value, column.statusId)}
                       className="h-8 w-full rounded-md border border-primary/60 bg-surface-muted px-3 text-body-sm
                                  text-text-primary shadow-focus placeholder:text-text-muted focus-visible:outline-none"
                     />
@@ -791,7 +926,7 @@ export function ListView({ project, onOpenTask }: { project: Project; onOpenTask
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setComposing(status)}
+                    onClick={() => setComposing(column.key)}
                     className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 text-body-sm
                                text-text-muted transition-colors duration-fast hover:text-text-primary
                                focus-visible:outline-none focus-visible:shadow-focus"
