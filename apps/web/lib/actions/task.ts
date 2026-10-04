@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { toISODate, type Priority, type TaskStatus } from "@/lib/data/task-types";
+import { runAutomations } from "@/lib/automations/run";
 import type { ActionResult } from "./workspace";
 
 /**
@@ -77,6 +78,15 @@ export async function createTask(input: {
     if (columnError) console.error("[tyriaq] could not file the new task:", columnError.message);
   }
 
+  if (id) {
+    await runAutomations({
+      taskId: id,
+      projectId: input.projectId,
+      trigger: "task_created",
+      after: { statusId: input.statusId ?? null, category: input.status ?? "todo" },
+    });
+  }
+
   refresh();
   return { id };
 }
@@ -137,6 +147,34 @@ export async function updateTask(
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").update(row).eq("id", id);
   if (error) return { error: error.message };
+
+  /*
+    After the write, and only for the changes a rule can listen for.
+
+    Reading the project back costs one query on every task edit, which
+    is the price of rules that react to the thing that actually
+    happened rather than to what the client claimed.
+  */
+  if (patch.status !== undefined || patch.statusId !== undefined || patch.priority !== undefined) {
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("project_id, status, status_id, priority")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (task) {
+      const row = task as {
+        project_id: string; status: string; status_id: string | null; priority: string;
+      };
+      await runAutomations({
+        taskId: id,
+        projectId: row.project_id,
+        trigger: patch.priority !== undefined ? "priority_changed" : "status_changed",
+        after: { statusId: row.status_id, category: row.status, priority: row.priority },
+      });
+    }
+  }
+
   refresh();
   return {};
 }
@@ -188,6 +226,26 @@ export async function setTaskAssignee(
     : await supabase.from("task_assignees").delete().eq("task_id", taskId).eq("user_id", userId);
 
   if (error) return { error: error.message };
+
+  if (assigned) {
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("project_id, status, status_id, priority")
+      .eq("id", taskId)
+      .maybeSingle();
+    const row = task as
+      | { project_id: string; status: string; status_id: string | null; priority: string }
+      | null;
+    if (row) {
+      await runAutomations({
+        taskId,
+        projectId: row.project_id,
+        trigger: "assigned",
+        after: { statusId: row.status_id, category: row.status, priority: row.priority },
+      });
+    }
+  }
+
   refresh();
   return {};
 }

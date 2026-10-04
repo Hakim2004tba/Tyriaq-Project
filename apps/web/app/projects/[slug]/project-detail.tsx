@@ -9,6 +9,7 @@ import {
   Check,
   ChevronRight,
   Columns3,
+  Zap,
   MoreHorizontal,
   Pencil,
   Star,
@@ -36,6 +37,8 @@ import { cn } from "@flow/utils";
 import { SPACE_COLOR } from "@/components/shell";
 import { ProjectEditor } from "@/components/projects/project-editor";
 import { BoardColumnsDialog } from "@/components/projects/board-columns-dialog";
+import { AutomationsDialog } from "@/components/projects/automations-dialog";
+import type { Automation } from "@/lib/data/automations";
 import { ProjectWorkspace } from "./project-workspace";
 import type { CustomField, CustomFieldValue } from "@flow/types";
 import type { ProjectStatus, SavedView } from "@/lib/data/board";
@@ -77,6 +80,8 @@ export function ProjectDetail({
   fieldValues,
   statuses,
   savedViews,
+  automations,
+  canManage,
   currentUser,
 }: {
   project: Project;
@@ -90,10 +95,14 @@ export function ProjectDetail({
   fieldValues: Record<string, Record<string, CustomFieldValue>>;
   statuses: ProjectStatus[];
   savedViews: SavedView[];
+  automations: Automation[];
+  /** Whether this person may write rules — the same bar as space admin. */
+  canManage: boolean;
   currentUser: Person;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
+  const [automationsOpen, setAutomationsOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const status = PROJECT_STATUS_META[project.status];
@@ -210,6 +219,15 @@ export function ProjectDetail({
                   </IconButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={() => setAutomationsOpen(true)}>
+                    <Zap className="size-4" />
+                    Automations
+                    {automations.filter((rule) => rule.enabled).length > 0 && (
+                      <Badge variant="chrome" size="sm" className="ms-auto">
+                        {automations.filter((rule) => rule.enabled).length}
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setColumnsOpen(true)}>
                     <Columns3 className="size-4" />
                     Board columns
@@ -384,6 +402,17 @@ export function ProjectDetail({
           </SectionCard>
         </div>
       </div>
+
+      <AutomationsDialog
+        open={automationsOpen}
+        onOpenChange={setAutomationsOpen}
+        projectId={project.id}
+        projectName={project.name}
+        automations={automations}
+        people={workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))}
+        statuses={statuses}
+        canManage={canManage}
+      />
 
       <BoardColumnsDialog
         open={columnsOpen}
