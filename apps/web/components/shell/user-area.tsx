@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronsUpDown, LogOut, Settings, Sparkles, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, LogOut, Settings, Sparkles, UserRound } from "lucide-react";
 import {
   Avatar,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@flow/ui";
 import { signOut } from "@/lib/auth/actions";
 import type { ShellUser } from "./nav-model";
+import { LOCALES, LOCALE_META } from "@/lib/i18n/config";
+import { useLocale } from "@/lib/i18n/provider";
 
 /**
  * The account block that anchors the bottom of the rail — identity plus
@@ -20,12 +23,14 @@ import type { ShellUser } from "./nav-model";
  * top edge is reserved for the actions people take constantly.
  */
 export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boolean }) {
+  const { locale, t, setLocale } = useLocale();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`flex w-full items-center gap-2.5 rounded-md p-1.5 text-left transition-colors duration-fast
+          className={`flex w-full items-center gap-2.5 rounded-md p-1.5 text-start transition-colors duration-fast
                       hover:bg-sidebar-hover focus-visible:outline-none focus-visible:shadow-focus
                       ${collapsed ? "justify-center" : ""}`}
           aria-label="Account menu"
@@ -51,13 +56,13 @@ export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boo
         <DropdownMenuItem asChild>
           <Link href="/settings/profile">
             <UserRound className="size-4" />
-            Profile
+            {t("nav.profile")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings/people">
             <Settings className="size-4" />
-            People &amp; permissions
+            {t("nav.people")}
           </Link>
         </DropdownMenuItem>
         {/* Was a menu item that did nothing at all when clicked. */}
@@ -70,9 +75,32 @@ export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boo
         <DropdownMenuItem asChild>
           <Link href="/settings/billing">
             <Sparkles className="size-4" />
-            Plan &amp; billing
+            {t("nav.billing")}
           </Link>
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        {/*
+          The language, in the language. "العربية" written in Arabic is
+          readable to somebody who cannot read the English label around
+          it — which is exactly the person who needs this control.
+        */}
+        <DropdownMenuLabel>{t("nav.language")}</DropdownMenuLabel>
+        {LOCALES.map((option) => (
+          <DropdownMenuItem
+            key={option}
+            onSelect={(event) => {
+              event.preventDefault();
+              if (option !== locale) setLocale(option);
+            }}
+          >
+            <span className="flex size-4 items-center justify-center">
+              {option === locale && <Check className="size-3.5" />}
+            </span>
+            {LOCALE_META[option].native}
+          </DropdownMenuItem>
+        ))}
         <DropdownMenuSeparator />
         {/* A form, not an onClick: sign-out clears an httpOnly cookie,
             which only the server can do. */}
@@ -80,7 +108,7 @@ export function UserArea({ user, collapsed }: { user: ShellUser; collapsed?: boo
           <DropdownMenuItem asChild destructive>
             <button type="submit" className="w-full">
               <LogOut className="size-4" />
-              Log out
+              {t("nav.signOut")}
             </button>
           </DropdownMenuItem>
         </form>

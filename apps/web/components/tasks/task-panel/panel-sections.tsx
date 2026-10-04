@@ -57,7 +57,7 @@ export function Section({
       <div className="flex items-center gap-2">
         <h3 className="text-body-sm font-semibold text-text-primary">{title}</h3>
         {count !== undefined && <span className="text-caption tabular text-text-muted">{count}</span>}
-        {action && <div className="ml-auto">{action}</div>}
+        {action && <div className="ms-auto">{action}</div>}
       </div>
       {children}
     </section>
@@ -132,7 +132,7 @@ export function SubtasksSection({ task, detail }: { task: ProjectTask; detail: T
             <button
               type="button"
               onClick={() => store.toggleSubtask(task.id, s.id)}
-              className="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 text-left transition-colors
+              className="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 text-start transition-colors
                          duration-fast hover:bg-white/[0.04] focus-visible:outline-none focus-visible:shadow-focus"
             >
               <span
@@ -265,7 +265,7 @@ export function AttachmentsSection({ task, detail }: { task: ProjectTask; detail
             accept(e.dataTransfer.files);
           }}
           className={cn(
-            "w-full rounded-md border border-dashed px-3 py-3 text-left text-body-sm transition-colors",
+            "w-full rounded-md border border-dashed px-3 py-3 text-start text-body-sm transition-colors",
             dragging ? "border-primary text-text-primary" : "border-border text-text-muted"
           )}
         >
@@ -430,7 +430,7 @@ export function TimeSection({ task, detail }: { task: ProjectTask; detail: TaskD
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
-              className="w-16 rounded border border-border bg-surface px-1.5 py-0.5 text-right text-body-sm
+              className="w-16 rounded border border-border bg-surface px-1.5 py-0.5 text-end text-body-sm
                          tabular text-text-primary outline-none focus-visible:shadow-focus"
             />
             <span className="text-caption text-text-muted">hours</span>
@@ -459,7 +459,7 @@ export function TimeSection({ task, detail }: { task: ProjectTask; detail: TaskD
               <Avatar name={e.person.name} size="xs" />
               <span className="min-w-0 flex-1 truncate text-body-sm text-text-secondary">{e.note}</span>
               <span className="shrink-0 text-caption tabular text-text-muted">{e.when}</span>
-              <span className="w-14 shrink-0 text-right text-body-sm tabular text-text-primary">
+              <span className="w-14 shrink-0 text-end text-body-sm tabular text-text-primary">
                 {formatMinutes(e.minutes)}
               </span>
             </li>
@@ -576,7 +576,7 @@ export function CommentsSection({ task, detail }: { task: ProjectTask; detail: T
                 {c.edited && <span className="shrink-0 text-caption text-text-muted">· edited</span>}
 
                 {(c.mine || c.canDelete) && !c.pending && (
-                  <span className="ml-auto flex shrink-0 gap-0.5 opacity-0 transition-opacity
+                  <span className="ms-auto flex shrink-0 gap-0.5 opacity-0 transition-opacity
                                    focus-within:opacity-100 group-hover:opacity-100">
                     {c.mine && (
                       <IconButton
@@ -658,7 +658,7 @@ export function CommentsSection({ task, detail }: { task: ProjectTask; detail: T
                 <button
                   type="button"
                   onClick={() => insertMention(p.name)}
-                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-body-sm text-text-primary
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-start text-body-sm text-text-primary
                              transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:bg-white/5"
                 >
                   <Avatar name={p.name} size="xs" />

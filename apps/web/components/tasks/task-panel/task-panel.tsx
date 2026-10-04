@@ -152,7 +152,7 @@ export function TaskPanel({
         {task && detail && project && (
           <>
             {/* Header */}
-            <header className="shrink-0 border-b border-border px-5 py-3.5 pr-14">
+            <header className="shrink-0 border-b border-border px-5 py-3.5 pe-14">
               <div className="flex items-center gap-2">
                 <span
                   className={cn(
@@ -188,7 +188,7 @@ export function TaskPanel({
                 {/* Who is on it, in the header where it is legible at a
                     glance; the rail below is where it is changed. */}
                 {task.assignees.length > 0 && (
-                  <span className="ml-1 shrink-0">
+                  <span className="ms-1 shrink-0">
                     <AvatarGroup
                       people={task.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatarUrl }))}
                       max={3}
@@ -197,7 +197,7 @@ export function TaskPanel({
                   </span>
                 )}
 
-                <div className="ml-auto flex items-center gap-0.5">
+                <div className="ms-auto flex items-center gap-0.5">
                   <IconButton
                     label="Previous task"
                     size="sm"
@@ -384,7 +384,7 @@ export function TaskPanel({
                       <TabsTrigger value="comments">
                         Comments
                         {detail.comments.length > 0 && (
-                          <span className="ml-1 tabular text-text-muted">{detail.comments.length}</span>
+                          <span className="ms-1 tabular text-text-muted">{detail.comments.length}</span>
                         )}
                       </TabsTrigger>
                       <TabsTrigger value="activity">Activity</TabsTrigger>

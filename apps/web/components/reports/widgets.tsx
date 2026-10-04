@@ -98,7 +98,7 @@ export function WidgetCard({
       )}
     >
       {editing && (
-        <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
+        <div className="absolute end-2 top-2 z-10 flex items-center gap-1">
           <span className="flex size-7 items-center justify-center text-text-muted" aria-hidden="true">
             <GripVertical className="size-4" />
           </span>
@@ -210,11 +210,11 @@ function WidgetBody({ id, data }: { id: WidgetId; data: ReportData }) {
             <table className="w-full min-w-[34rem] text-body-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th scope="col" className="px-1 pb-2 text-left text-caption font-medium text-text-muted">Project</th>
-                  <th scope="col" className="px-1 pb-2 text-right text-caption font-medium text-text-muted">Tasks</th>
-                  <th scope="col" className="px-1 pb-2 text-right text-caption font-medium text-text-muted">Overdue</th>
-                  <th scope="col" className="px-1 pb-2 text-right text-caption font-medium text-text-muted">Time</th>
-                  <th scope="col" className="w-[38%] px-1 pb-2 text-left text-caption font-medium text-text-muted">Progress</th>
+                  <th scope="col" className="px-1 pb-2 text-start text-caption font-medium text-text-muted">Project</th>
+                  <th scope="col" className="px-1 pb-2 text-end text-caption font-medium text-text-muted">Tasks</th>
+                  <th scope="col" className="px-1 pb-2 text-end text-caption font-medium text-text-muted">Overdue</th>
+                  <th scope="col" className="px-1 pb-2 text-end text-caption font-medium text-text-muted">Time</th>
+                  <th scope="col" className="w-[38%] px-1 pb-2 text-start text-caption font-medium text-text-muted">Progress</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -229,17 +229,17 @@ function WidgetBody({ id, data }: { id: WidgetId; data: ReportData }) {
                         {project.name}
                       </Link>
                     </td>
-                    <td className="px-1 py-2 text-right tabular text-text-secondary">
+                    <td className="px-1 py-2 text-end tabular text-text-secondary">
                       {project.done}/{project.total}
                     </td>
-                    <td className="px-1 py-2 text-right tabular">
+                    <td className="px-1 py-2 text-end tabular">
                       {project.overdue > 0 ? (
                         <span className="text-danger">{project.overdue}</span>
                       ) : (
                         <span className="text-text-muted">—</span>
                       )}
                     </td>
-                    <td className="px-1 py-2 text-right tabular text-text-secondary">
+                    <td className="px-1 py-2 text-end tabular text-text-secondary">
                       {formatMinutes(project.minutes)}
                     </td>
                     <td className="px-1 py-2">
@@ -250,7 +250,7 @@ function WidgetBody({ id, data }: { id: WidgetId; data: ReportData }) {
                           tone={project.overdue > 0 ? "warning" : "brand"}
                           className="flex-1"
                         />
-                        <span className="w-9 shrink-0 text-right text-caption tabular text-text-secondary">
+                        <span className="w-9 shrink-0 text-end text-caption tabular text-text-secondary">
                           {project.progress}%
                         </span>
                       </span>

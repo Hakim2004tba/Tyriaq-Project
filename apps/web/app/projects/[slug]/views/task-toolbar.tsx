@@ -299,7 +299,7 @@ export function TaskToolbar({
           leaves people guessing at the format.
         */}
         {onExport && (
-          <Button variant="secondary" size="sm" onClick={onExport} className="ml-auto">
+          <Button variant="secondary" size="sm" onClick={onExport} className="ms-auto">
             <Download className="size-3.5" />
             <span className="hidden sm:inline">
               Export {count > 0 ? `${resultCount} ` : ""}to CSV

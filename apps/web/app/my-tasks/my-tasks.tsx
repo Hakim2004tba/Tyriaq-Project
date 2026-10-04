@@ -182,7 +182,7 @@ function TaskRow({
         <button
           type="button"
           onClick={onOpen}
-          className="min-w-0 flex-1 rounded text-left focus-visible:outline-none focus-visible:shadow-focus"
+          className="min-w-0 flex-1 rounded text-start focus-visible:outline-none focus-visible:shadow-focus"
         >
           <span
             className={cn(

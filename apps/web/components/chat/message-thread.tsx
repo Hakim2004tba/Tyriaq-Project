@@ -131,7 +131,7 @@ export function MessageThread({
 
                 <div className="min-w-0 flex-1">
                   {message.replyTo && (
-                    <p className="mb-1 flex min-w-0 items-center gap-1.5 border-l-2 border-border-strong pl-2 text-caption text-text-muted">
+                    <p className="mb-1 flex min-w-0 items-center gap-1.5 border-l-2 border-border-strong ps-2 text-caption text-text-muted">
                       <CornerUpLeft className="size-3 shrink-0" aria-hidden="true" />
                       <span className="shrink-0 font-medium">{message.replyTo.authorName}</span>
                       <span className="truncate">{message.replyTo.body}</span>
@@ -251,7 +251,7 @@ export function MessageThread({
                 {/* Actions appear on hover, anchored to the message's top
                     edge so they never cover the text they act on. */}
                 {!message.pending && (
-                  <div className="absolute -top-3 right-2 flex items-center gap-0.5 rounded-md border border-border bg-surface-elevated p-0.5 opacity-0 shadow-lg transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                  <div className="absolute -top-3 end-2 flex items-center gap-0.5 rounded-md border border-border bg-surface-elevated p-0.5 opacity-0 shadow-lg transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <IconButton label="Add a reaction" size="sm">

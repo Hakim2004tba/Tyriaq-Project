@@ -108,7 +108,7 @@ export function DocumentSidebar({
     return (
       <li key={folder.id}>
         <div
-          className="group flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-white/[0.04]"
+          className="group flex items-center gap-1 rounded-md pe-1 transition-colors hover:bg-white/[0.04]"
           style={{ paddingLeft: `${depth * 12}px` }}
         >
           <button
@@ -122,7 +122,7 @@ export function DocumentSidebar({
               })
             }
             aria-expanded={isOpen}
-            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md py-1.5 pl-1 text-left
+            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md py-1.5 ps-1 text-start
                        focus-visible:outline-none focus-visible:shadow-focus"
           >
             <ChevronRight
@@ -202,7 +202,7 @@ export function DocumentSidebar({
           href={`/documents/${doc.id}`}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           className={cn(
-            "flex items-center gap-1.5 rounded-md py-1.5 pr-2 transition-colors duration-fast",
+            "flex items-center gap-1.5 rounded-md py-1.5 pe-2 transition-colors duration-fast",
             "focus-visible:outline-none focus-visible:shadow-focus",
             active ? "bg-primary-muted text-primary" : "text-text-secondary hover:bg-white/[0.04]"
           )}

@@ -63,8 +63,18 @@ const TEAM_POINTS = [
 ];
 
 export function LandingPage({ signedIn = false }: { signedIn?: boolean }) {
+  /*
+    `dir="ltr"`, deliberately, until this page is translated.
+
+    Its copy is English, and English inside an RTL document is laid out
+    by the bidi algorithm — which moves trailing punctuation to the
+    front, so "limitless productivity." renders as ".limitless
+    productivity". Declaring the direction of the text that is actually
+    here is the fix; the marketing page becomes Arabic when somebody
+    writes the Arabic, not before.
+  */
   return (
-    <div className="tq-aurora min-h-screen bg-background">
+    <div dir="ltr" className="tq-aurora min-h-screen bg-background">
       <MarketingNav signedIn={signedIn} />
 
       {/* ------------------------------- hero ------------------------------ */}
@@ -143,7 +153,7 @@ export function LandingPage({ signedIn = false }: { signedIn?: boolean }) {
               larger rather than a framed picture. The glow behind it is a
               light source, not a decoration — it is what lifts the panel
               off the starfield. */}
-          <div className="relative min-w-0 lg:-mr-16 xl:-mr-28">
+          <div className="relative min-w-0 lg:-me-16 xl:-me-28">
             <span
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-10 -top-16 bottom-0 -z-10 rounded-full blur-3xl"
@@ -188,7 +198,7 @@ export function LandingPage({ signedIn = false }: { signedIn?: boolean }) {
 
       {/* ------------------------------ teams ------------------------------ */}
       <section className="mx-auto grid max-w-[1240px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-14 lg:px-8 lg:py-24">
-        <div className="order-2 min-w-0 lg:order-1 lg:-ml-10 xl:-ml-16">
+        <div className="order-2 min-w-0 lg:order-1 lg:-ms-10 xl:-ms-16">
           <BoardPreview />
         </div>
 

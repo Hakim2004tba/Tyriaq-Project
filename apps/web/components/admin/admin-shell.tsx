@@ -58,7 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {/* ------------------------------ sidebar ----------------------------- */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[248px] shrink-0 flex-col border-r border-border bg-surface-muted/70 backdrop-blur-xl",
+          "fixed inset-y-0 start-0 z-50 flex w-[248px] shrink-0 flex-col border-r border-border bg-surface-muted/70 backdrop-blur-xl",
           "transition-transform duration-slow lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
@@ -76,7 +76,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <IconButton
             label="Close menu"
             size="sm"
-            className="ml-auto lg:hidden"
+            className="ms-auto lg:hidden"
             onClick={() => setOpen(false)}
           >
             <X className="size-4" />
@@ -162,17 +162,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
           <div className="relative min-w-0 max-w-lg flex-1">
             <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+              className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
               aria-hidden="true"
             />
             <Input
               placeholder="Search a user, a workspace…"
               aria-label="Search the platform"
-              className="h-9 pl-8"
+              className="h-9 ps-8"
             />
           </div>
 
-          <span className="ml-auto hidden items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-caption text-text-secondary sm:flex">
+          <span className="ms-auto hidden items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-caption text-text-secondary sm:flex">
             <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
             All systems operational
           </span>

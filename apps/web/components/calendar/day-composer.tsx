@@ -76,7 +76,7 @@ export function DayComposer({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm px-1.5 py-1 text-left
+                className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm px-1.5 py-1 text-start
                            transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:shadow-focus"
               >
                 <span

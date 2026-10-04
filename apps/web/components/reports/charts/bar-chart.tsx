@@ -51,7 +51,7 @@ export function BarChart({
 
           <span className="relative h-4 min-w-0 overflow-hidden rounded-[4px] bg-white/[0.04]">
             <span
-              className="absolute inset-y-0 left-0 rounded-r-[4px] transition-[width] duration-slow"
+              className="absolute inset-y-0 start-0 rounded-r-[4px] transition-[width] duration-slow"
               style={{ width: `${Math.max(2, (bar.value / max) * 100)}%`, background: bar.color }}
             />
           </span>
@@ -63,7 +63,7 @@ export function BarChart({
           {hover === bar.key && bar.detail && (
             <span
               className={cn(
-                "pointer-events-none absolute -top-1 left-[7.5rem] z-10 -translate-y-full rounded-md",
+                "pointer-events-none absolute -top-1 start-[7.5rem] z-10 -translate-y-full rounded-md",
                 "border border-border bg-surface-elevated px-2 py-1 text-caption text-text-secondary shadow-lg"
               )}
             >

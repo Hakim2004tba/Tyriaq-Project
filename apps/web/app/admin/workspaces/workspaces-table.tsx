@@ -199,7 +199,7 @@ export function WorkspacesTable({ workspaces }: { workspaces: AdminWorkspace[] }
         <SheetContent width="lg" className="p-0" aria-describedby={undefined}>
           {open && (
             <div className="flex h-full flex-col gap-5 overflow-y-auto p-5">
-              <header className="flex items-start gap-3 pr-10">
+              <header className="flex items-start gap-3 pe-10">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-muted text-h4 font-bold text-primary">
                   {open.name.slice(0, 1)}
                 </span>

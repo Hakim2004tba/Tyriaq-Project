@@ -25,6 +25,8 @@ import {
 } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { useTasks } from "@/components/tasks/task-store";
+import { useT } from "@/lib/i18n/provider";
+import { statusKey } from "@/lib/i18n/messages";
 import { Tag } from "./shared";
 import { csvFilename, downloadCsv, toCsv } from "@/lib/data/csv";
 import { BulkBar } from "./bulk-bar";
@@ -87,6 +89,8 @@ export function ListView({
   viewerId?: string;
 }) {
   const store = useTasks();
+  // `t` is a task in every map below, so the translator is `tr` here.
+  const tr = useT();
   /*
     Keyed by COLUMN rather than category: a board with "Delivered" and
     "Archived" both mapping to `done` must be able to collapse one
@@ -281,7 +285,9 @@ export function ListView({
         }))
       : TASK_STATUS_ORDER.map((status) => ({
           key: status,
-          label: TASK_STATUS_META[status].label,
+          // Translated here, so the group headers speak the reader's
+          // language while a custom column keeps the name its team gave it.
+          label: tr(statusKey(status)),
           category: status,
           statusId: null as string | null,
           accent: TASK_STATUS_META[status].accent,
@@ -409,7 +415,7 @@ export function ListView({
       />
 
       <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-2.5 shadow-card">
-        <span className="text-caption text-text-muted">Project progress</span>
+        <span className="text-caption text-text-muted">{tr("project.progress")}</span>
         <Progress
           value={store.topLevel.length ? (totalDone / store.topLevel.length) * 100 : 0}
           label="Project progress"
@@ -516,7 +522,7 @@ export function ListView({
                   type="button"
                   onClick={() => toggleGroup(column.key)}
                   aria-expanded={isOpen}
-                  className="flex flex-1 items-center gap-2.5 rounded text-left transition-colors duration-fast
+                  className="flex flex-1 items-center gap-2.5 rounded text-start transition-colors duration-fast
                              hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
                 >
                   <ChevronDown
@@ -614,7 +620,7 @@ export function ListView({
                             }
                           }}
                           aria-label={`${t.title} — ${meta.label}. Alt with arrow keys moves this task.`}
-                          className="group flex w-full cursor-pointer items-center gap-2.5 px-2 py-2.5 text-left
+                          className="group flex w-full cursor-pointer items-center gap-2.5 px-2 py-2.5 text-start
                                      transition-colors duration-fast hover:bg-white/[0.025]
                                      focus-visible:outline-none focus-visible:bg-white/[0.04]"
                         >
@@ -679,7 +685,7 @@ export function ListView({
                           >
                             <ChevronRight
                               className={cn(
-                                "size-3.5 transition-transform duration-fast",
+                                "rtl-flip size-3.5 transition-transform duration-fast",
                                 isExpanded && "rotate-90"
                               )}
                               aria-hidden="true"
@@ -798,12 +804,12 @@ export function ListView({
                                       onOpenTask(kid.id);
                                     }
                                   }}
-                                  className="flex w-full cursor-pointer items-center gap-2.5 py-2 pl-10 pr-2 text-left
+                                  className="flex w-full cursor-pointer items-center gap-2.5 py-2 ps-10 pe-2 text-start
                                              transition-colors duration-fast hover:bg-white/[0.025]
                                              focus-visible:outline-none focus-visible:bg-white/[0.04]"
                                 >
                                   <CornerDownRight
-                                    className="size-3.5 shrink-0 text-text-muted"
+                                    className="rtl-flip size-3.5 shrink-0 text-text-muted"
                                     aria-hidden="true"
                                   />
                                   <StatusControl task={kid} statuses={statuses} />
@@ -837,7 +843,7 @@ export function ListView({
                               {addingTo === t.id ? (
                                 <input
                                   autoFocus
-                                  placeholder="Subtask, then Enter"
+                                  placeholder={tr("task.subtask")}
                                   aria-label={`New subtask in ${t.title}`}
                                   onKeyDown={(e) => {
                                     if (e.key === "Enter") {
@@ -862,12 +868,12 @@ export function ListView({
                                     e.stopPropagation();
                                     setAddingTo(t.id);
                                   }}
-                                  className="flex w-full items-center gap-1.5 py-1.5 pl-10 text-caption text-text-muted
+                                  className="flex w-full items-center gap-1.5 py-1.5 ps-10 text-caption text-text-muted
                                              transition-colors hover:text-text-primary
                                              focus-visible:outline-none focus-visible:bg-white/[0.04]"
                                 >
                                   <Plus className="size-3" aria-hidden="true" />
-                                  Add subtask
+                                  {tr("task.addSubtask")}
                                 </button>
                               )}
                             </li>
@@ -908,7 +914,7 @@ export function ListView({
                     <input
                       ref={composeRef}
                       autoFocus
-                      placeholder="Task name, then Enter — Escape to finish"
+                      placeholder={tr("task.title")}
                       aria-label={`New task in ${meta.label}`}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -932,7 +938,7 @@ export function ListView({
                                focus-visible:outline-none focus-visible:shadow-focus"
                   >
                     <Plus className="size-4" />
-                    Add task
+                    {tr("task.add")}
                   </button>
                 ))}
             </section>

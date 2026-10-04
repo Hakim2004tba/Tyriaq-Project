@@ -72,8 +72,8 @@ export function CalendarTask({
         onClick={onOpen}
         title={`${task.title} — ${status.label}, ${priority.label} priority`}
         className={cn(
-          "group relative flex w-full items-center gap-1.5 overflow-hidden rounded-sm py-[3px] pl-2 pr-1.5",
-          "bg-surface-elevated text-left transition-colors duration-fast",
+          "group relative flex w-full items-center gap-1.5 overflow-hidden rounded-sm py-[3px] ps-2 pe-1.5",
+          "bg-surface-elevated text-start transition-colors duration-fast",
           "hover:bg-white/[0.09] focus-visible:outline-none focus-visible:shadow-focus",
           draggable && "cursor-grab active:cursor-grabbing",
           dragging && "opacity-35",
@@ -81,7 +81,7 @@ export function CalendarTask({
         )}
       >
         <span
-          className={cn("absolute inset-y-0 left-0 w-[3px]", PRIORITY_EDGE[task.priority])}
+          className={cn("absolute inset-y-0 start-0 w-[3px]", PRIORITY_EDGE[task.priority])}
           aria-hidden="true"
         />
         <span className={cn("size-1.5 shrink-0 rounded-full", status.accent)} aria-hidden="true" />
@@ -115,7 +115,7 @@ export function CalendarTask({
         }
       }}
       className={cn(
-        "group relative overflow-hidden rounded-md border border-border bg-surface p-2 pl-2.5 shadow-card",
+        "group relative overflow-hidden rounded-md border border-border bg-surface p-2 ps-2.5 shadow-card",
         "transition-all duration-fast ease-emphasized",
         "hover:-translate-y-px hover:border-border-strong hover:shadow-card-hover",
         "focus-visible:outline-none focus-visible:shadow-focus",
@@ -124,7 +124,7 @@ export function CalendarTask({
       )}
     >
       <span
-        className={cn("absolute inset-y-0 left-0 w-[3px]", PRIORITY_EDGE[task.priority])}
+        className={cn("absolute inset-y-0 start-0 w-[3px]", PRIORITY_EDGE[task.priority])}
         aria-hidden="true"
       />
 
@@ -141,7 +141,7 @@ export function CalendarTask({
       </div>
 
       {chip && project && (
-        <p className="mt-1.5 flex items-center gap-1.5 pl-3">
+        <p className="mt-1.5 flex items-center gap-1.5 ps-3">
           <span
             className={cn(
               "flex size-3.5 shrink-0 items-center justify-center rounded-[4px] text-[7px] font-bold ring-1 ring-inset",
@@ -156,7 +156,7 @@ export function CalendarTask({
         </p>
       )}
 
-      <div className="mt-2 flex items-center justify-between gap-2 pl-3">
+      <div className="mt-2 flex items-center justify-between gap-2 ps-3">
         <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", priority.text)}>
           <Flag className={cn("size-2.5", task.priority === "urgent" && "fill-current")} aria-hidden="true" />
           {priority.label}

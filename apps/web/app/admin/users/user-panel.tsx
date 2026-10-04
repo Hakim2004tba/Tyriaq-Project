@@ -60,7 +60,7 @@ export function UserPanel({
       <SheetContent width="lg" className="p-0" aria-describedby={undefined}>
         {user && (
           <div className="flex h-full flex-col overflow-y-auto">
-            <header className="flex items-start gap-3 border-b border-border p-5 pr-14">
+            <header className="flex items-start gap-3 border-b border-border p-5 pe-14">
               <Avatar name={user.name} size="lg" />
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-h3 text-text-primary">{user.name}</h2>
@@ -190,7 +190,7 @@ function Row({
     <p className="flex items-center gap-2 text-body-sm">
       <Icon className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
       <span className="text-text-muted">{label}</span>
-      <span className="ml-auto min-w-0 truncate text-text-primary">{value}</span>
+      <span className="ms-auto min-w-0 truncate text-text-primary">{value}</span>
     </p>
   );
 }

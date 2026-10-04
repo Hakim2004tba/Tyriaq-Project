@@ -74,7 +74,7 @@ const FieldButton = forwardRef<
     ref={ref}
     type="button"
     className={cn(
-      "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-body-sm transition-colors duration-fast",
+      "flex w-full items-center gap-2 rounded-md px-2 py-1 text-start text-body-sm transition-colors duration-fast",
       "hover:bg-white/[0.05] focus-visible:outline-none focus-visible:shadow-focus",
       className
     )}
@@ -214,7 +214,7 @@ export function DatesField({ task }: { task: ProjectTask }) {
           type="date"
           value={toISODate(task.startOffset) ?? ""}
           onChange={(e) => setDate("startOffset", e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-right tabular text-text-primary outline-none
+          className="min-w-0 flex-1 bg-transparent text-end tabular text-text-primary outline-none
                      [color-scheme:dark]"
         />
       </label>
@@ -231,7 +231,7 @@ export function DatesField({ task }: { task: ProjectTask }) {
           value={toISODate(task.dueOffset) ?? ""}
           onChange={(e) => setDate("dueOffset", e.target.value)}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-right tabular outline-none [color-scheme:dark]",
+            "min-w-0 flex-1 bg-transparent text-end tabular outline-none [color-scheme:dark]",
             overdue ? "text-danger" : "text-text-primary"
           )}
         />

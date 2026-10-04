@@ -77,7 +77,7 @@ export function MarketingNav({ signedIn = false }: { signedIn?: boolean }) {
             </li>
           </ul>
 
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
+          <div className="ms-auto flex items-center gap-2 md:ms-0">
             {signedIn ? (
               <Button size="md" asChild className="hidden sm:inline-flex">
                 <Link href="/dashboard">

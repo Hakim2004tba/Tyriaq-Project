@@ -150,7 +150,7 @@ export function DataTable<T extends { id: string }>({
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[12rem] flex-1">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+            className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
             aria-hidden="true"
           />
           <Input
@@ -161,7 +161,7 @@ export function DataTable<T extends { id: string }>({
             }}
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
-            className="h-9 pl-8"
+            className="h-9 ps-8"
           />
         </div>
 
@@ -224,7 +224,7 @@ export function DataTable<T extends { id: string }>({
           <span className="text-body-sm text-text-primary">
             {selectedRows.length} selected
           </span>
-          <span className="ml-auto flex flex-wrap items-center gap-2">
+          <span className="ms-auto flex flex-wrap items-center gap-2">
             {bulkActions(selectedRows, () => setSelected(new Set()))}
             <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
               Clear
@@ -286,7 +286,7 @@ export function DataTable<T extends { id: string }>({
                       scope="col"
                       className={cn(
                         "px-3 py-2.5 text-caption font-medium text-text-muted",
-                        column.align === "right" ? "text-right" : "text-left",
+                        column.align === "right" ? "text-end" : "text-start",
                         column.hideBelow && HIDE[column.hideBelow]
                       )}
                     >
@@ -357,7 +357,7 @@ export function DataTable<T extends { id: string }>({
                       key={column.key}
                       className={cn(
                         "px-3 py-2.5",
-                        column.align === "right" ? "text-right" : "text-left",
+                        column.align === "right" ? "text-end" : "text-start",
                         column.hideBelow && HIDE[column.hideBelow],
                         column.className
                       )}

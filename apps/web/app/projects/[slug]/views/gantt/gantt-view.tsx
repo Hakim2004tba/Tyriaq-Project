@@ -388,7 +388,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
               {/* Header */}
               <div className="flex border-b border-border">
                 <div
-                  className="sticky left-0 z-30 shrink-0 border-r border-border bg-surface px-4 py-2"
+                  className="sticky start-0 z-30 shrink-0 border-r border-border bg-surface px-4 py-2"
                   style={{ width: LABEL_W }}
                 >
                   <span className="text-overline uppercase text-text-muted">Task</span>
@@ -432,7 +432,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
                 {/* Sticky task column — without it a bar scrolled weeks to
                     the right becomes anonymous. */}
                 <div
-                  className="sticky left-0 z-30 shrink-0 border-r border-border bg-surface"
+                  className="sticky start-0 z-30 shrink-0 border-r border-border bg-surface"
                   style={{ width: LABEL_W }}
                 >
                   {rows.map((r) =>
@@ -446,7 +446,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
                           type="button"
                           onClick={() => toggleSection(r.id)}
                           aria-expanded={!collapsed.has(r.id)}
-                          className="flex flex-1 items-center gap-2 rounded text-left focus-visible:outline-none focus-visible:shadow-focus"
+                          className="flex flex-1 items-center gap-2 rounded text-start focus-visible:outline-none focus-visible:shadow-focus"
                         >
                           <ChevronDown
                             className={cn(
@@ -486,7 +486,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
                           type="button"
                           onClick={() => onOpenTask(r.task.id)}
                           className={cn(
-                            "min-w-0 flex-1 truncate text-left text-body-sm transition-colors rounded",
+                            "min-w-0 flex-1 truncate text-start text-body-sm transition-colors rounded",
                             "hover:text-primary focus-visible:outline-none focus-visible:shadow-focus",
                             r.task.status === "done" ? "text-text-muted line-through" : "text-text-primary"
                           )}
@@ -561,7 +561,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
                       key={rowKey(r)}
                       aria-hidden="true"
                       className={cn(
-                        "absolute left-0 w-full border-b border-border",
+                        "absolute start-0 w-full border-b border-border",
                         r.kind === "group" && "bg-surface-muted/60"
                       )}
                       style={{ top: r.y, height: r.kind === "group" ? GROUP_H : ROW_H }}
@@ -686,7 +686,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2.5 rotate-45 rounded-[2px] bg-brand" aria-hidden="true" /> Milestone
             </span>
-            <span className="ml-auto inline-flex items-center gap-1.5">
+            <span className="ms-auto inline-flex items-center gap-1.5">
               <Link2Off className="size-3" aria-hidden="true" />
               Today is {dayLabel(0)}
             </span>

@@ -9,6 +9,8 @@ import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
 import { TaskStoreProvider } from "@/components/tasks/task-store";
 import type { CustomField, CustomFieldValue } from "@flow/types";
 import type { ProjectStatus, SavedView } from "@/lib/data/board";
+import { useT } from "@/lib/i18n/provider";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { Person, ProjectTask, TaskDetail } from "@/lib/data/task-types";
 import type { Project } from "@/lib/data/types";
 import { BoardView } from "./views/board-view";
@@ -20,11 +22,11 @@ import { ListView } from "./views/list-view";
 const VIEWS = ["list", "board", "calendar", "gantt", "chat"] as const;
 type View = (typeof VIEWS)[number];
 
-const TABS: { id: View; label: string; icon: LucideIcon }[] = [
-  { id: "list", label: "List", icon: List },
-  { id: "board", label: "Board", icon: KanbanSquare },
-  { id: "calendar", label: "Calendar", icon: CalendarDays },
-  { id: "gantt", label: "Gantt", icon: GanttChartSquare },
+const TABS: { id: View; label: string; labelKey: MessageKey; icon: LucideIcon }[] = [
+  { id: "list", label: "List", labelKey: "view.list", icon: List },
+  { id: "board", label: "Board", labelKey: "view.board", icon: KanbanSquare },
+  { id: "calendar", label: "Calendar", labelKey: "view.calendar", icon: CalendarDays },
+  { id: "gantt", label: "Gantt", labelKey: "view.gantt", icon: GanttChartSquare },
   /*
     Chat sits at the end of the same strip rather than in a side panel.
 
@@ -35,7 +37,7 @@ const TABS: { id: View; label: string; icon: LucideIcon }[] = [
     this project's tasks in the `#` picker, and a message that can become
     a task on this board without anybody being asked which project.
   */
-  { id: "chat", label: "Chat", icon: MessageSquare },
+  { id: "chat", label: "Chat", labelKey: "view.chat", icon: MessageSquare },
 ];
 
 function isView(v: string | null): v is View {
@@ -84,6 +86,8 @@ export function ProjectWorkspace({
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  // `t` is a tab in the map below, so the translator is `tr`.
+  const tr = useT();
 
   const raw = params.get("view");
   const view: View = isView(raw) ? raw : "list";
@@ -142,7 +146,7 @@ export function ProjectWorkspace({
                 return (
                   <TabsTrigger key={t.id} value={t.id}>
                     <Icon className="size-4" aria-hidden="true" />
-                    {t.label}
+                    {tr(t.labelKey)}
                   </TabsTrigger>
                 );
               })}

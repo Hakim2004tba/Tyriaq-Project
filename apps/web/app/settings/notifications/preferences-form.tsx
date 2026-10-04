@@ -134,7 +134,7 @@ export function NotificationPreferences({
                 <span
                   className={cn(
                     "absolute top-0.5 flex size-4 items-center justify-center rounded-full bg-white transition-[left] duration-fast",
-                    on ? "left-[18px]" : "left-0.5"
+                    on ? "start-[18px]" : "start-0.5"
                   )}
                   aria-hidden="true"
                 >
@@ -198,7 +198,7 @@ function EmailSwitch({
         <span
           className={cn(
             "absolute top-0.5 flex size-4 items-center justify-center rounded-full bg-white transition-[left] duration-fast",
-            checked ? "left-[18px]" : "left-0.5"
+            checked ? "start-[18px]" : "start-0.5"
           )}
           aria-hidden="true"
         >

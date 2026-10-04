@@ -49,7 +49,7 @@ function Row({
     <div className="relative flex items-center" style={{ paddingLeft: INDENT[depth] }}>
       {active && (
         <span
-          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary"
+          className="absolute start-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary"
           aria-hidden="true"
         />
       )}
@@ -64,7 +64,7 @@ function Row({
                      transition-colors hover:text-sidebar-text focus-visible:outline-none focus-visible:shadow-focus"
         >
           <ChevronRight
-            className={cn("size-3.5 transition-transform duration-fast", expanded && "rotate-90")}
+            className={cn("rtl-flip size-3.5 transition-transform duration-fast", expanded && "rotate-90")}
             aria-hidden="true"
           />
         </button>
@@ -76,7 +76,7 @@ function Row({
         href={href}
         onClick={onClick}
         className={cn(
-          "group/row flex min-w-0 flex-1 items-center gap-2 rounded-md py-[6px] pl-1 pr-2 text-body-sm font-medium",
+          "group/row flex min-w-0 flex-1 items-center gap-2 rounded-md py-[6px] ps-1 pe-2 text-body-sm font-medium",
           "transition-colors duration-fast ease-emphasized",
           "focus-visible:outline-none focus-visible:shadow-focus",
           active
@@ -85,7 +85,7 @@ function Row({
         )}
       >
         {leading}
-        <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+        <span className="min-w-0 flex-1 truncate text-start">{label}</span>
         {trailing}
       </Link>
     </div>

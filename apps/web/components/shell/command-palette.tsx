@@ -201,7 +201,7 @@ export function CommandPalette({
                           onClick={() => go(hit)}
                           onMouseEnter={() => setActive(index)}
                           className={cn(
-                            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors",
+                            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-start transition-colors",
                             isActive ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
                           )}
                         >
@@ -242,7 +242,7 @@ export function CommandPalette({
             <CornerDownLeft className="size-3" aria-hidden="true" />
             to open
           </span>
-          <span className="ml-auto">esc to close</span>
+          <span className="ms-auto">esc to close</span>
         </div>
       </DialogContent>
     </Dialog>

@@ -51,7 +51,7 @@ export function DocumentList({ documents }: { documents: DocumentSummary[] }) {
       <div className="flex flex-col gap-3">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+            className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
             aria-hidden="true"
           />
           <Input
@@ -59,7 +59,7 @@ export function DocumentList({ documents }: { documents: DocumentSummary[] }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search documents…"
             aria-label="Search documents"
-            className="pl-8"
+            className="ps-8"
           />
         </div>
 

@@ -139,7 +139,7 @@ export function SavedViewsBar({
                 type="button"
                 onClick={() => remove(view)}
                 aria-label={`Remove the ${view.name} view`}
-                className="ml-0.5 hidden rounded p-0.5 text-text-muted transition-colors
+                className="ms-0.5 hidden rounded p-0.5 text-text-muted transition-colors
                            hover:text-danger focus-visible:outline-none focus-visible:shadow-focus
                            group-hover/view:block"
               >

@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { Kbd } from "@flow/ui";
+import { useT } from "@/lib/i18n/provider";
 
 /**
  * The topbar command entry.
@@ -15,16 +16,18 @@ import { Kbd } from "@flow/ui";
  * too. The hint stays because this is where people look for it.
  */
 export function CommandBar({ onOpen }: { onOpen?: () => void }) {
+  const t = useT();
+
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="group flex h-9 w-full items-center gap-2.5 rounded-md border border-border bg-surface-muted px-3 text-left
+      className="group flex h-9 w-full items-center gap-2.5 rounded-md border border-border bg-surface-muted px-3 text-start
                  transition-colors duration-fast hover:border-border-strong hover:bg-surface
                  focus-visible:outline-none focus-visible:border-primary/60 focus-visible:shadow-focus"
     >
       <Search className="size-4 shrink-0 text-text-muted transition-colors group-hover:text-text-secondary" aria-hidden="true" />
-      <span className="flex-1 truncate text-body-sm text-text-muted">Search tasks, docs and people…</span>
+      <span className="flex-1 truncate text-body-sm text-text-muted">{t("nav.search")}</span>
       <Kbd className="hidden sm:inline-block">⌘K</Kbd>
     </button>
   );

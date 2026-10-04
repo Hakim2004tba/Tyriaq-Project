@@ -80,7 +80,7 @@ export function BoardPreview({ className }: { className?: string }) {
               A
             </span>
             <span className="truncate text-[11px] font-medium text-text-primary">Academy website</span>
-            <span className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-md border border-white/[0.06] bg-surface-muted p-0.5 sm:flex">
+            <span className="ms-auto hidden shrink-0 items-center gap-0.5 rounded-md border border-white/[0.06] bg-surface-muted p-0.5 sm:flex">
               {["List", "Board", "Calendar"].map((view) => (
                 <span
                   key={view}

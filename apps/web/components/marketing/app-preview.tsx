@@ -143,7 +143,7 @@ export function AppPreview({ className }: { className?: string }) {
                           style={{ width: `${project.value}%` }}
                         />
                       </span>
-                      <span className="w-6 shrink-0 text-right text-[8px] tabular-nums text-text-muted">
+                      <span className="w-6 shrink-0 text-end text-[8px] tabular-nums text-text-muted">
                         {project.value}%
                       </span>
                     </li>

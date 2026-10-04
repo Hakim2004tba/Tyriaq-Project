@@ -43,7 +43,7 @@ export function WorkspaceSwitcher() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="hidden h-9 items-center gap-2 rounded-md border border-border px-2.5 text-left
+            className="hidden h-9 items-center gap-2 rounded-md border border-border px-2.5 text-start
                        transition-colors duration-fast hover:border-border-strong hover:bg-surface
                        focus-visible:outline-none focus-visible:shadow-focus lg:flex"
           >

@@ -222,7 +222,7 @@ export function SpaceMembersDialog({
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-0 flex-1">
                   <Search
-                    className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+                    className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
                     aria-hidden="true"
                   />
                   <Input
@@ -231,7 +231,7 @@ export function SpaceMembersDialog({
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search workspace members…"
                     aria-label="Search workspace members"
-                    className="pl-8"
+                    className="ps-8"
                   />
                 </div>
                 <PermissionPicker level={level} source="space" onChange={setLevel} />
@@ -245,7 +245,7 @@ export function SpaceMembersDialog({
                         type="button"
                         onClick={invite}
                         disabled={pending}
-                        className="flex w-full items-center gap-2.5 rounded-md text-left transition-colors
+                        className="flex w-full items-center gap-2.5 rounded-md text-start transition-colors
                                    hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-white/5"
                       >
                         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-muted text-primary">
@@ -276,7 +276,7 @@ export function SpaceMembersDialog({
                       <button
                         type="button"
                         onClick={() => add(member)}
-                        className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors
+                        className="flex w-full items-center gap-2.5 px-2.5 py-2 text-start transition-colors
                                    hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-white/5"
                       >
                         <Avatar name={member.name} src={member.avatarUrl ?? undefined} size="sm" />

@@ -13,7 +13,10 @@ import { Wordmark } from "@flow/ui";
  */
 export default function LegalLayout({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <div className="min-h-screen bg-background">
+    // English until translated, for the same bidi reason as the
+    // marketing page: punctuation at the end of a Latin sentence jumps
+    // to the front inside an RTL document.
+    <div dir="ltr" className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-[820px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link href="/" className="rounded focus-visible:outline-none focus-visible:shadow-focus">

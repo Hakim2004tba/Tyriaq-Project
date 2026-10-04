@@ -686,7 +686,7 @@ function NewConversationDialog({
                         })
                       }
                       className={cn(
-                        "flex w-full items-center gap-2 px-2.5 py-2 text-left text-body-sm transition-colors",
+                        "flex w-full items-center gap-2 px-2.5 py-2 text-start text-body-sm transition-colors",
                         on ? "bg-primary-muted text-primary" : "text-text-secondary hover:bg-white/5"
                       )}
                     >
@@ -764,7 +764,7 @@ function SearchDialog({
 
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+            className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
             aria-hidden="true"
           />
           <Input
@@ -773,13 +773,13 @@ function SearchDialog({
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Search…"
             aria-label="Search messages"
-            className="pl-8"
+            className="ps-8"
           />
           {query && (
             <IconButton
               label="Clear search"
               size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              className="absolute end-1 top-1/2 -translate-y-1/2"
               onClick={() => onQuery("")}
             >
               <X className="size-3.5" />
@@ -801,7 +801,7 @@ function SearchDialog({
                   <button
                     type="button"
                     onClick={() => onOpenMessage(result.conversationId)}
-                    className="flex w-full flex-col gap-0.5 px-1 py-2 text-left transition-colors hover:bg-white/5
+                    className="flex w-full flex-col gap-0.5 px-1 py-2 text-start transition-colors hover:bg-white/5
                                focus-visible:outline-none focus-visible:shadow-focus"
                   >
                     <span className="flex items-baseline gap-2">

@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { MessageKey } from "@/lib/i18n/messages";
 import {
   BarChart3,
   CalendarDays,
@@ -22,7 +23,13 @@ import {
  */
 export interface NavEntry {
   id: string;
+  /**
+   * The English label, kept as the fallback and as what a developer
+   * reads here. The sidebar renders `labelKey` through the translator.
+   */
   label: string;
+  /** Its key in the dictionary, so the rail speaks the reader's language. */
+  labelKey: MessageKey;
   href: string;
   icon: LucideIcon;
   /** Unread/pending count rendered as a chrome badge. */
@@ -43,16 +50,16 @@ export interface NavEntry {
 export const WORKSPACE_NAV: NavEntry[] = [
   // Points at the preview dashboard while /app is still on the old,
   // auth-gated shell. Repoint to "/app" when that route adopts AppFrame.
-  { id: "home", label: "Home", href: "/dashboard", icon: Home, primary: true },
-  { id: "my-tasks", label: "My Tasks", href: "/my-tasks", icon: CheckSquare, primary: true },
-  { id: "projects", label: "Projects", href: "/projects", icon: FolderKanban },
-  { id: "calendar", label: "Calendar", href: "/calendar", icon: CalendarDays, primary: true },
-  { id: "docs", label: "Documents", href: "/documents", icon: FileText },
-  { id: "whiteboards", label: "Whiteboards", href: "#", icon: PenTool, soon: true },
-  { id: "goals", label: "Goals", href: "#", icon: Target, soon: true },
-  { id: "reports", label: "Reports", href: "/reports", icon: BarChart3 },
-  { id: "chat", label: "Chat", href: "/chat", icon: MessagesSquare, primary: true },
-  { id: "inbox", label: "Inbox", href: "/inbox", icon: Inbox, primary: true },
+  { id: "home", labelKey: "nav.home", label: "Home", href: "/dashboard", icon: Home, primary: true },
+  { id: "my-tasks", labelKey: "nav.myTasks", label: "My Tasks", href: "/my-tasks", icon: CheckSquare, primary: true },
+  { id: "projects", labelKey: "nav.projects", label: "Projects", href: "/projects", icon: FolderKanban },
+  { id: "calendar", labelKey: "nav.calendar", label: "Calendar", href: "/calendar", icon: CalendarDays, primary: true },
+  { id: "docs", labelKey: "nav.documents", label: "Documents", href: "/documents", icon: FileText },
+  { id: "whiteboards", labelKey: "nav.whiteboards", label: "Whiteboards", href: "#", icon: PenTool, soon: true },
+  { id: "goals", labelKey: "nav.goals", label: "Goals", href: "#", icon: Target, soon: true },
+  { id: "reports", labelKey: "nav.reports", label: "Reports", href: "/reports", icon: BarChart3 },
+  { id: "chat", labelKey: "nav.chat", label: "Chat", href: "/chat", icon: MessagesSquare, primary: true },
+  { id: "inbox", labelKey: "nav.inbox", label: "Inbox", href: "/inbox", icon: Inbox, primary: true },
 ];
 
 /** The colour a space is identified by, everywhere it appears. */

@@ -136,7 +136,7 @@ export function GanttBar({
         {/* Progress fill sits inside the bar rather than beside it, so
             duration and completion occupy the same space. */}
         <span
-          className={cn("absolute inset-y-0 left-0 rounded-l-md", fillFor(task, late))}
+          className={cn("absolute inset-y-0 start-0 rounded-l-md", fillFor(task, late))}
           style={{ width: `${pct}%` }}
           aria-hidden="true"
         />
@@ -147,7 +147,7 @@ export function GanttBar({
             </span>
           )}
           {width > 120 && (
-            <span className="ml-auto shrink-0 text-[10px] tabular text-white/70">{pct}%</span>
+            <span className="ms-auto shrink-0 text-[10px] tabular text-white/70">{pct}%</span>
           )}
         </span>
       </div>
@@ -160,7 +160,7 @@ export function GanttBar({
           e.stopPropagation();
           onPointerDown(e, "resize-start");
         }}
-        className="absolute inset-y-0 left-0 w-1.5 cursor-ew-resize rounded-l-md opacity-0
+        className="absolute inset-y-0 start-0 w-1.5 cursor-ew-resize rounded-l-md opacity-0
                    transition-opacity group-hover:bg-white/30 group-hover:opacity-100"
       />
       <span
@@ -170,7 +170,7 @@ export function GanttBar({
           e.stopPropagation();
           onPointerDown(e, "resize-end");
         }}
-        className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize rounded-r-md opacity-0
+        className="absolute inset-y-0 end-0 w-1.5 cursor-ew-resize rounded-r-md opacity-0
                    transition-opacity group-hover:bg-white/30 group-hover:opacity-100"
       />
 

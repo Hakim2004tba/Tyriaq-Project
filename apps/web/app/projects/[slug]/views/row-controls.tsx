@@ -23,6 +23,8 @@ import {
   type ProjectTask,
 } from "@/lib/data/task-types";
 import { useTasks } from "@/components/tasks/task-store";
+import { useT } from "@/lib/i18n/provider";
+import { priorityKey, statusKey } from "@/lib/i18n/messages";
 import { Due, Priority as PriorityFlag } from "./shared";
 
 /**
@@ -55,6 +57,7 @@ export function StatusControl({
   statuses?: { id: string; name: string; category: ProjectTask["status"]; color: string }[];
 }) {
   const store = useTasks();
+  const t = useT();
   const meta = TASK_STATUS_META[task.status];
   const current = statuses.find((status) => status.id === task.statusId);
 
@@ -78,7 +81,7 @@ export function StatusControl({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="z-[60] w-48" onClick={stop}>
-        <DropdownMenuLabel>Status</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("task.status")}</DropdownMenuLabel>
 
         {/*
           The board's own columns when it has them, and the five
@@ -107,7 +110,7 @@ export function StatusControl({
               return (
                 <DropdownMenuItem key={status} onSelect={() => store.setStatus(task.id, status)}>
                   <span className={cn("size-2 shrink-0 rounded-full", item.accent)} aria-hidden="true" />
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1">{t(statusKey(status))}</span>
                   {task.status === status && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
                 </DropdownMenuItem>
               );
@@ -123,6 +126,7 @@ export function StatusControl({
 
 export function AssigneeControl({ task, people }: { task: ProjectTask; people: Person[] }) {
   const store = useTasks();
+  const t = useT();
   const assigned = new Set(task.assignees.map((person) => person.id));
 
   return (
@@ -155,7 +159,7 @@ export function AssigneeControl({ task, people }: { task: ProjectTask; people: P
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-[60] w-56" onClick={stop}>
-        <DropdownMenuLabel>Assignees</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("task.assignees")}</DropdownMenuLabel>
         {people.length === 0 ? (
           <p className="px-2 py-1.5 text-caption text-text-muted">
             Nobody is on this project yet.
@@ -245,6 +249,7 @@ const STATUS_DOT: Record<string, string> = {
 
 export function PriorityControl({ task, compact }: { task: ProjectTask; compact?: boolean }) {
   const store = useTasks();
+  const t = useT();
 
   return (
     <DropdownMenu>
@@ -260,7 +265,7 @@ export function PriorityControl({ task, compact }: { task: ProjectTask; compact?
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-[60] w-40" onClick={stop}>
-        <DropdownMenuLabel>Priority</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("task.priority")}</DropdownMenuLabel>
         {PRIORITIES.map((priority) => (
           <DropdownMenuItem key={priority} onSelect={() => store.updateTask(task.id, { priority })}>
             <Flag
@@ -273,14 +278,14 @@ export function PriorityControl({ task, compact }: { task: ProjectTask; compact?
               )}
               aria-hidden="true"
             />
-            <span className="flex-1 capitalize">{priority}</span>
+            <span className="flex-1">{t(priorityKey(priority))}</span>
             {task.priority === priority && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => store.setStatus(task.id, "done")}>
           <Check className="size-3.5 shrink-0 text-success" aria-hidden="true" />
-          Mark done
+          {t("task.markDone")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -31,7 +31,7 @@ export function LoginForm() {
         <FormMessage error={state.error} message={state.message} />
         <Field label="Email" name="email" type="email" autoComplete="email" placeholder="you@example.com" />
         <PasswordField />
-        <div className="-mt-1 text-right">
+        <div className="-mt-1 text-end">
           <Link href="/forgot-password" className="text-caption text-text-muted hover:text-text-primary">
             Forgot your password?
           </Link>

@@ -44,7 +44,7 @@ export function ConversationList({
       <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+            className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-text-muted"
             aria-hidden="true"
           />
           <Input
@@ -52,7 +52,7 @@ export function ConversationList({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Find a conversation…"
             aria-label="Find a conversation"
-            className="pl-8"
+            className="ps-8"
           />
         </div>
         <IconButton label="New conversation" variant="secondary" onClick={onNew}>
@@ -77,7 +77,7 @@ export function ConversationList({
                   onClick={() => onSelect(c.id)}
                   aria-current={active ? "true" : undefined}
                   className={cn(
-                    "flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors duration-fast",
+                    "flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-2 text-start transition-colors duration-fast",
                     "focus-visible:outline-none focus-visible:shadow-focus",
                     active ? "bg-primary-muted" : "hover:bg-white/[0.04]"
                   )}
@@ -102,7 +102,7 @@ export function ConversationList({
                     )}
                     {online && (
                       <span
-                        className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-background bg-success"
+                        className="absolute -bottom-0.5 -end-0.5 size-2.5 rounded-full border-2 border-background bg-success"
                         aria-label="Online"
                       />
                     )}

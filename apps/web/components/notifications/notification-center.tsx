@@ -149,7 +149,7 @@ export function NotificationCenter() {
           {unread > 0 && (
             <span
               className={cn(
-                "absolute right-1 top-1 flex min-w-[15px] items-center justify-center rounded-full",
+                "absolute end-1 top-1 flex min-w-[15px] items-center justify-center rounded-full",
                 "bg-primary px-1 text-[9px] font-semibold leading-[15px] text-white ring-2 ring-background"
               )}
               aria-hidden="true"
@@ -231,7 +231,7 @@ export function NotificationCenter() {
               );
 
               const className = cn(
-                "flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors",
+                "flex w-full items-start gap-2.5 px-3 py-2.5 text-start transition-colors",
                 "focus-visible:outline-none focus-visible:bg-white/5",
                 notification.read ? "hover:bg-white/[0.03]" : "bg-primary/[0.04] hover:bg-primary/[0.07]"
               );

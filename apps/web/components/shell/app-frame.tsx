@@ -37,6 +37,7 @@ import { useSession } from "@/components/auth/session-provider";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { CommandBar } from "./command-bar";
 import { CommandPalette } from "./command-palette";
+import { useT } from "@/lib/i18n/provider";
 import { SpaceTree } from "./space-tree";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { UpgradeCard } from "./upgrade-card";
@@ -88,6 +89,7 @@ export function AppFrame({
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const t = useT();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -235,8 +237,8 @@ export function AppFrame({
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 {!railCollapsed && (
                   <>
-                    <span className="flex-1 truncate text-left">{item.label}</span>
-                    <Badge variant="chrome" size="sm">Soon</Badge>
+                    <span className="flex-1 truncate text-start">{t(item.labelKey)}</span>
+                    <Badge variant="chrome" size="sm">{t("nav.soon")}</Badge>
                   </>
                 )}
               </NavigationItem>
@@ -252,7 +254,7 @@ export function AppFrame({
                   <Icon className="size-4 shrink-0" aria-hidden="true" />
                   {!railCollapsed && (
                     <>
-                      <span className="flex-1 truncate text-left">{item.label}</span>
+                      <span className="flex-1 truncate text-start">{t(item.labelKey)}</span>
                       {item.count ? (
                         <Badge variant="chrome" size="sm" className="tabular">
                           {item.count > 99 ? "99+" : item.count}
@@ -269,7 +271,7 @@ export function AppFrame({
 
       {/* Spaces — scrolls independently so a workspace with forty spaces
           never pushes the account block off the bottom of the rail. */}
-      <div className="tq-scroll-none -mr-1 min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="tq-scroll-none -me-1 min-h-0 flex-1 overflow-y-auto pe-1">
         <SpaceTree
           collapsed={railCollapsed}
           activeSpace={activeSpaceSlug}
@@ -308,7 +310,7 @@ export function AppFrame({
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed inset-y-0 left-0 z-50 animate-in slide-in-from-left-2 duration-base">{rail}</div>
+          <div className="fixed inset-y-0 start-0 z-50 animate-in slide-in-from-left-2 duration-base">{rail}</div>
         </>
       )}
 
@@ -320,7 +322,7 @@ export function AppFrame({
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar className="sticky top-0 z-30">
           {isMobile && (
-            <IconButton label="Open navigation" onClick={() => setDrawerOpen(true)} className="-ml-1">
+            <IconButton label="Open navigation" onClick={() => setDrawerOpen(true)} className="-ms-1">
               <Menu className="size-5" />
             </IconButton>
           )}
@@ -332,7 +334,7 @@ export function AppFrame({
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ms-auto flex items-center gap-1">
             {/* On mobile the palette collapses to its icon — the field
                 would leave no room for the workspace switcher. */}
             <IconButton label="Search" className="md:hidden" onClick={() => setSearchOpen(true)}>
@@ -374,12 +376,12 @@ export function AppFrame({
               <span className="relative">
                 <Icon className="size-5" aria-hidden="true" />
                 {item.count ? (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold tabular text-white">
+                  <span className="absolute -end-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold tabular text-white">
                     {item.count > 9 ? "9+" : item.count}
                   </span>
                 ) : null}
               </span>
-              {item.label}
+              {t(item.labelKey)}
               {active && (
                 <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-brand" aria-hidden="true" />
               )}

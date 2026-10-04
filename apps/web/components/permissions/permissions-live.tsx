@@ -439,7 +439,7 @@ export function PermissionsLive({ overview }: { overview: PermissionsOverview })
                               nobody remembers making.
                             */}
                             {space.canManage && (
-                              <ul className="flex flex-col gap-1 pl-3">
+                              <ul className="flex flex-col gap-1 ps-3">
                                 {space.members.map((member) => {
                                   const person = peopleById.get(member.personId);
                                   if (!person) return null;
@@ -453,7 +453,7 @@ export function PermissionsLive({ overview }: { overview: PermissionsOverview })
                                       className="flex items-center gap-2 text-caption"
                                     >
                                       <ChevronRight
-                                        className="size-3 shrink-0 text-text-muted"
+                                        className="rtl-flip size-3 shrink-0 text-text-muted"
                                         aria-hidden="true"
                                       />
                                       <span className="min-w-0 flex-1 truncate text-text-secondary">

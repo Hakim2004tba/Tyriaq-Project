@@ -88,7 +88,7 @@ export function SettingsForm({
               <span
                 className={cn(
                   "absolute top-0.5 flex size-4 items-center justify-center rounded-full bg-white transition-[left] duration-fast",
-                  signupsOpen ? "left-[18px]" : "left-0.5"
+                  signupsOpen ? "start-[18px]" : "start-0.5"
                 )}
                 aria-hidden="true"
               >
@@ -147,7 +147,7 @@ export function SettingsForm({
       </section>
 
       <div className="flex items-center justify-end gap-2">
-        {dirty && <p className="mr-auto text-caption text-text-muted">Unsaved changes</p>}
+        {dirty && <p className="me-auto text-caption text-text-muted">Unsaved changes</p>}
         <Button variant="secondary" disabled={!dirty || pending} onClick={discard}>
           Discard
         </Button>

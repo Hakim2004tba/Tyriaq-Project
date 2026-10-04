@@ -71,7 +71,7 @@ export function ChartFrame({
                       scope="col"
                       className={cn(
                         "px-2.5 py-1.5 text-caption font-medium text-text-muted",
-                        i === 0 ? "text-left" : "text-right"
+                        i === 0 ? "text-start" : "text-end"
                       )}
                     >
                       {column}
@@ -87,7 +87,7 @@ export function ChartFrame({
                         key={j}
                         className={cn(
                           "px-2.5 py-1.5",
-                          j === 0 ? "text-text-secondary" : "text-right tabular text-text-primary"
+                          j === 0 ? "text-text-secondary" : "text-end tabular text-text-primary"
                         )}
                       >
                         {cell}

@@ -173,7 +173,7 @@ export function Composer({
       )}
 
       {matches.length > 0 && (
-        <ul className="absolute bottom-full left-1 z-20 mb-2 max-h-60 w-72 overflow-y-auto rounded-md border border-border bg-surface-elevated py-1 shadow-lg">
+        <ul className="absolute bottom-full start-1 z-20 mb-2 max-h-60 w-72 overflow-y-auto rounded-md border border-border bg-surface-elevated py-1 shadow-lg">
           {matches.map((token, i) => (
             <li key={token.id}>
               <button
@@ -183,7 +183,7 @@ export function Composer({
                   insert(token);
                 }}
                 className={cn(
-                  "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-body-sm transition-colors",
+                  "flex w-full items-center gap-2 px-2.5 py-1.5 text-start text-body-sm transition-colors",
                   i === active ? "bg-white/5 text-text-primary" : "text-text-secondary hover:bg-white/5"
                 )}
               >

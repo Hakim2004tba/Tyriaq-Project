@@ -110,7 +110,7 @@ export function PlansBoard({ plans }: { plans: AdminPlan[] }) {
             <p className="flex items-center gap-1.5 border-t border-border pt-2.5 text-caption text-text-muted">
               <Users className="size-3.5 shrink-0" aria-hidden="true" />
               {plan.subscribers.toLocaleString()} subscribers
-              {plan.archived && <span className="ml-auto text-text-muted">Archived</span>}
+              {plan.archived && <span className="ms-auto text-text-muted">Archived</span>}
             </p>
           </li>
         ))}

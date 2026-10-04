@@ -57,7 +57,7 @@ export function CustomFieldsSection({
             <span className="text-caption text-text-muted">
               {field.name}
               {field.projectId === null && (
-                <span className="ml-1.5 text-text-muted/70">· everywhere</span>
+                <span className="ms-1.5 text-text-muted/70">· everywhere</span>
               )}
             </span>
             <CustomFieldInput

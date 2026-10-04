@@ -154,7 +154,7 @@ export function DocumentProperties({
             type="button"
             disabled={pending}
             onClick={() => run(() => setDocumentArchived(document.id, !document.archived))}
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-body-sm text-text-secondary
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-body-sm text-text-secondary
                        transition-colors hover:bg-white/5 hover:text-text-primary
                        focus-visible:outline-none focus-visible:shadow-focus"
           >
@@ -167,7 +167,7 @@ export function DocumentProperties({
               type="button"
               disabled={pending}
               onClick={() => run(() => deleteDocument(document.id))}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-body-sm text-danger
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-body-sm text-danger
                          transition-colors hover:bg-danger-subtle
                          focus-visible:outline-none focus-visible:shadow-focus"
             >

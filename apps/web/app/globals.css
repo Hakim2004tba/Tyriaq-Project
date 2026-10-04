@@ -426,3 +426,43 @@
   height: 0;
   pointer-events: none;
 }
+
+/* ---------------------------------------------------------------- */
+/* Right-to-left                                                     */
+/* ---------------------------------------------------------------- */
+
+/*
+  Layout mirrors on its own: flexbox, grid and the logical properties
+  (`ps-`, `me-`, `start-`, `text-start`) all follow `dir`. What does not
+  is an icon that POINTS somewhere — a chevron opening a tree, a
+  breadcrumb separator, an arrow meaning "forward". Those are
+  directional drawings, and in Arabic forward is the other way.
+
+  Opt-in rather than automatic. A global rule flipping every svg would
+  also mirror the logo, the play triangle and every letter-shaped icon.
+*/
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/*
+  Numbers stay left-to-right inside Arabic text.
+
+  "2/7 done" and a date must not be re-ordered by the bidi algorithm
+  when they sit next to Arabic words — `tabular` is already on every
+  figure in the product, so this rides along with it.
+*/
+[dir="rtl"] .tabular {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/*
+  Progress bars fill from the reading side.
+
+  A bar that fills left-to-right in an Arabic interface reads as
+  emptying, which is the opposite of what it means.
+*/
+[dir="rtl"] [role="progressbar"] > * {
+  transform-origin: right center;
+}

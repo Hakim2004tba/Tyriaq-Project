@@ -188,7 +188,7 @@ export function CalendarBoard({ projects, projectOf, onOpenTask, onCreateTask }:
           <Button variant="secondary" size="sm" onClick={goToday}>
             Today
           </Button>
-          <h2 className="ml-1 min-w-0 truncate text-h3 tabular text-text-primary">
+          <h2 className="ms-1 min-w-0 truncate text-h3 tabular text-text-primary">
             {rangeLabel(cursor, view)}
           </h2>
         </div>
@@ -354,7 +354,7 @@ function MonthGrid({
                     type="button"
                     onClick={() => setComposeOn(day.offset)}
                     aria-label={`Add task on ${day.date.getDate()} ${MONTH_SHORT[day.date.getMonth()]}`}
-                    className="ml-auto flex size-5 items-center justify-center rounded text-text-muted opacity-0
+                    className="ms-auto flex size-5 items-center justify-center rounded text-text-muted opacity-0
                                transition-opacity hover:bg-white/5 hover:text-text-primary
                                focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus
                                [div:hover>div>&]:opacity-100"
@@ -374,7 +374,7 @@ function MonthGrid({
                     <button
                       type="button"
                       onClick={() => onToggleExpand(day.offset)}
-                      className="rounded px-1.5 text-left text-[11px] tabular text-text-muted transition-colors
+                      className="rounded px-1.5 text-start text-[11px] tabular text-text-muted transition-colors
                                  hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
                     >
                       {isOpen ? "Show less" : `+${all.length - MONTH_CELL_CAP} more`}
@@ -462,7 +462,7 @@ function ColumnGrid({
                       {MONTH_SHORT[day.date.getMonth()]} {day.date.getFullYear()}
                     </span>
                   )}
-                  <span className="ml-auto text-caption tabular text-text-muted">{all.length}</span>
+                  <span className="ms-auto text-caption tabular text-text-muted">{all.length}</span>
                 </header>
 
                 <div

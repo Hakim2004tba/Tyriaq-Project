@@ -128,7 +128,7 @@ function TaskCard({
           label={`Options for ${task.title}`}
           size="sm"
           onClick={(e) => e.stopPropagation()}
-          className="-mr-1 -mt-1 size-7 shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          className="-me-1 -mt-1 size-7 shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
         >
           <MoreHorizontal className="size-3.5" />
         </IconButton>
@@ -454,7 +454,7 @@ export function BoardView({ project, onOpenTask }: { project: Project; onOpenTas
                       {col.tasks.length}
                     </span>
 
-                    <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                    <div className="ms-auto flex shrink-0 items-center gap-0.5">
                       <IconButton
                         label={`Add task to ${col.label}`}
                         size="sm"

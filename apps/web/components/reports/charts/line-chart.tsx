@@ -171,7 +171,7 @@ export function LineChart({
                   aria-hidden="true"
                 />
                 <span className="text-text-secondary">{line.label}</span>
-                <span className="ml-auto tabular text-text-primary">
+                <span className="ms-auto tabular text-text-primary">
                   {formatValue(line.values[hover] ?? 0)}
                 </span>
               </li>

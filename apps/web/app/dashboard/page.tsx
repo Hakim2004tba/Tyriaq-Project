@@ -129,7 +129,7 @@ export default async function DashboardPage(): Promise<JSX.Element> {
                         </span>
                         <span
                           className={cn(
-                            "hidden w-24 shrink-0 text-right text-caption tabular sm:block",
+                            "hidden w-24 shrink-0 text-end text-caption tabular sm:block",
                             isOverdue(p) ? "text-danger" : "text-text-muted"
                           )}
                         >

@@ -330,7 +330,7 @@ export function DocumentEditor({
       {editor && editable && <EditorToolbar editor={editor} onInsertImage={insertImage} />}
       <EditorContent editor={editor} className={cn("min-w-0 py-6", uploading && "opacity-70")} />
       {uploading && (
-        <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-elevated px-3 py-1.5 text-caption text-text-secondary shadow-lg">
+        <p className="pointer-events-none absolute bottom-4 start-1/2 -translate-x-1/2 rounded-md border border-border bg-surface-elevated px-3 py-1.5 text-caption text-text-secondary shadow-lg">
           Uploading image…
         </p>
       )}

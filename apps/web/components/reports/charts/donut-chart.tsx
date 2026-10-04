@@ -124,7 +124,7 @@ export function DonutChart({
             />
             <span className="min-w-0 flex-1 truncate text-text-secondary">{slice.label}</span>
             <span className="shrink-0 tabular text-text-primary">{slice.value}</span>
-            <span className="w-9 shrink-0 text-right tabular text-text-muted">
+            <span className="w-9 shrink-0 text-end tabular text-text-muted">
               {Math.round((slice.value / total) * 100)}%
             </span>
           </li>
