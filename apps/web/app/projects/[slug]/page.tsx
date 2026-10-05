@@ -12,6 +12,7 @@ import { getCollaboration } from "@/lib/data/collaboration";
 import { getFieldValues, getProjectFields } from "@/lib/data/custom-fields";
 import { getProjectStatuses, getSavedViews } from "@/lib/data/board";
 import { getAutomations } from "@/lib/data/automations";
+import { getProjectScoring } from "@/lib/data/scoring";
 import { getCurrentUser, getProfile } from "@/lib/auth/session";
 import { ProjectDetail } from "./project-detail";
 
@@ -27,10 +28,13 @@ export async function generateMetadata({
 
 export default async function ProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ period?: string }>;
 }): Promise<JSX.Element> {
   const { slug } = await params;
+  const { period } = await searchParams;
   const [project, spaces, workspace, workspaceMembers] = await Promise.all([
     getProject(slug),
     getSpaces(),
@@ -62,6 +66,19 @@ export default async function ProjectPage({
     getSavedViews(project.id),
     getAutomations(project.id),
   ]);
+
+  /*
+    Scoring is read after the members, because a leaderboard is a list
+    of ids until somebody puts names and faces to them — and the people
+    are already loaded for every other part of this page.
+  */
+  const scoring = await getProjectScoring(
+    project.id,
+    period === "all"
+      ? null
+      : new Date(Date.now() - (period === "week" ? 7 : 30) * 86400000).toISOString(),
+    workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))
+  );
   const collaboration = await getCollaboration(
     tasks.map((t) => t.id),
     user?.id ?? "",
@@ -95,6 +112,8 @@ export default async function ProjectPage({
       statuses={statuses}
       savedViews={savedViews}
       automations={automations}
+      scoring={scoring}
+      period={period === "week" || period === "all" ? period : "month"}
       canManage={workspace?.role === "owner" || workspace?.role === "admin"}
       currentUser={{ id: user?.id ?? "", name: profile?.fullName || "You" }}
     />

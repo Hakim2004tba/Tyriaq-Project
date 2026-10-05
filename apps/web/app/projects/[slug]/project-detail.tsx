@@ -39,6 +39,8 @@ import { ProjectEditor } from "@/components/projects/project-editor";
 import { BoardColumnsDialog } from "@/components/projects/board-columns-dialog";
 import { AutomationsDialog } from "@/components/projects/automations-dialog";
 import type { Automation } from "@/lib/data/automations";
+import type { ProjectScoring } from "@/lib/data/scoring-types";
+import type { PeriodId } from "./views/scoreboard-view";
 import { ProjectWorkspace } from "./project-workspace";
 import type { CustomField, CustomFieldValue } from "@flow/types";
 import type { ProjectStatus, SavedView } from "@/lib/data/board";
@@ -81,6 +83,8 @@ export function ProjectDetail({
   statuses,
   savedViews,
   automations,
+  scoring,
+  period,
   canManage,
   currentUser,
 }: {
@@ -96,6 +100,8 @@ export function ProjectDetail({
   statuses: ProjectStatus[];
   savedViews: SavedView[];
   automations: Automation[];
+  scoring: ProjectScoring;
+  period: PeriodId;
   /** Whether this person may write rules — the same bar as space admin. */
   canManage: boolean;
   currentUser: Person;
@@ -326,6 +332,9 @@ export function ProjectDetail({
             fieldValues={fieldValues}
             statuses={statuses}
             savedViews={savedViews}
+            scoring={scoring}
+            period={period}
+            canManage={canManage}
             currentUser={currentUser}
           />
         </div>

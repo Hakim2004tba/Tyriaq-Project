@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { toISODate, type Priority, type TaskStatus } from "@/lib/data/task-types";
 import { runAutomations } from "@/lib/automations/run";
+import { awardForCompletion, awardForReviewPassed, revokeForReopen } from "@/lib/scoring/award";
 import type { ActionResult } from "./workspace";
 
 /**
@@ -145,6 +146,20 @@ export async function updateTask(
   if (Object.keys(row).length === 0) return {};
 
   const supabase = await createClient();
+
+  /*
+    The status BEFORE the write, read only when it might change.
+
+    Points depend on the direction of travel — arriving at done pays,
+    leaving it refunds — and after the update there is no way to tell
+    which of the two just happened.
+  */
+  let before: { status: string } | null = null;
+  if (patch.status !== undefined || patch.statusId !== undefined) {
+    const { data } = await supabase.from("tasks").select("status").eq("id", id).maybeSingle();
+    before = data as { status: string } | null;
+  }
+
   const { error } = await supabase.from("tasks").update(row).eq("id", id);
   if (error) return { error: error.message };
 
@@ -172,6 +187,23 @@ export async function updateTask(
         trigger: patch.priority !== undefined ? "priority_changed" : "status_changed",
         after: { statusId: row.status_id, category: row.status, priority: row.priority },
       });
+
+      /*
+        Points, after the automations and only on a status change.
+
+        `wasDone` is read from the status BEFORE this write, so the two
+        directions are told apart: arriving at done pays, leaving it
+        takes the payment back. Both are idempotent in the database, so
+        a status nudged twice settles the same either way.
+      */
+      if (patch.status !== undefined || patch.statusId !== undefined) {
+        if (row.status === "done" && before?.status !== "done") {
+          await awardForCompletion(id);
+          if (before?.status === "review") await awardForReviewPassed(id);
+        } else if (row.status !== "done" && before?.status === "done") {
+          await revokeForReopen(id);
+        }
+      }
     }
   }
 

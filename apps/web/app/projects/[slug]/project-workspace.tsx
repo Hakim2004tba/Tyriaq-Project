@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, GanttChartSquare, KanbanSquare, List, MessageSquare } from "lucide-react";
+import {
+  CalendarDays,
+  GanttChartSquare,
+  KanbanSquare,
+  List,
+  MessageSquare,
+  Trophy,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@flow/ui";
 import { TaskPanel } from "@/components/tasks/task-panel/task-panel";
@@ -17,9 +24,11 @@ import { BoardView } from "./views/board-view";
 import { CalendarView } from "./views/calendar-view";
 import { GanttView } from "./views/gantt/gantt-view";
 import { ChatView } from "./views/chat-view";
+import { ScoreboardView, type PeriodId } from "./views/scoreboard-view";
+import type { ProjectScoring } from "@/lib/data/scoring-types";
 import { ListView } from "./views/list-view";
 
-const VIEWS = ["list", "board", "calendar", "gantt", "chat"] as const;
+const VIEWS = ["list", "board", "calendar", "gantt", "chat", "scoreboard"] as const;
 type View = (typeof VIEWS)[number];
 
 const TABS: { id: View; label: string; labelKey: MessageKey; icon: LucideIcon }[] = [
@@ -38,6 +47,12 @@ const TABS: { id: View; label: string; labelKey: MessageKey; icon: LucideIcon }[
     a task on this board without anybody being asked which project.
   */
   { id: "chat", label: "Chat", labelKey: "view.chat", icon: MessageSquare },
+  /*
+    Last, because it is the one tab that is about the people rather
+    than the work — and a scoreboard sitting first would tell a team
+    the wrong thing about what this project is for.
+  */
+  { id: "scoreboard", label: "Scoreboard", labelKey: "view.scoreboard", icon: Trophy },
 ];
 
 function isView(v: string | null): v is View {
@@ -70,6 +85,9 @@ export function ProjectWorkspace({
   fieldValues,
   statuses,
   savedViews,
+  scoring,
+  period,
+  canManage,
   currentUser,
 }: {
   project: Project;
@@ -81,6 +99,9 @@ export function ProjectWorkspace({
   fieldValues: Record<string, Record<string, CustomFieldValue>>;
   statuses: ProjectStatus[];
   savedViews: SavedView[];
+  scoring: ProjectScoring;
+  period: PeriodId;
+  canManage: boolean;
   currentUser: Person;
 }) {
   const router = useRouter();
@@ -167,6 +188,28 @@ export function ProjectWorkspace({
           {view === "board" && <BoardView project={project} onOpenTask={setTask} />}
           {view === "calendar" && <CalendarView project={project} onOpenTask={setTask} />}
           {view === "gantt" && <GanttView project={project} onOpenTask={setTask} />}
+          {view === "scoreboard" && (
+            <ScoreboardView
+              projectId={project.id}
+              projectName={project.name}
+              scoring={scoring}
+              viewerId={currentUser.id}
+              canManage={canManage}
+              period={period}
+              onPeriodChange={(next) => {
+                /*
+                  The period lives in the URL like the view does, so
+                  "look at this month's board" is a link somebody can
+                  send rather than a state only they can see.
+                */
+                const qs = new URLSearchParams(params.toString());
+                if (next === "month") qs.delete("period");
+                else qs.set("period", next);
+                const q = qs.toString();
+                router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+              }}
+            />
+          )}
           {view === "chat" && (
             <ChatView
               project={project}
