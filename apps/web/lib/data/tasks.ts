@@ -43,12 +43,43 @@ type TaskRow = {
   tags: string[] | null;
   is_milestone: boolean;
   position: number;
-  estimate_minutes: number;
-  status_id: string | null;
+  /** Both are absent on a database where the later migrations have
+   * not been run; every reader treats that as "not set". */
+  estimate_minutes?: number;
+  status_id?: string | null;
 };
 
-const TASK_COLUMNS =
-  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position, estimate_minutes, status_id";
+/*
+  The columns every version of this schema has.
+
+  Everything a task NEEDS to render is in here, and nothing added after
+  the first release is.
+*/
+const BASE_COLUMNS =
+  "id, project_id, parent_task_id, title, description, status, priority, start_date, due_date, tags, is_milestone, position";
+
+/** Columns a later migration added, asked for only while they exist. */
+const EXTRA_COLUMNS = ["estimate_minutes", "status_id"] as const;
+
+/*
+  Whether this deployment's database has the newer columns.
+
+  Undefined until the first read finds out, then remembered for the life
+  of the process — a column cannot appear and disappear between
+  requests, so asking twice is waste.
+
+  This exists because of a real outage I caused: adding
+  `estimate_minutes` and `status_id` to the select made the WHOLE query
+  fail with 42703 on any database where the migration had not been run
+  yet, which PostgREST returns as an error and this function turned into
+  an empty array. Every board in the product read "No tasks yet", and a
+  task added afterwards vanished on the next read — while all of it sat
+  safely in the database.
+
+  A feature that is not set up should cost its own feature, never the
+  page it was added to.
+*/
+let hasExtraColumns: boolean | undefined;
 
 const EMPTY: TaskBundle = { tasks: [], details: {} };
 
@@ -70,9 +101,35 @@ async function loadTasks(filter: (query: any) => any): Promise<TaskBundle> {
 
   const supabase = await createClient();
 
-  const { data: taskRows, error: tasksError } = await filter(
-    supabase.from("tasks").select(TASK_COLUMNS).order("position", { ascending: true })
+  const columns = (full: boolean) =>
+    full ? `${BASE_COLUMNS}, ${EXTRA_COLUMNS.join(", ")}` : BASE_COLUMNS;
+
+  let { data: taskRows, error: tasksError } = await filter(
+    supabase
+      .from("tasks")
+      .select(columns(hasExtraColumns !== false))
+      .order("position", { ascending: true })
   );
+
+  /*
+    42703 is "column does not exist". The newer columns are optional, so
+    the read drops them and tries once more rather than reporting an
+    empty project.
+  */
+  if (tasksError?.code === "42703" && hasExtraColumns !== false) {
+    hasExtraColumns = false;
+    console.warn(
+      "[tyriaq] the tasks table is missing estimate_minutes or status_id — " +
+        "run supabase/apply-estimates.sql and supabase/apply-board.sql. " +
+        "Estimates and board columns are off until then; everything else works."
+    );
+    ({ data: taskRows, error: tasksError } = await filter(
+      supabase.from("tasks").select(BASE_COLUMNS).order("position", { ascending: true })
+    ));
+  } else if (!tasksError && hasExtraColumns === undefined) {
+    hasExtraColumns = true;
+  }
+
   reportReadError("loadTasks", tasksError);
   const rows = (taskRows ?? []) as unknown as TaskRow[];
   if (rows.length === 0) return EMPTY;
@@ -175,7 +232,7 @@ function toTask(
     parentId: row.parent_task_id,
     title: row.title,
     status: row.status,
-    statusId: row.status_id,
+    statusId: row.status_id ?? null,
     priority: row.priority,
     assignees,
     startOffset: offsetFromISO(row.start_date),

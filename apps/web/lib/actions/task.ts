@@ -160,7 +160,36 @@ export async function updateTask(
     before = data as { status: string } | null;
   }
 
-  const { error } = await supabase.from("tasks").update(row).eq("id", id);
+  let { error } = await supabase.from("tasks").update(row).eq("id", id);
+
+  /*
+    42703 is "column does not exist".
+
+    `setStatus` sends `status_id: null` on every status change, and the
+    estimate field sends `estimate_minutes` — both added by later
+    migrations. On a database where those have not been run, the whole
+    update failed, so moving a task to Done did nothing and said
+    nothing useful about why.
+
+    The optional columns are dropped and the write is retried once. The
+    part somebody actually asked for lands; the feature that is not set
+    up stays off.
+  */
+  if (error?.code === "42703") {
+    const { estimate_minutes: _estimate, status_id: _column, ...supported } = row;
+    void _estimate;
+    void _column;
+    if (Object.keys(supported).length > 0) {
+      console.warn(
+        "[tyriaq] the tasks table is missing estimate_minutes or status_id — " +
+          "run supabase/apply-estimates.sql and supabase/apply-board.sql."
+      );
+      ({ error } = await supabase.from("tasks").update(supported).eq("id", id));
+    } else {
+      error = null;
+    }
+  }
+
   if (error) return { error: error.message };
 
   /*
