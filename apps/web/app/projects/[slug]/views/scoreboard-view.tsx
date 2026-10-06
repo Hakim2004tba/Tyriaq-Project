@@ -147,6 +147,9 @@ export function ScoreboardView({
   }
 
   const top = scoring.leaderboard[0];
+  // Everybody is on the board from the start, so "empty" means nobody
+  // has scored yet rather than nobody is here.
+  const nobodyScoredYet = (top?.points ?? 0) === 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -183,17 +186,19 @@ export function ScoreboardView({
       {scoring.leaderboard.length === 0 ? (
         <EmptyState
           icon={<TrendingUp className="size-5" />}
-          title="Nothing earned yet"
-          description="Points appear as work is finished. Assign a task to somebody and complete it, and this fills in."
+          title="Nobody is on this project yet"
+          description="Add somebody to the project and their line appears here, at zero, ready to fill in."
         />
       ) : (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <SectionCard
             title="Standings"
             subtitle={
-              top
-                ? `${top.person.name} is ahead with ${top.points.toLocaleString()} points`
-                : undefined
+              nobodyScoredYet
+                ? "Nothing earned yet — points appear as assigned work is finished"
+                : top
+                  ? `${top.person.name} is ahead with ${top.points.toLocaleString()} points`
+                  : undefined
             }
             flush
           >
@@ -202,7 +207,7 @@ export function ScoreboardView({
                 <Standing
                   key={row.person.id}
                   row={row}
-                  rank={index + 1}
+                  rank={nobodyScoredYet ? null : index + 1}
                   best={scoring.leaderboard[0]?.points ?? 0}
                   isViewer={row.person.id === viewerId}
                   canThank={scoring.kudosLeft > 0 && row.person.id !== viewerId}
@@ -325,7 +330,8 @@ function Standing({
   onThank,
 }: {
   row: LeaderboardRow;
-  rank: number;
+  /** Null before anybody has scored — a gold crown for 0 points is a lie. */
+  rank: number | null;
   best: number;
   isViewer: boolean;
   canThank: boolean;
@@ -352,7 +358,7 @@ function Standing({
                 : "text-text-muted"
         )}
       >
-        {rank === 1 ? <Crown className="size-3.5" aria-hidden="true" /> : rank}
+        {rank === 1 ? <Crown className="size-3.5" aria-hidden="true" /> : (rank ?? "–")}
       </span>
 
       <Avatar name={row.person.name} src={row.person.avatarUrl ?? undefined} size="sm" />

@@ -62,7 +62,7 @@ export const getProjectScoring = cache(
 
     const byId = new Map(people.map((person) => [person.id, person]));
 
-    const standings = ((board ?? []) as unknown as {
+    const earned = ((board ?? []) as unknown as {
       user_id: string; points: number; completed: number; on_time: number;
       kudos_received: number; last_earned: string | null;
     }[]).map((row) => ({
@@ -79,6 +79,34 @@ export const getProjectScoring = cache(
       */
       onTimeRate: row.completed > 0 ? Math.round((row.on_time / row.completed) * 100) : null,
     }));
+
+    /*
+      Everybody on the project appears, including everybody on nothing.
+
+      A board that lists only the people who have scored cannot be read:
+      an absent name is indistinguishable from a name that is not on the
+      project, so the person at zero looks like they were excluded
+      rather than like they have not started. Zero is information.
+
+      They sort last among themselves by name rather than by join date,
+      because an order nobody can see the reason for reads as a ranking.
+    */
+    const scored = new Set(earned.map((row) => row.person.id));
+    const standings = [
+      ...earned,
+      ...people
+        .filter((person) => !scored.has(person.id))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((person) => ({
+          person,
+          points: 0,
+          completed: 0,
+          onTime: 0,
+          kudos: 0,
+          lastEarned: null,
+          onTimeRate: null,
+        })),
+    ];
 
     const [{ data: recent }, { data: kudosLeft }] = await Promise.all([
       supabase
