@@ -29,6 +29,8 @@ import {
   saveAutomation,
   setAutomationEnabled,
 } from "@/lib/actions/automation";
+import { SETUP_FILE } from "@/lib/data/feature-state";
+import { SetupNeeded } from "./setup-needed";
 
 /**
  * Rules, written as sentences.
@@ -66,6 +68,7 @@ export function AutomationsDialog({
   projectId,
   projectName,
   automations,
+  installed,
   people,
   statuses,
   canManage,
@@ -75,6 +78,8 @@ export function AutomationsDialog({
   projectId: string;
   projectName: string;
   automations: Automation[];
+  /** Whether the automations tables exist in this database yet. */
+  installed: boolean;
   people: Person[];
   statuses: ProjectStatus[];
   canManage: boolean;
@@ -169,7 +174,9 @@ export function AutomationsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {rows.length === 0 && !building ? (
+        {!installed ? (
+          <SetupNeeded feature="Automations" file={SETUP_FILE.automations} />
+        ) : rows.length === 0 && !building ? (
           <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border-strong px-4 py-6 text-center">
             <span className="flex size-9 items-center justify-center rounded-full bg-primary-muted text-primary">
               <Zap className="size-4" aria-hidden="true" />
@@ -391,7 +398,7 @@ export function AutomationsDialog({
           </div>
         )}
 
-        {canManage && !building && rows.length > 0 && (
+        {installed && canManage && !building && rows.length > 0 && (
           <Button variant="ghost" size="sm" onClick={() => setBuilding(true)} className="self-start">
             <Plus className="size-3.5" />
             Add a rule
@@ -404,7 +411,7 @@ export function AutomationsDialog({
           tries, and finding out by watching it not work is worse than
           being told.
         */}
-        {canManage && (
+        {installed && canManage && (
           <p className="text-caption text-text-muted">
             A rule runs after a person changes something. One rule cannot start another — a chain
             stops after the first step, which is what keeps “when Done, set Done” from running

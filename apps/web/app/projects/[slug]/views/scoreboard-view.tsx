@@ -39,6 +39,8 @@ import {
 } from "@/lib/data/scoring-types";
 import { enableScoring, giveKudos } from "@/lib/actions/scoring";
 import { ScoringRulesDialog } from "@/components/projects/scoring-rules-dialog";
+import { SetupNeeded } from "@/components/projects/setup-needed";
+import { SETUP_FILE } from "@/lib/data/feature-state";
 
 /**
  * Who has been carrying this project.
@@ -115,6 +117,10 @@ export function ScoreboardView({
       setMessage("");
       toast.success(`Thanked ${person.name}.`);
     });
+  }
+
+  if (!scoring.installed) {
+    return <SetupNeeded feature="Scoring" file={SETUP_FILE.scoring} />;
   }
 
   if (!scoring.enabled) {

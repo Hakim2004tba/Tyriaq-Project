@@ -99,7 +99,8 @@ export function ProjectDetail({
   fieldValues: Record<string, Record<string, CustomFieldValue>>;
   statuses: ProjectStatus[];
   savedViews: SavedView[];
-  automations: Automation[];
+  /** Null when the automations tables have not been installed yet. */
+  automations: Automation[] | null;
   scoring: ProjectScoring;
   period: PeriodId;
   /** Whether this person may write rules — the same bar as space admin. */
@@ -228,9 +229,9 @@ export function ProjectDetail({
                   <DropdownMenuItem onSelect={() => setAutomationsOpen(true)}>
                     <Zap className="size-4" />
                     Automations
-                    {automations.filter((rule) => rule.enabled).length > 0 && (
+                    {(automations ?? []).filter((rule) => rule.enabled).length > 0 && (
                       <Badge variant="chrome" size="sm" className="ms-auto">
-                        {automations.filter((rule) => rule.enabled).length}
+                        {(automations ?? []).filter((rule) => rule.enabled).length}
                       </Badge>
                     )}
                   </DropdownMenuItem>
@@ -417,7 +418,8 @@ export function ProjectDetail({
         onOpenChange={setAutomationsOpen}
         projectId={project.id}
         projectName={project.name}
-        automations={automations}
+        automations={automations ?? []}
+        installed={automations !== null}
         people={workspaceMembers.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl }))}
         statuses={statuses}
         canManage={canManage}

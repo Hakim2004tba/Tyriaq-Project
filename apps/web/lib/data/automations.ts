@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { reportReadError } from "./report";
+import { isNotInstalled } from "./feature-state";
 import type { AutomationAction, AutomationTrigger } from "@/lib/automations/run";
 
 /**
@@ -23,7 +24,7 @@ export interface Automation {
   runCount: number;
 }
 
-export const getAutomations = cache(async (projectId: string): Promise<Automation[]> => {
+export const getAutomations = cache(async (projectId: string): Promise<Automation[] | null> => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -31,6 +32,9 @@ export const getAutomations = cache(async (projectId: string): Promise<Automatio
     .select("id, name, enabled, trigger, conditions, actions")
     .eq("project_id", projectId)
     .order("created_at", { ascending: true });
+  // A missing table means the feature was never installed, which the
+  // dialog says plainly instead of offering to write the first rule.
+  if (isNotInstalled(error)) return null;
   reportReadError("getAutomations", error);
 
   const rules = (data ?? []) as unknown as Omit<Automation, "lastRun" | "runCount">[];

@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { reportReadError } from "./report";
+import { isNotInstalled } from "./feature-state";
 import type { Person } from "./task-types";
 import {
   EMPTY_SCORING,
@@ -37,6 +38,15 @@ export const getProjectScoring = cache(
           .order("event", { ascending: true }),
         supabase.rpc("project_leaderboard", { p_project: projectId, p_since: since }),
       ]);
+
+    /*
+      A missing table is not an empty one. Without this the screen
+      offers a button whose only possible answer is a PostgREST error
+      about a schema cache.
+    */
+    if (isNotInstalled(rulesError) || isNotInstalled(boardError)) {
+      return { ...EMPTY_SCORING, installed: false };
+    }
 
     reportReadError("getProjectScoring:rules", rulesError);
     reportReadError("getProjectScoring:leaderboard", boardError);
@@ -81,6 +91,7 @@ export const getProjectScoring = cache(
     ]);
 
     return {
+      installed: true,
       enabled: true,
       rules: ruleRows.map((row) => ({
         id: row.id,

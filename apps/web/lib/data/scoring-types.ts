@@ -51,6 +51,14 @@ export interface ScoreEntry {
 }
 
 export interface ProjectScoring {
+  /**
+   * Whether the database half of this feature is there at all.
+   *
+   * Different from `enabled`: not installed means somebody has to run a
+   * file, and showing the "turn it on" button in that state produces a
+   * refusal about a schema cache that means nothing to anybody.
+   */
+  installed: boolean;
   enabled: boolean;
   rules: ScoringRule[];
   leaderboard: LeaderboardRow[];
@@ -61,6 +69,7 @@ export interface ProjectScoring {
 }
 
 export const EMPTY_SCORING: ProjectScoring = {
+  installed: true,
   enabled: false,
   rules: [],
   leaderboard: [],
