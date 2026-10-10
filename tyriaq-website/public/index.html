@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نادي ترياق — TyriaQ Club</title>
+<meta name="description" content="نادي ترياق هو مجتمع طبي علمي ثقافي وتطوعي، يسعى إلى تنمية المعرفة، وتمكين الطلبة، وتحويل الفضول العلمي إلى أثر إنساني حقيقي.">
+<meta name="theme-color" content="#BF0036">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#concept">تخطَّ إلى المحتوى</a>
+
+<!-- ─────────── NAV ─────────── -->
+<header class="nav" id="nav">
+  <div class="nav__in">
+    <a class="logo" href="#top" aria-label="نادي ترياق — TyriaQ Club">
+      <!-- الشعار الأصلي (كامل الألوان) — ضعه في assets/img/ باسم logo بأي امتداد -->
+      <img class="logo__img" alt="نادي ترياق — TyriaQ Club" data-logo="logo">
+      <span class="logo__fb" data-logo-fb aria-hidden="true">
+        <span class="logo__q">
+          <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="15" fill="none" stroke="currentColor" stroke-width="4"/><path d="M31 31 L39 39" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="22" cy="22" r="5" fill="currentColor"/></svg>
+        </span>
+        <span class="logo__tx"><b>ترياق</b><i>TYRIAQ CLUB</i></span>
+      </span>
+    </a>
+
+    <nav class="nav__menu" id="menu" aria-label="التنقل">
+      <a href="#concept">الفكرة</a>
+      <a href="#dimensions">الأبعاد</a>
+      <a href="#promise">الوعد</a>
+      <a href="#programs">الفروع</a>
+      <a href="#voice">صوتنا</a>
+    </nav>
+
+    <a class="btn btn--primary btn--sm" href="#join">انضم</a>
+    <button class="burger" id="burger" aria-label="القائمة" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
+  </div>
+</header>
+
+<!-- ─────────── HERO ─────────── -->
+<section class="hero" id="top">
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient__glow ambient__glow--a"></span>
+    <span class="ambient__glow ambient__glow--b"></span>
+    <span class="ambient__grid"></span>
+    <canvas class="ambient__stars" id="stars"></canvas>
+  </div>
+
+  <div class="hero__in wrap">
+    <div class="hero__copy">
+      <p class="pill up" style="--d:0"><i aria-hidden="true"></i>نادٍ طبي علمي ثقافي وتطوعي</p>
+
+      <h1 class="hero__title">
+        <span class="mask"><span class="mask__i word" style="--d:1">نادي</span></span>
+        <span class="mask"><span class="mask__i word word--red" style="--d:2">ترياق</span></span>
+        <span class="mask"><span class="mask__i word word--shimmer lat" style="--d:3">TyriaQ Club</span></span>
+      </h1>
+
+      <p class="hero__sub up" style="--d:4">
+        <span>علمٌ يخدم. معرفةٌ تشفي. أناسٌ يعملون.</span>
+        <span class="hero__sub-2">مجتمع طلابي يحوّل الفضول العلمي إلى أثر إنساني حقيقي.</span>
+      </p>
+
+      <div class="hero__actions up" style="--d:5">
+        <a class="btn btn--primary" href="#join">انضم إلينا <b aria-hidden="true">←</b></a>
+        <a class="btn btn--ghost" href="#programs">شاهد النشاطات</a>
+      </div>
+    </div>
+
+    <div class="hero__showcase up" style="--d:6">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span class="device__url lat">tyriaq.club</span></div>
+        <div class="device__screen">
+          <div class="dv__head">
+            <span class="dv__tag">الفرع العلمي</span>
+            <span class="dv__dots" aria-hidden="true"></span>
+          </div>
+          <div class="dv__title">ورشة المنهجية والبحث</div>
+          <div class="dv__bars" aria-hidden="true"><i style="--w:86%"></i><i style="--w:62%"></i><i style="--w:74%"></i></div>
+          <div class="dv__row">
+            <span class="dv__chip">تعلّم</span><span class="dv__chip">تواصل</span>
+            <span class="dv__chip">اخدم</span><span class="dv__chip dv__chip--on">أثّر</span>
+          </div>
+        </div>
+      </div>
+      <span class="device__glow" aria-hidden="true"></span>
+
+      <div class="float float--a">
+        <b class="lat">٣</b>
+        <span>فروع</span>
+      </div>
+      <div class="float float--b">
+        <span class="float__ico" aria-hidden="true">✦</span>
+        <span>٦ فرق</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="wrap strip__in">
+      <p class="strip__kick lat">LEARN · CONNECT · SERVE · IMPACT</p>
+      <ul class="strip__grid">
+        <li><b class="lat">٤</b><span>أبعاد تلتقي</span></li>
+        <li><b class="lat">٣</b><span>فروع</span></li>
+        <li><b class="lat">٦</b><span>فروع وفرق للانضمام</span></li>
+        <li><b class="lat">١</b><span>هوية واحدة</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── CONCEPT ─────────── -->
+<section class="sec concept" id="concept">
+  <div class="wrap">
+    <header class="head">
+      <span class="kick rev">01 — الفكرة</span>
+      <h2 class="h2 rev">الاسم نفسه<br><em>هو الوعد.</em></h2>
+    </header>
+
+    <div class="concept__grid">
+      <p class="concept__big rev">
+        «ترياق» كلمة تحمل معنى <b>الدواء المضاد</b> — ما يستجيب لمشكلة، ويساهم في الشفاء.
+        ولنادٍ علمي وطبي، هذه ليست تسمية جميلة فحسب؛ إنها الفكرة المركزية التي يُبنى عليها كل ما نفعله.
+      </p>
+
+      <div class="quote rev">
+        <span class="quote__lat">Science that serves.<br>Knowledge that heals.<br>People who act.</span>
+        <span class="quote__ar">علمٌ يخدم. معرفةٌ تشفي. أناسٌ يعملون.</span>
+      </div>
+    </div>
+
+    <p class="concept__note rev">
+      ولذلك لا نبدو كنادٍ طبي فقط. الجمع بين العمل العلمي والثقافي والتطوّعي هو جزء أساسي مما يميّز ترياق.
+    </p>
+  </div>
+</section>
+
+<!-- ─────────── FOUR DIMENSIONS ─────────── -->
+<section class="sec dims" id="dimensions">
+  <div class="wrap">
+    <header class="head head--row">
+      <div>
+        <span class="kick rev">02 — الأبعاد</span>
+        <h2 class="h2 rev">أربعة أبعاد،<br><em>في آنٍ واحد.</em></h2>
+      </div>
+      <p class="sub rev">الهوية تتحدّث بأربعة أصوات معًا — لا واحدًا يعلو على البقية.</p>
+    </header>
+
+    <div class="dimgrid">
+      <article class="dim rev" data-i="1">
+        <span class="dim__n">01</span>
+        <span class="dim__lat">MEDICAL</span>
+        <h3>طبّي</h3>
+        <p>الصحة، الطب، الرعاية، والثقافة السريرية.</p>
+      </article>
+      <article class="dim rev" data-i="2">
+        <span class="dim__n">02</span>
+        <span class="dim__lat">SCIENTIFIC</span>
+        <h3>علمي</h3>
+        <p>البحث، الدليل، الفضول، والابتكار.</p>
+      </article>
+      <article class="dim rev" data-i="3">
+        <span class="dim__n">03</span>
+        <span class="dim__lat">CULTURAL</span>
+        <h3>ثقافي</h3>
+        <p>التعليم، الإبداع، والتنمية الفكرية.</p>
+      </article>
+      <article class="dim rev" data-i="4">
+        <span class="dim__n">04</span>
+        <span class="dim__lat">VOLUNTARY</span>
+        <h3>تطوّعي</h3>
+        <p>الخدمة، التضامن، والأثر في المجتمع.</p>
+      </article>
+    </div>
+
+    <div class="dna rev">
+      <h3 class="dna__t">شجرة ترياق</h3>
+      <div class="dna__tree">
+        <div class="dna__root"><b>ترياق</b></div>
+        <div class="dna__branches">
+          <div class="dna__b"><b>SCIENCE</b><span>البحث · الدليل · الابتكار</span></div>
+          <div class="dna__b"><b>MEDICINE</b><span>الصحة · الرعاية · التعليم</span></div>
+          <div class="dna__b"><b>SERVICE</b><span>التطوّع · المجتمع · الأثر</span></div>
+        </div>
+        <div class="dna__leaf"><b>CULTURE</b><span>التنمية الإنسانية</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── PROMISE ─────────── -->
+<section class="sec promise" id="promise">
+  <div class="wrap promise__in">
+    <span class="kick rev">03 — الوعد</span>
+    <h2 class="h2 rev">تعلّم <b>•</b> تواصل <b>•</b> اخدم <b>•</b> أثّر</h2>
+
+    <ol class="steps">
+      <li class="step rev"><span class="step__n">01</span><h3>تعلّم</h3><i>LEARN</i><p>المعرفة أولًا — دقيقة، مبنيّة على دليل، وقابلة للفهم.</p></li>
+      <li class="step rev"><span class="step__n">02</span><h3>تواصل</h3><i>CONNECT</i><p>طلبة من تخصصات وخلفيات مختلفة، وشبكة تتجاوز القاعة.</p></li>
+      <li class="step rev"><span class="step__n">03</span><h3>اخدم</h3><i>SERVE</i><p>المعرفة تعود إلى الناس: تطوّع، وتضامن، وعمل ميداني.</p></li>
+      <li class="step rev"><span class="step__n">04</span><h3>أثّر</h3><i>IMPACT</i><p>أثر إنساني حقيقي — لا نشاط من أجل النشاط.</p></li>
+    </ol>
+
+    <p class="promise__stmt rev">
+      نادي ترياق هو مجتمع طبي علمي ثقافي وتطوعي، يسعى إلى تنمية المعرفة، وتمكين الطلبة،
+      وتحويل الفضول العلمي إلى أثر إنساني حقيقي.
+    </p>
+  </div>
+</section>
+
+<!-- ─────────── BRANCHES & PROGRAMS ─────────── -->
+<section class="sec progs" id="programs">
+  <span class="badge" aria-hidden="true"><i>نشاطات<br>وبرامج</i></span>
+  <div class="wrap">
+    <header class="head head--row">
+      <div>
+        <span class="kick rev">04 — الفروع ونشاطاتها</span>
+        <h2 class="h2 rev">ثلاثة فروع،<br><em>هوية واحدة.</em></h2>
+      </div>
+      <p class="sub rev">البعد الطبّي يسري في الفروع الثلاثة جميعها — فهو جوهر النادي، لا فرعًا رابعًا.
+        اسحب أفقيًا لتصفّح برامج كل فرع.</p>
+    </header>
+  </div>
+
+  <article class="branch" id="branch-sci">
+    <header class="branch__head">
+      <div class="branch__id">
+        <span class="branch__num">01</span>
+        <div>
+          <h3 class="branch__t">الفرع العلمي</h3>
+          <span class="branch__lat">SCIENTIFIC BRANCH</span>
+        </div>
+      </div>
+      <div class="branch__say">
+        <p class="branch__lead">البحث، الدليل، الفضول، والابتكار. هنا يتحوّل السؤال إلى منهج، والفضول إلى تجربة قابلة للعرض والنقاش.</p>
+        <ul class="chips"><li>بحث</li><li>دليل</li><li>فضول</li><li>ابتكار</li></ul>
+      </div>
+    </header>
+
+    <div class="rail" data-rail>
+      <div class="rail__track" data-track>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/sci-1.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>01</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">علمي</span><h3>عنوان البرنامج الأول</h3><p>وصف قصير — سطران على الأكثر.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/sci-2.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>02</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">علمي</span><h3>عنوان البرنامج الثاني</h3><p>وصف قصير للبرنامج.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/sci-3.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>03</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">علمي</span><h3>عنوان البرنامج الثالث</h3><p>وصف قصير للبرنامج.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/sci-4.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>04</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">علمي</span><h3>عنوان البرنامج الرابع</h3><p>وصف قصير للبرنامج.</p></div>
+        </article>
+      </div>
+      <div class="rail__foot">
+        <div class="rail__bar"><i data-bar></i></div>
+        <div class="rail__nav">
+          <button class="rnav" data-prev aria-label="السابق"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="rnav" data-next aria-label="التالي"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="branch" id="branch-vol">
+    <header class="branch__head">
+      <div class="branch__id">
+        <span class="branch__num">02</span>
+        <div>
+          <h3 class="branch__t">الفرع التطوعي</h3>
+          <span class="branch__lat">VOLUNTARY BRANCH</span>
+        </div>
+      </div>
+      <div class="branch__say">
+        <p class="branch__lead">الخدمة، التضامن، والأثر في المجتمع. هنا تغادر المعرفة القاعة وتعود إلى الناس الذين جاءت من أجلهم.</p>
+        <ul class="chips"><li>خدمة</li><li>تضامن</li><li>ميدان</li><li>أثر</li></ul>
+      </div>
+    </header>
+
+    <div class="rail" data-rail>
+      <div class="rail__track" data-track>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/vol-1.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>01</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">تطوّعي</span><h3>عنوان النشاط الأول</h3><p>وصف قصير — سطران على الأكثر.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/vol-2.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>02</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">تطوّعي</span><h3>عنوان النشاط الثاني</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/vol-3.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>03</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">تطوّعي</span><h3>عنوان النشاط الثالث</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/vol-4.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>04</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">تطوّعي</span><h3>عنوان النشاط الرابع</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+      </div>
+      <div class="rail__foot">
+        <div class="rail__bar"><i data-bar></i></div>
+        <div class="rail__nav">
+          <button class="rnav" data-prev aria-label="السابق"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="rnav" data-next aria-label="التالي"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="branch" id="branch-cul">
+    <header class="branch__head">
+      <div class="branch__id">
+        <span class="branch__num">03</span>
+        <div>
+          <h3 class="branch__t">الفرع الثقافي</h3>
+          <span class="branch__lat">CULTURAL BRANCH</span>
+        </div>
+      </div>
+      <div class="branch__say">
+        <p class="branch__lead">التعليم، الإبداع، والتنمية الفكرية. هنا يُبنى الطالب ككل — لا كتخصّص واحد ينتهي عند المقرّر.</p>
+        <ul class="chips"><li>تعليم</li><li>إبداع</li><li>تعبير</li><li>تنمية</li></ul>
+      </div>
+    </header>
+
+    <div class="rail" data-rail>
+      <div class="rail__track" data-track>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/cul-1.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>01</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">ثقافي</span><h3>عنوان النشاط الأول</h3><p>وصف قصير — سطران على الأكثر.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/cul-2.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>02</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">ثقافي</span><h3>عنوان النشاط الثاني</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/cul-3.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>03</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">ثقافي</span><h3>عنوان النشاط الثالث</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+        <article class="prog" data-card>
+          <figure class="prog__fig">
+            <img src="assets/img/cul-4.jpg" alt="" loading="lazy">
+            <span class="prog__ph"><b>04</b>صورة البرنامج</span>
+          </figure>
+          <div class="prog__meta"><span class="tag">ثقافي</span><h3>عنوان النشاط الرابع</h3><p>وصف قصير للنشاط.</p></div>
+        </article>
+      </div>
+      <div class="rail__foot">
+        <div class="rail__bar"><i data-bar></i></div>
+        <div class="rail__nav">
+          <button class="rnav" data-prev aria-label="السابق"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="rnav" data-next aria-label="التالي"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ─────────── VOICE & PERSONALITY ─────────── -->
+<section class="sec voice" id="voice">
+  <div class="wrap">
+    <header class="head">
+      <span class="kick rev">05 — الشخصية والصوت</span>
+      <h2 class="h2 rev">كيف يبدو ترياق،<br><em>وكيف يتكلّم.</em></h2>
+    </header>
+
+    <div class="voice__grid">
+      <div class="balance rev">
+        <h3 class="mini">توازن الشخصية</h3>
+        <div class="bal" style="--p:50"><span>علمي</span><i></i><span>إنساني</span></div>
+        <div class="bal" style="--p:50"><span>احترافي</span><i></i><span>شبابي</span></div>
+        <div class="bal" style="--p:50"><span>مؤسسي</span><i></i><span>إبداعي</span></div>
+        <div class="bal" style="--p:50"><span>جادّ</span><i></i><span>حيوي</span></div>
+        <p class="note">هذا التوازن مقصود: ترياق يخاطب الطلبة والأساتذة والمستشفيات والمؤسسات العلمية والشركات والرعاة والأندية والجمهور الأوسع.</p>
+      </div>
+
+      <div class="tones rev">
+        <h3 class="mini">نبرة الصوت</h3>
+        <ul class="tonelist">
+          <li><b>واضح</b><span>بلا تعقيد أو مصطلحات زائدة.</span></li>
+          <li><b>مبني على الدليل</b><span>كل ادّعاء علمي يستند إلى مصدر موثوق.</span></li>
+          <li><b>إنساني</b><span>نتحدّث مع الناس، لا إليهم.</span></li>
+          <li><b>حيوي</b><span>خطاب شبابي فيه اندفاع وتفاؤل.</span></li>
+          <li><b>احترافي</b><span>رسمي ودقيق مع الجامعات والمستشفيات والشركات.</span></li>
+          <li><b>شامل</b><span>يرحّب بالطلبة من مختلف التخصصات والخلفيات.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ctx rev">
+      <h3 class="mini">الخطاب بحسب السياق</h3>
+      <div class="ctx__row">
+        <div class="ctx__c"><b>داخلي / طلابي</b><span>ودود + حيوي + مختصر</span></div>
+        <div class="ctx__c"><b>علمي</b><span>دقيق + مبني على الدليل + تعليمي</span></div>
+        <div class="ctx__c"><b>مؤسسي</b><span>رسمي + محترم + منظّم</span></div>
+        <div class="ctx__c"><b>مع الرعاة</b><span>احترافي + قائم على القيمة + مُقنع</span></div>
+        <div class="ctx__c"><b>تطوّعي</b><span>إنساني + دافئ + مركّز على الأثر</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── JOIN ─────────── -->
+<section class="sec join" id="join">
+
+  <div class="join__in wrap">
+    <h2 class="join__t rev">ترياق يبدأ بك.</h2>
+    <p class="sub rev">املأ الاستمارة، واختر الفرع أو الفريق الذي تراه لك. نعود إليك قريبًا.</p>
+
+    <form class="jform rev" id="joinForm" novalidate>
+      <div class="jrow">
+        <label class="jf"><span>الاسم</span>
+          <input name="first" type="text" maxlength="60" autocomplete="given-name" required></label>
+        <label class="jf"><span>اللقب</span>
+          <input name="last" type="text" maxlength="60" autocomplete="family-name" required></label>
+      </div>
+
+      <label class="jf"><span>رقم الهاتف</span>
+        <input name="phone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"
+               placeholder="05 00 00 00 00" required></label>
+
+      <label class="jf"><span>ما المواهب أو المهارات التي تملكها؟</span>
+        <textarea name="talents" rows="3" maxlength="600"
+                  placeholder="تصميم، تصوير، كتابة، تنظيم، لغات، برمجة…"></textarea></label>
+
+      <fieldset class="jf jf--teams">
+        <legend><span>أي فرع أو فريق أعجبك؟</span> <i>يمكنك اختيار أكثر من واحد</i></legend>
+        <div class="teams">
+          <label class="team">
+            <input type="checkbox" name="teams" value="الفرع العلمي">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>الفرع العلمي</b><i>SCIENTIFIC</i></span>
+          </label>
+          <label class="team">
+            <input type="checkbox" name="teams" value="الفرع الثقافي">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>الفرع الثقافي</b><i>CULTURAL</i></span>
+          </label>
+          <label class="team">
+            <input type="checkbox" name="teams" value="الفرع التطوعي">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>الفرع التطوعي</b><i>VOLUNTARY</i></span>
+          </label>
+          <label class="team">
+            <input type="checkbox" name="teams" value="فريق الميديا">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>فريق الميديا</b><i>MEDIA</i></span>
+          </label>
+          <label class="team">
+            <input type="checkbox" name="teams" value="فريق الموارد">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>فريق الموارد</b><i>RESOURCES</i></span>
+          </label>
+          <label class="team">
+            <input type="checkbox" name="teams" value="فريق العلاقات">
+            <span class="team__box" aria-hidden="true"></span>
+            <span class="team__tx"><b>فريق العلاقات</b><i>RELATIONS</i></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- فخّ للروبوتات: حقل مخفي لا يراه الإنسان -->
+      <label class="hp" aria-hidden="true"><span>لا تملأ هذا الحقل</span>
+        <input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+
+      <p class="jmsg" id="joinMsg" hidden></p>
+      <button class="btn btn--primary btn--full" type="submit" id="joinBtn">أرسل طلب الانضمام</button>
+      <p class="jnote">بياناتك تصل إلى إدارة النادي وحدها.</p>
+    </form>
+
+    <div class="jdone" id="joinDone" hidden>
+      <span class="jdone__tick" aria-hidden="true">✓</span>
+      <h3>وصلنا طلبك.</h3>
+      <p>شكرًا لك — سيتواصل معك أحد أعضاء ترياق قريبًا.</p>
+      <button class="ghostred" type="button" id="joinAgain">إرسال طلب آخر</button>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── FOOTER ─────────── -->
+<footer class="foot">
+  <div class="wrap foot__in">
+    <div class="foot__b">
+      <!-- النسخة البيضاء من الشعار — ضعها في assets/img/ باسم logo-white بأي امتداد -->
+      <img class="foot__logo" alt="نادي ترياق — TyriaQ Club" data-logo="logo-white">
+      <span class="foot__fb" data-logo-fb><b>نادي ترياق</b><i>TYRIAQ CLUB</i></span>
+      <p>Medical • Scientific • Cultural • Voluntary Club</p>
+    </div>
+    <nav class="foot__l" aria-label="روابط الفوتر">
+      <a href="#concept">الفكرة</a><a href="#dimensions">الأبعاد</a>
+      <a href="#programs">الفروع</a><a href="#join">انضم</a>
+    </nav>
+    <div class="foot__s">
+      <a href="#">Instagram</a><a href="#">Facebook</a><a href="#">LinkedIn</a>
+    </div>
+  </div>
+  <p class="foot__c">© <span id="yr"></span> TyriaQ Club — نادي ترياق</p>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

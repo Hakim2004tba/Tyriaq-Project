@@ -1,0 +1,249 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+/* ---------------------------------------------------------------------- */
+/* ART Cuisine design tokens                                              */
+/* Luxury stone-grey + black, subtle metallic gold accent.                */
+/* ---------------------------------------------------------------------- */
+
+:root {
+  /* Neutral stone-grey scale (warm, not blue-grey) — the dominant palette */
+  --stone-50: #faf9f7;
+  --stone-100: #f3f1ed;
+  --stone-150: #ebe8e2;
+  --stone-200: #e2ded6;
+  --stone-300: #cdc6ba;
+  --stone-400: #a89e8e;
+  --stone-500: #857c6d;
+  --stone-600: #665f53;
+  --stone-700: #4a4640;
+  --stone-800: #322f2a;
+  --stone-900: #201e1b;
+
+  /* Secondary black */
+  --ink-950: #0d0c0b;
+  --ink-900: #141311;
+  --ink-800: #1c1a17;
+
+  /* Metallic gold — accent only, never a fill for large surfaces */
+  --gold-300: #e4cd9c;
+  --gold-400: #cbaa6c;
+  --gold-500: #b3925a;
+  --gold-600: #8f7442;
+
+  /* Semantic surface tokens */
+  --surface: var(--stone-50);
+  --surface-raised: #ffffff;
+  --surface-sunken: var(--stone-100);
+  --surface-inverse: var(--ink-950);
+
+  --border-subtle: var(--stone-200);
+  --border-default: var(--stone-300);
+  --border-strong: var(--stone-600);
+
+  --text-primary: var(--ink-950);
+  --text-secondary: var(--stone-600);
+  --text-muted: var(--stone-500);
+  --text-inverse: var(--stone-50);
+  --text-inverse-muted: var(--stone-400);
+  --text-accent: var(--gold-500);
+
+  --accent: var(--gold-500);
+  --accent-strong: var(--gold-600);
+  --accent-soft: var(--gold-300);
+
+  /* Status colors — desaturated, editorial rather than "app default" */
+  --status-info-bg: #eef1ee;
+  --status-info-fg: #4b5a4f;
+  --status-warning-bg: #f7ecd9;
+  --status-warning-fg: #8a5a20;
+  --status-success-bg: #e8efe4;
+  --status-success-fg: #3f6b3f;
+  --status-danger-bg: #f6e7e4;
+  --status-danger-fg: #9c3f30;
+  --status-neutral-bg: var(--stone-150);
+  --status-neutral-fg: var(--stone-600);
+
+  /* Elevation — soft, long, low-opacity shadows (no hard drop shadows) */
+  --shadow-sm: 0 1px 2px 0 rgb(20 19 17 / 0.04), 0 1px 1px 0 rgb(20 19 17 / 0.03);
+  --shadow-md: 0 6px 16px -4px rgb(20 19 17 / 0.08), 0 2px 6px -2px rgb(20 19 17 / 0.05);
+  --shadow-lg: 0 20px 40px -12px rgb(20 19 17 / 0.16), 0 8px 16px -8px rgb(20 19 17 / 0.08);
+  --shadow-gold: 0 8px 24px -8px rgb(179 146 90 / 0.35);
+
+  /* Radii — restrained, mostly small; luxury reads as precise, not "rounded/friendly" */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+
+  /* Motion */
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 280ms;
+  --duration-slow: 520ms;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+  --color-text-inverse-muted: var(--text-inverse-muted);
+  --color-text-accent: var(--text-accent);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-stone-50: var(--stone-50);
+  --color-stone-100: var(--stone-100);
+  --color-stone-150: var(--stone-150);
+  --color-stone-200: var(--stone-200);
+  --color-stone-300: var(--stone-300);
+  --color-stone-400: var(--stone-400);
+  --color-stone-500: var(--stone-500);
+  --color-stone-600: var(--stone-600);
+  --color-stone-700: var(--stone-700);
+  --color-stone-800: var(--stone-800);
+  --color-stone-900: var(--stone-900);
+
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-800: var(--ink-800);
+
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+
+  --shadow-elevation-sm: var(--shadow-sm);
+  --shadow-elevation-md: var(--shadow-md);
+  --shadow-elevation-lg: var(--shadow-lg);
+  --shadow-elevation-gold: var(--shadow-gold);
+
+  --radius-elevation-sm: var(--radius-sm);
+  --radius-elevation-md: var(--radius-md);
+  --radius-elevation-lg: var(--radius-lg);
+  --radius-elevation-xl: var(--radius-xl);
+
+  --animate-accordion-down: accordion-down 0.25s var(--ease-editorial);
+  --animate-accordion-up: accordion-up 0.25s var(--ease-editorial);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+* {
+  border-color: var(--border-subtle);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--gold-300);
+  color: var(--ink-950);
+}
+
+/* Subtle film-grain texture — no stock imagery, just quiet noise + light */
+.bg-grain {
+  position: relative;
+  isolation: isolate;
+}
+
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+.bg-grain-dark::before {
+  opacity: 0.08;
+}
+
+/* Editorial kicker label — small uppercase gold caption above headings */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+.kicker::before {
+  content: "";
+  width: 1.25rem;
+  height: 1px;
+  background: var(--accent);
+}
+
+/* Thin hairline rule used across section dividers */
+.rule-gold {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 70%);
+}
+
+/* Focus ring — consistent, visible, on-brand */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

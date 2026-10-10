@@ -44,3 +44,6 @@ tibyan-full-project/
 
 # deployment bundle, built on demand
 dist/
+
+# Local Netlify folder
+.netlify

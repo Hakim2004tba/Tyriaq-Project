@@ -1,0 +1,17 @@
+{
+  "name": "tyriaq-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "نادي ترياق — TyriaQ Club",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

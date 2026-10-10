@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة الإدارة — نادي ترياق</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#BF0036">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ───── LOGIN ───── -->
+<div class="gate" id="gate" hidden>
+  <form class="card gate__card" id="loginForm" autocomplete="on">
+    <h1 class="gate__t">لوحة إدارة <span>ترياق</span></h1>
+    <p class="gate__s">سجّل الدخول لإدارة النشاطات والبرامج.</p>
+    <label class="f"><span>اسم المستخدم</span>
+      <input name="user" type="text" autocomplete="username" required></label>
+    <label class="f"><span>كلمة السر</span>
+      <input name="pass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="loginErr" hidden></p>
+    <button class="btn btn--full" type="submit">دخول</button>
+  </form>
+</div>
+
+<!-- ───── PANEL ───── -->
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div class="top__in">
+      <div class="top__brand">
+        <img class="top__logo" alt="" data-logo="logo" hidden>
+        <b>لوحة الإدارة</b><i>TYRIAQ CLUB</i>
+      </div>
+      <div class="top__act">
+        <a class="ghost" href="index.html" target="_blank" rel="noopener">عرض الموقع ↗</a>
+        <button class="ghost" id="pwBtn" type="button">تغيير كلمة السر</button>
+        <button class="ghost ghost--red" id="outBtn" type="button">خروج</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- brand assets -->
+    <section class="card">
+      <h2 class="h">شعار النادي</h2>
+      <p class="hint">الشعار الأصلي يظهر في شريط التنقّل (خلفيته بيضاء دائمًا)، والنسخة البيضاء في الفوتر الأسود.
+        PNG أو SVG بخلفية شفافة — حتى ٨ ميغابايت.</p>
+      <div class="logos">
+        <div class="logoslot" data-slot="logo">
+          <div class="logoslot__prev"><img alt="" data-prev><span>لا يوجد</span></div>
+          <b>الشعار الأصلي</b>
+          <label class="file">اختر ملفًا<input type="file" accept="image/*" data-file></label>
+        </div>
+        <div class="logoslot logoslot--dark" data-slot="logo-white">
+          <div class="logoslot__prev"><img alt="" data-prev><span>لا يوجد</span></div>
+          <b>النسخة البيضاء</b>
+          <label class="file">اختر ملفًا<input type="file" accept="image/*" data-file></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- add / edit a programme -->
+    <section class="card" id="editorCard">
+      <h2 class="h" id="editorTitle">إضافة نشاط أو برنامج</h2>
+      <form id="progForm" class="form">
+        <input type="hidden" name="id">
+        <div class="row">
+          <label class="f"><span>الفرع</span>
+            <select name="branch" id="branchSel" required></select></label>
+          <label class="f"><span>التصنيف <i>(الشارة فوق العنوان)</i></span>
+            <input name="tag" type="text" maxlength="40" placeholder="مثال: ورشة"></label>
+        </div>
+        <label class="f"><span>العنوان</span>
+          <input name="title" type="text" maxlength="120" required placeholder="اسم النشاط"></label>
+        <label class="f"><span>الوصف</span>
+          <textarea name="desc" rows="3" maxlength="400" placeholder="سطران على الأكثر"></textarea></label>
+
+        <div class="f">
+          <span>الصورة</span>
+          <div class="drop" id="drop">
+            <img id="dropPrev" alt="" hidden>
+            <div class="drop__cta" id="dropCta">
+              <b>اسحب الصورة هنا</b>
+              <span>أو اضغط للاختيار — PNG / JPG / WEBP / GIF / SVG</span>
+            </div>
+            <input type="file" id="imgFile" accept="image/*" hidden>
+          </div>
+          <input type="hidden" name="image">
+          <button class="ghost ghost--sm" type="button" id="clearImg" hidden>إزالة الصورة</button>
+        </div>
+
+        <p class="err" id="formErr" hidden></p>
+        <div class="row row--end">
+          <button class="ghost" type="button" id="cancelEdit" hidden>إلغاء</button>
+          <button class="btn" type="submit" id="saveBtn">حفظ</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- join requests -->
+    <section class="card" id="joinsCard">
+      <div class="joins__top">
+        <div>
+          <h2 class="h">طلبات الانضمام <span class="count" id="joinsCount">0</span></h2>
+          <p class="hint" id="joinsHint">ما يرسله الطلبة من استمارة أسفل الموقع.</p>
+        </div>
+        <div class="joins__act">
+          <a class="btn" id="xlsxBtn" href="/api/joins.xlsx" download>تحميل Excel</a>
+          <a class="ghost" id="csvBtn" href="/api/joins.csv" download>CSV</a>
+        </div>
+      </div>
+      <div class="tablewrap"><table class="tbl" id="joinsTable"></table></div>
+    </section>
+
+    <!-- branches -->
+    <section class="branches" id="branches"></section>
+  </main>
+
+  <p class="toast" id="toast" hidden></p>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

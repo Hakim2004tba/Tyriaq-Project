@@ -1,0 +1,8 @@
+node_modules/
+.netlify/
+data/admin.json
+data/joins.json
+data/content.json
+data/session-secret
+public/assets/img/uploads/*
+!public/assets/img/uploads/.gitkeep

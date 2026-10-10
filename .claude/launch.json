@@ -21,6 +21,59 @@
       ],
       "port": 3100,
       "autoPort": true
+    },
+    {
+      "name": "tyriaq-club-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4173",
+        "--directory",
+        "tyriaq-club-site"
+      ],
+      "port": 4173
+    },
+    {
+      "name": "tibyan-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/start-tibyan-prod.mjs",
+        "3101"
+      ],
+      "port": 3101,
+      "autoPort": true
+    },
+    {
+      "name": "tyriaq-website",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tyriaq-website/server.mjs",
+        "4200"
+      ],
+      "port": 4200
+    },
+    {
+      "name": "art-cuisine",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "art-cuisine/node_modules/next/dist/bin/next",
+        "dev",
+        "art-cuisine"
+      ],
+      "port": 3210,
+      "autoPort": true
+    },
+    {
+      "name": "nb-sport",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "nb-sport/node_modules/next/dist/bin/next",
+        "dev",
+        "nb-sport"
+      ],
+      "port": 3220,
+      "autoPort": true
     }
   ]
 }
