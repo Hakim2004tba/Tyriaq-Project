@@ -26,7 +26,7 @@ import { getClientOptions, getClientById } from "@/lib/data/clients";
 import { getLeadOptions, getLeadById } from "@/lib/data/leads";
 import { getDevisById, getDevisVersions } from "@/lib/data/devis";
 import { getConfigByDevisId } from "@/lib/data/kitchen-config";
-import { getKitchenRenderForDevis, getKitchenRenderRevisions } from "@/lib/data/kitchen-render";
+import { getKitchenRenderForDevis, getKitchenRenderRevisions, getKitchenRenderEvents } from "@/lib/data/kitchen-render";
 import { getProjectOptions, getProjectByRef } from "@/lib/data/appointments";
 import { getLineItemsForDevis, getActiveCatalogueByCategory, computeDevisTotalsFor } from "@/lib/data/pricing";
 import { getDocumentsForDevis } from "@/lib/data/documents";
@@ -85,6 +85,7 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
   ]);
   const kitchenRender = config ? await getKitchenRenderForDevis(devis.id) : undefined;
   const kitchenRenderRevisions = kitchenRender ? await getKitchenRenderRevisions(kitchenRender.id) : [];
+  const kitchenRenderEvents = kitchenRender ? await getKitchenRenderEvents(kitchenRender.id) : [];
   const project = getProjectByRef(devis.projectRef);
   const totals = computeDevisTotalsFor(devis, lineItems);
   const catalogueByCategory = getActiveCatalogueByCategory();
@@ -287,7 +288,13 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
             </div>
           </CardHeader>
           <CardContent>
-            <KitchenRenderPanel devisId={devis.id} config={config} render={kitchenRender} revisions={kitchenRenderRevisions} />
+            <KitchenRenderPanel
+              devisId={devis.id}
+              config={config}
+              render={kitchenRender}
+              revisions={kitchenRenderRevisions}
+              events={kitchenRenderEvents}
+            />
           </CardContent>
         </Card>
       )}

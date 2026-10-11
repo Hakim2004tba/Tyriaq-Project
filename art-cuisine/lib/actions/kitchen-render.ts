@@ -6,7 +6,12 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth/session";
 import { getPgDb } from "@/lib/db/pg";
-import { kitchenConfigs as kitchenConfigsTable, kitchenRenders as kitchenRendersTable, kitchenRenderRevisions as kitchenRenderRevisionsTable } from "@/lib/db/schema";
+import {
+  kitchenConfigs as kitchenConfigsTable,
+  kitchenRenders as kitchenRendersTable,
+  kitchenRenderRevisions as kitchenRenderRevisionsTable,
+  kitchenRenderEvents as kitchenRenderEventsTable,
+} from "@/lib/db/schema";
 import {
   KITCHEN_LAYOUTS,
   ISLAND_OPTIONS,
@@ -284,4 +289,72 @@ export async function restoreKitchenRenderRevision(devisId: string, revisionId: 
 
   revalidateDevisDetail(devisId);
   return { ok: true, data: undefined };
+}
+
+const noteSchema = z.object({ note: z.string().trim().min(1, "La note ne peut pas être vide.") });
+
+/** A staff-only remark on this render — never shown on the customer-facing share page. */
+export async function addKitchenRenderNote(devisId: string, input: unknown): Promise<ActionResult> {
+  const result = await requireManageableDevisWithConfig(devisId);
+  if (!result.ok) return result;
+  const { user } = result;
+
+  const parsed = noteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Note invalide." };
+  }
+
+  const render = await getKitchenRenderForDevis(devisId);
+  if (!render) return { ok: false, error: "Aucune visualisation pour ce devis." };
+
+  await getPgDb().insert(kitchenRenderEventsTable).values({
+    id: `KRE-${randomUUID().slice(0, 8).toUpperCase()}`,
+    renderId: render.id,
+    kind: "internal_note",
+    message: parsed.data.note,
+    authorName: user.name,
+    createdAt: new Date().toISOString(),
+  });
+
+  revalidateDevisDetail(devisId);
+  return { ok: true, data: undefined };
+}
+
+/**
+ * Hands the customer a no-login link to the current image — the one gate
+ * that makes a render visible to them at all (see app/apercu-cuisine/[token]).
+ * Safe to call again later (e.g. after a retouch): the token is kept stable
+ * so a link already sent to the client keeps working and just shows the
+ * newer image.
+ */
+export async function shareKitchenRenderWithCustomer(devisId: string): Promise<ActionResult<{ shareToken: string }>> {
+  const result = await requireManageableDevisWithConfig(devisId);
+  if (!result.ok) return result;
+  const { user } = result;
+
+  const render = await getKitchenRenderForDevis(devisId);
+  if (!render || render.status !== "generated") {
+    return { ok: false, error: "Générez une visualisation avant de la partager." };
+  }
+
+  const db = getPgDb();
+  const now = new Date().toISOString();
+  const shareToken = render.shareToken ?? randomUUID().replace(/-/g, "");
+
+  await db
+    .update(kitchenRendersTable)
+    .set({ sharedAt: now, shareToken, updatedAt: now })
+    .where(eq(kitchenRendersTable.id, render.id));
+
+  await db.insert(kitchenRenderEventsTable).values({
+    id: `KRE-${randomUUID().slice(0, 8).toUpperCase()}`,
+    renderId: render.id,
+    kind: "shared",
+    message: "Aperçu envoyé au client.",
+    authorName: user.name,
+    createdAt: now,
+  });
+
+  revalidateDevisDetail(devisId);
+  return { ok: true, data: { shareToken } };
 }

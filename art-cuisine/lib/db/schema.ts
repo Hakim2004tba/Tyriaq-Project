@@ -245,8 +245,31 @@ export const kitchenRenders = pgTable("kitchen_renders", {
   approvedAt: text("approved_at"),
   currentRevisionId: text("current_revision_id"),
   errorMessage: text("error_message"),
+  // Customer-facing sharing/decision state — the customer only ever sees this
+  // render once sharedAt is set, via the token below (no login needed, same
+  // model as the existing document-share feature).
+  sharedAt: text("shared_at"),
+  shareToken: text("share_token"),
+  customerDecision: text("customer_decision"), // null | "approved" | "rejected" | "changes_requested"
+  customerDecisionAt: text("customer_decision_at"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
+});
+
+/**
+ * One unified, append-only timeline per render: staff-only internal notes
+ * alongside every customer-facing event (shared, feedback, approved,
+ * rejected) — "kind" tells a reader (and the UI) which audience each entry
+ * is for. Nothing here is ever edited or deleted, so it doubles as the full
+ * communications/decisions history the workflow requires.
+ */
+export const kitchenRenderEvents = pgTable("kitchen_render_events", {
+  id: text("id").primaryKey(),
+  renderId: text("render_id").notNull(),
+  kind: text("kind").notNull(), // "internal_note" | "shared" | "customer_feedback" | "customer_approved" | "customer_rejected"
+  message: text("message").notNull(),
+  authorName: text("author_name").notNull(),
+  createdAt: text("created_at").notNull(),
 });
 
 export const kitchenRenderRevisions = pgTable("kitchen_render_revisions", {

@@ -3,7 +3,26 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, ShieldCheck, RotateCcw, History, AlertTriangle, Loader2, Paintbrush, Undo2, Redo2, Columns2, Eraser } from "lucide-react";
+import {
+  Sparkles,
+  ShieldCheck,
+  RotateCcw,
+  History,
+  AlertTriangle,
+  Loader2,
+  Paintbrush,
+  Undo2,
+  Redo2,
+  Columns2,
+  Eraser,
+  Share2,
+  Copy,
+  Download,
+  StickyNote,
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquarePlus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +48,10 @@ import {
   generateKitchenRender,
   regenerateKitchenRender,
   restoreKitchenRenderRevision,
+  addKitchenRenderNote,
+  shareKitchenRenderWithCustomer,
 } from "@/lib/actions/kitchen-render";
-import type { KitchenRenderRecord, KitchenRenderRevisionRecord } from "@/lib/data/kitchen-render";
+import type { KitchenRenderRecord, KitchenRenderRevisionRecord, KitchenRenderEventRecord } from "@/lib/data/kitchen-render";
 import { formatRelativeTime } from "@/lib/format";
 
 function toggleInArray<T>(arr: T[], value: T): T[] {
@@ -238,11 +259,13 @@ function KitchenRenderPanel({
   config,
   render,
   revisions,
+  events,
 }: {
   devisId: string;
   config: KitchenConfigRecord;
   render: KitchenRenderRecord | undefined;
   revisions: KitchenRenderRevisionRecord[];
+  events: KitchenRenderEventRecord[];
 }) {
   const router = useRouter();
   const [generating, setGenerating] = React.useState(false);
@@ -301,6 +324,7 @@ function KitchenRenderPanel({
           devisId={devisId}
           render={render}
           revisions={revisions}
+          events={events}
           originalPhotoUrl={config.photos[0]?.dataUrl}
         />
       )}
@@ -309,15 +333,31 @@ function KitchenRenderPanel({
 }
 
 /** The current image, a brush tool to mark a region, an instruction field, undo/redo, before/after compare and restorable history — everything after a render exists. */
+const CUSTOMER_DECISION_BADGE: Record<string, { label: string; variant: "success" | "danger" | "gold" }> = {
+  approved: { label: "Client : approuvé", variant: "success" },
+  rejected: { label: "Client : refusé", variant: "danger" },
+  changes_requested: { label: "Client : modification demandée", variant: "gold" },
+};
+
+const EVENT_ICON: Record<KitchenRenderEventRecord["kind"], typeof StickyNote> = {
+  internal_note: StickyNote,
+  shared: Share2,
+  customer_feedback: MessageSquarePlus,
+  customer_approved: ThumbsUp,
+  customer_rejected: ThumbsDown,
+};
+
 function RenderWorkspace({
   devisId,
   render,
   revisions,
+  events,
   originalPhotoUrl,
 }: {
   devisId: string;
   render: KitchenRenderRecord;
   revisions: KitchenRenderRevisionRecord[];
+  events: KitchenRenderEventRecord[];
   originalPhotoUrl?: string;
 }) {
   const router = useRouter();
@@ -335,6 +375,10 @@ function RenderWorkspace({
   const [brushing, setBrushing] = React.useState(false);
   const [hasStrokes, setHasStrokes] = React.useState(false);
   const [compareMode, setCompareMode] = React.useState(false);
+  const [sharing, setSharing] = React.useState(false);
+  const [shareToken, setShareToken] = React.useState(render.shareToken);
+  const [note, setNote] = React.useState("");
+  const [addingNote, setAddingNote] = React.useState(false);
   const imgRef = React.useRef<HTMLImageElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const drawingRef = React.useRef(false);
@@ -433,10 +477,85 @@ function RenderWorkspace({
     router.refresh();
   }
 
+  async function share() {
+    setSharing(true);
+    const result = await shareKitchenRenderWithCustomer(devisId);
+    setSharing(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    setShareToken(result.data.shareToken);
+    const url = `${window.location.origin}/apercu-cuisine/${result.data.shareToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Lien copié — envoyé au client et prêt à partager");
+    } catch {
+      toast.success("Aperçu partagé avec le client");
+    }
+    router.refresh();
+  }
+
+  async function copyShareLink() {
+    if (!shareToken) return;
+    const url = `${window.location.origin}/apercu-cuisine/${shareToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Lien copié");
+    } catch {
+      toast.error("Impossible de copier le lien");
+    }
+  }
+
+  async function submitNote() {
+    if (note.trim().length < 1) return;
+    setAddingNote(true);
+    const result = await addKitchenRenderNote(devisId, { note });
+    setAddingNote(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    setNote("");
+    router.refresh();
+  }
+
+  function downloadImage() {
+    const link = document.createElement("a");
+    link.href = current.imageDataUrl;
+    link.download = `cuisine-${devisId}.jpg`;
+    link.click();
+  }
+
   if (!current) return null;
+
+  const decisionBadge = render.customerDecision ? CUSTOMER_DECISION_BADGE[render.customerDecision] : null;
 
   return (
     <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={render.sharedAt ? "success" : "outline"}>
+            {render.sharedAt ? "Partagé avec le client" : "Non partagé"}
+          </Badge>
+          {decisionBadge && <Badge variant={decisionBadge.variant}>{decisionBadge.label}</Badge>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={downloadImage}>
+            <Download className="h-3.5 w-3.5" /> Télécharger
+          </Button>
+          {shareToken ? (
+            <Button type="button" size="sm" variant="outline" onClick={copyShareLink}>
+              <Copy className="h-3.5 w-3.5" /> Copier le lien client
+            </Button>
+          ) : null}
+          <Button type="button" size="sm" onClick={share} disabled={sharing}>
+            {sharing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Share2 className="h-3.5 w-3.5" />}
+            {shareToken ? "Renvoyer au client" : "Envoyer au client"}
+          </Button>
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button
@@ -520,6 +639,38 @@ function RenderWorkspace({
       </div>
 
       <RevisionHistory revisions={sortedAsc} currentRevisionId={render.currentRevisionId} onRestore={restore} busy={busy} />
+
+      <div className="flex flex-col gap-2">
+        <Label>Note interne (jamais visible par le client)</Label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex : client sensible au prix, insister sur la finition…" className="flex-1" />
+          <Button type="button" variant="outline" onClick={submitNote} disabled={addingNote || note.trim().length < 1} className="shrink-0">
+            {addingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <StickyNote className="h-4 w-4" />} Ajouter
+          </Button>
+        </div>
+      </div>
+
+      {events.length > 0 && (
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+            <History className="h-3.5 w-3.5" /> Historique — notes et échanges avec le client
+          </p>
+          <ul className="flex flex-col gap-2">
+            {events.map((e) => {
+              const Icon = EVENT_ICON[e.kind];
+              return (
+                <li key={e.id} className="flex items-start gap-3 rounded-md border border-border-subtle bg-surface-sunken px-3 py-2.5 text-sm">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-text-muted" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-text-secondary">{e.message}</p>
+                    <p className="mt-0.5 text-xs text-text-muted">{e.authorName} · {formatRelativeTime(e.createdAt)}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
