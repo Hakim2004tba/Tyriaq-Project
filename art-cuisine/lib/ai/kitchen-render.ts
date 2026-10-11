@@ -42,10 +42,13 @@ export async function generateKitchenRenderImage({
   prompt,
   referenceImages,
   priorImage,
+  regionOverlay,
 }: {
   prompt: string;
   referenceImages: string[]; // data URLs
   priorImage?: string; // data URL of the current revision, when regenerating
+  /** The current image with a colored brush mark over the area to change — sent alongside `priorImage` so the model can target that region specifically. */
+  regionOverlay?: string;
 }): Promise<InlineImage> {
   const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [
     { text: prompt },
@@ -53,6 +56,10 @@ export async function generateKitchenRenderImage({
 
   if (priorImage) {
     const inline = dataUrlToInlineImage(priorImage);
+    if (inline) parts.push({ inline_data: { mime_type: inline.mimeType, data: inline.data } });
+  }
+  if (regionOverlay) {
+    const inline = dataUrlToInlineImage(regionOverlay);
     if (inline) parts.push({ inline_data: { mime_type: inline.mimeType, data: inline.data } });
   }
   for (const photo of referenceImages) {

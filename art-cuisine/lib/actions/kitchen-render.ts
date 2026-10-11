@@ -46,7 +46,7 @@ function revalidateDevisDetail(devisId: string): void {
   revalidatePath(`/dashboard/devis/${devisId}`);
 }
 
-function buildPrompt(config: KitchenConfigRecord, feedbackNote?: string): string {
+function buildPrompt(config: KitchenConfigRecord, feedbackNote?: string, hasRegion?: boolean): string {
   const accessories = config.accessories.length > 0 ? config.accessories.join(", ") : "aucun";
   const base = `Tu es un visualiseur d'intérieur spécialisé en cuisines sur mesure. À partir de la photo de référence fournie (l'espace réel du client), génère une image photoréaliste montrant à quoi pourrait ressembler cette même pièce après rénovation par ART Cuisine, en conservant autant que possible la géométrie, les proportions et le point de vue de la pièce d'origine (murs, fenêtres, ouvertures).
 
@@ -64,6 +64,13 @@ ${config.additionalInfo ? `- Précisions du client : ${config.additionalInfo}` :
 Rends un résultat réaliste, bien éclairé, avec des matériaux et finitions haut de gamme cohérents avec une fabrication artisanale en atelier. N'ajoute aucun texte ni filigrane sur l'image.`;
 
   if (!feedbackNote) return base;
+
+  if (hasRegion) {
+    return `${base}
+
+Une version précédente a déjà été générée (première image ci-jointe). Une deuxième image, identique mais avec une zone marquée en rouge semi-transparent, indique précisément où appliquer le changement suivant. Applique ce changement UNIQUEMENT dans la zone marquée, et conserve le reste de l'image strictement identique à la première image (mêmes meubles, mêmes couleurs, même cadrage en dehors de la zone marquée) : ${feedbackNote}`;
+  }
+
   return `${base}
 
 Une première version a déjà été générée (fournie en référence ci-joint). Applique cette retouche demandée par l'équipe, en conservant le reste de la composition : ${feedbackNote}`;
@@ -150,12 +157,14 @@ async function runGeneration({
   userName,
   feedbackNote,
   priorImage,
+  regionOverlay,
 }: {
   devisId: string;
   config: KitchenConfigRecord;
   userName: string;
   feedbackNote?: string;
   priorImage?: string;
+  regionOverlay?: string;
 }): Promise<ActionResult> {
   const db = getPgDb();
   const render = await getKitchenRenderForDevis(devisId);
@@ -164,11 +173,13 @@ async function runGeneration({
   const now = new Date().toISOString();
   await db.update(kitchenRendersTable).set({ status: "generating", updatedAt: now }).where(eq(kitchenRendersTable.id, render.id));
 
-  const prompt = buildPrompt(config, feedbackNote);
-  const referenceImages = config.photos.map((p) => p.dataUrl).filter(Boolean);
+  const prompt = buildPrompt(config, feedbackNote, Boolean(regionOverlay));
+  // Original client photos only ground the very first generation — once there's a prior
+  // image to edit, re-sending them alongside it just confuses which photo is "current."
+  const referenceImages = priorImage ? [] : config.photos.map((p) => p.dataUrl).filter(Boolean);
 
   try {
-    const image = await generateKitchenRenderImage({ prompt, referenceImages, priorImage });
+    const image = await generateKitchenRenderImage({ prompt, referenceImages, priorImage, regionOverlay });
     const revisionId = `KRV-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     await db.insert(kitchenRenderRevisionsTable).values({
@@ -215,6 +226,8 @@ export async function generateKitchenRender(devisId: string): Promise<ActionResu
 
 const regenerateSchema = z.object({
   feedbackNote: z.string().trim().min(3, "Décrivez la retouche souhaitée."),
+  /** The current image with a red brush mark over the area to change, exported client-side as a data URL. */
+  regionOverlayDataUrl: z.string().trim().min(1).optional(),
 });
 
 /** Edits the current image in place (kept as a new revision, but becomes the new "current" one) rather than starting over. */
@@ -243,5 +256,32 @@ export async function regenerateKitchenRender(devisId: string, input: unknown): 
     userName: user.name,
     feedbackNote: parsed.data.feedbackNote,
     priorImage: currentRevision.imageDataUrl,
+    regionOverlay: parsed.data.regionOverlayDataUrl,
   });
+}
+
+/**
+ * Points "current" at an existing revision — used for undo/redo (the
+ * immediately previous/next revision chronologically) and for restoring any
+ * older version from the history list. Nothing is deleted; every revision
+ * this devis ever produced stays in kitchen_render_revisions regardless.
+ */
+export async function restoreKitchenRenderRevision(devisId: string, revisionId: string): Promise<ActionResult> {
+  const result = await requireManageableDevisWithConfig(devisId);
+  if (!result.ok) return result;
+
+  const render = await getKitchenRenderForDevis(devisId);
+  if (!render) return { ok: false, error: "Aucune visualisation pour ce devis." };
+
+  const revisions = await getKitchenRenderRevisions(render.id);
+  const target = revisions.find((r) => r.id === revisionId);
+  if (!target) return { ok: false, error: "Version introuvable." };
+
+  await getPgDb()
+    .update(kitchenRendersTable)
+    .set({ status: "generated", currentRevisionId: revisionId, errorMessage: null, updatedAt: new Date().toISOString() })
+    .where(eq(kitchenRendersTable.id, render.id));
+
+  revalidateDevisDetail(devisId);
+  return { ok: true, data: undefined };
 }

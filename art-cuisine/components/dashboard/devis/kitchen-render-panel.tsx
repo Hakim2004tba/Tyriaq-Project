@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, ShieldCheck, RotateCcw, History, AlertTriangle, Loader2 } from "lucide-react";
+import { Sparkles, ShieldCheck, RotateCcw, History, AlertTriangle, Loader2, Paintbrush, Undo2, Redo2, Columns2, Eraser } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,13 @@ import {
   CONFIGURATOR_BUDGETS,
   type KitchenConfigRecord,
 } from "@/lib/data/operations";
-import { updateKitchenConfig, approveKitchenRender, generateKitchenRender, regenerateKitchenRender } from "@/lib/actions/kitchen-render";
+import {
+  updateKitchenConfig,
+  approveKitchenRender,
+  generateKitchenRender,
+  regenerateKitchenRender,
+  restoreKitchenRenderRevision,
+} from "@/lib/actions/kitchen-render";
 import type { KitchenRenderRecord, KitchenRenderRevisionRecord } from "@/lib/data/kitchen-render";
 import { formatRelativeTime } from "@/lib/format";
 
@@ -186,23 +193,40 @@ function ReviewForm({ devisId, config }: { devisId: string; config: KitchenConfi
   );
 }
 
-function RevisionHistory({ revisions, currentRevisionId }: { revisions: KitchenRenderRevisionRecord[]; currentRevisionId: string | null }) {
+function RevisionHistory({
+  revisions,
+  currentRevisionId,
+  onRestore,
+  busy,
+}: {
+  revisions: KitchenRenderRevisionRecord[];
+  currentRevisionId: string | null;
+  onRestore: (revisionId: string) => void;
+  busy: boolean;
+}) {
   if (revisions.length <= 1) return null;
   return (
     <div>
       <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-        <History className="h-3.5 w-3.5" /> Historique des versions ({revisions.length})
+        <History className="h-3.5 w-3.5" /> Historique des versions ({revisions.length}) — cliquez pour restaurer
       </p>
       <div className="flex flex-wrap gap-3">
         {revisions.map((r) => (
-          <div key={r.id} className="flex flex-col items-center gap-1">
+          <button
+            key={r.id}
+            type="button"
+            disabled={busy || r.id === currentRevisionId}
+            onClick={() => onRestore(r.id)}
+            className="focus-ring flex flex-col items-center gap-1 disabled:cursor-default"
+            title={r.feedbackNote ?? "Version initiale"}
+          >
             <img
               src={r.imageDataUrl}
               alt={r.feedbackNote ?? "Version initiale"}
-              className={`h-20 w-20 rounded-md border object-cover ${r.id === currentRevisionId ? "border-ink-950 ring-2 ring-ink-950/20" : "border-border-subtle"}`}
+              className={`h-20 w-20 rounded-md border object-cover ${r.id === currentRevisionId ? "border-ink-950 ring-2 ring-ink-950/20" : "border-border-subtle hover:border-ink-950/50"}`}
             />
             <span className="text-[10px] text-text-muted">{formatRelativeTime(r.createdAt)}</span>
-          </div>
+          </button>
         ))}
       </div>
     </div>
@@ -222,7 +246,6 @@ function KitchenRenderPanel({
 }) {
   const router = useRouter();
   const [generating, setGenerating] = React.useState(false);
-  const [feedbackNote, setFeedbackNote] = React.useState("");
 
   async function generate() {
     setGenerating(true);
@@ -233,23 +256,6 @@ function KitchenRenderPanel({
       return;
     }
     toast.success("Visualisation générée");
-    router.refresh();
-  }
-
-  async function regenerate() {
-    if (feedbackNote.trim().length < 3) {
-      toast.error("Décrivez la retouche souhaitée.");
-      return;
-    }
-    setGenerating(true);
-    const result = await regenerateKitchenRender(devisId, { feedbackNote });
-    setGenerating(false);
-    if (!result.ok) {
-      toast.error(result.error);
-      return;
-    }
-    setFeedbackNote("");
-    toast.success("Visualisation retouchée");
     router.refresh();
   }
 
@@ -291,29 +297,229 @@ function KitchenRenderPanel({
       )}
 
       {render.status === "generated" && currentRevision && (
-        <>
-          <img
-            src={currentRevision.imageDataUrl}
-            alt="Visualisation IA de la cuisine"
-            className="w-full rounded-lg border border-border-subtle object-cover"
-          />
-          <div className="flex flex-col gap-2">
-            <Label>Demander une retouche (la même image sera modifiée, pas une nouvelle)</Label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Textarea
-                value={feedbackNote}
-                onChange={(e) => setFeedbackNote(e.target.value)}
-                placeholder="Ex : des façades plus claires, un plan de travail en marbre…"
-                className="flex-1"
-              />
-              <Button type="button" variant="outline" onClick={regenerate} disabled={generating} className="shrink-0">
-                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Retoucher
-              </Button>
-            </div>
-          </div>
-          <RevisionHistory revisions={revisions} currentRevisionId={render.currentRevisionId} />
-        </>
+        <RenderWorkspace
+          devisId={devisId}
+          render={render}
+          revisions={revisions}
+          originalPhotoUrl={config.photos[0]?.dataUrl}
+        />
       )}
+    </div>
+  );
+}
+
+/** The current image, a brush tool to mark a region, an instruction field, undo/redo, before/after compare and restorable history — everything after a render exists. */
+function RenderWorkspace({
+  devisId,
+  render,
+  revisions,
+  originalPhotoUrl,
+}: {
+  devisId: string;
+  render: KitchenRenderRecord;
+  revisions: KitchenRenderRevisionRecord[];
+  originalPhotoUrl?: string;
+}) {
+  const router = useRouter();
+  const sortedAsc = React.useMemo(
+    () => [...revisions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    [revisions],
+  );
+  const currentIndex = sortedAsc.findIndex((r) => r.id === render.currentRevisionId);
+  const current = sortedAsc[currentIndex];
+  const canUndo = currentIndex > 0;
+  const canRedo = currentIndex >= 0 && currentIndex < sortedAsc.length - 1;
+
+  const [busy, setBusy] = React.useState(false);
+  const [instruction, setInstruction] = React.useState("");
+  const [brushing, setBrushing] = React.useState(false);
+  const [hasStrokes, setHasStrokes] = React.useState(false);
+  const [compareMode, setCompareMode] = React.useState(false);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const drawingRef = React.useRef(false);
+
+  function setupCanvas() {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas) return;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    setHasStrokes(false);
+  }
+
+  function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((e.clientY - rect.top) / rect.height) * canvas.height,
+    };
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!brushing) return;
+    drawingRef.current = true;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!brushing || !drawingRef.current) return;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const { x, y } = getPos(e);
+    ctx.lineWidth = Math.max(canvas.width * 0.03, 20);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(220, 38, 38, 0.55)";
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasStrokes(true);
+  }
+
+  function handlePointerUp() {
+    drawingRef.current = false;
+  }
+
+  function clearBrush() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
+    setHasStrokes(false);
+  }
+
+  function buildOverlayDataUrl(): string | undefined {
+    if (!hasStrokes || !imgRef.current || !canvasRef.current) return undefined;
+    const out = document.createElement("canvas");
+    out.width = imgRef.current.naturalWidth;
+    out.height = imgRef.current.naturalHeight;
+    const ctx = out.getContext("2d")!;
+    ctx.drawImage(imgRef.current, 0, 0, out.width, out.height);
+    ctx.drawImage(canvasRef.current, 0, 0, out.width, out.height);
+    return out.toDataURL("image/jpeg", 0.92);
+  }
+
+  async function submitEdit() {
+    if (instruction.trim().length < 3) {
+      toast.error("Décrivez le changement souhaité.");
+      return;
+    }
+    setBusy(true);
+    const regionOverlayDataUrl = buildOverlayDataUrl();
+    const result = await regenerateKitchenRender(devisId, { feedbackNote: instruction, regionOverlayDataUrl });
+    setBusy(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    setInstruction("");
+    clearBrush();
+    setBrushing(false);
+    toast.success("Visualisation retouchée");
+    router.refresh();
+  }
+
+  async function restore(revisionId: string) {
+    setBusy(true);
+    const result = await restoreKitchenRenderRevision(devisId, revisionId);
+    setBusy(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  if (!current) return null;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => restore(sortedAsc[currentIndex - 1].id)}
+            disabled={!canUndo || busy}
+          >
+            <Undo2 className="h-3.5 w-3.5" /> Annuler
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => restore(sortedAsc[currentIndex + 1].id)}
+            disabled={!canRedo || busy}
+          >
+            <Redo2 className="h-3.5 w-3.5" /> Rétablir
+          </Button>
+        </div>
+        {originalPhotoUrl && (
+          <Button type="button" size="sm" variant="outline" onClick={() => setCompareMode((m) => !m)}>
+            <Columns2 className="h-3.5 w-3.5" /> {compareMode ? "Voir le résultat" : "Comparer avant / après"}
+          </Button>
+        )}
+      </div>
+
+      {compareMode && originalPhotoUrl ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">Avant</p>
+            <img src={originalPhotoUrl} alt="Photo d'origine du client" className="w-full rounded-lg border border-border-subtle object-cover" />
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">Après</p>
+            <img src={current.imageDataUrl} alt="Visualisation IA de la cuisine" className="w-full rounded-lg border border-border-subtle object-cover" />
+          </div>
+        </div>
+      ) : (
+        <div className="relative select-none overflow-hidden rounded-lg border border-border-subtle">
+          {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+          <img ref={imgRef} src={current.imageDataUrl} onLoad={setupCanvas} alt="Visualisation IA de la cuisine" className="w-full" />
+          <canvas
+            ref={canvasRef}
+            className={cn("absolute inset-0 h-full w-full touch-none", brushing ? "cursor-crosshair" : "pointer-events-none")}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          />
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" size="sm" variant={brushing ? "primary" : "outline"} onClick={() => setBrushing((b) => !b)}>
+          <Paintbrush className="h-3.5 w-3.5" /> {brushing ? "Pinceau actif" : "Sélectionner une zone à modifier"}
+        </Button>
+        {hasStrokes && (
+          <Button type="button" size="sm" variant="ghost" onClick={clearBrush}>
+            <Eraser className="h-3.5 w-3.5" /> Effacer la sélection
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>
+          {hasStrokes ? "Décrivez le changement pour la zone surlignée en rouge" : "Décrivez le changement souhaité (image entière)"}
+        </Label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Textarea
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            placeholder="Ex : des façades plus claires, un plan de travail en marbre…"
+            className="flex-1"
+          />
+          <Button type="button" onClick={submitEdit} disabled={busy} className="shrink-0">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Appliquer
+          </Button>
+        </div>
+      </div>
+
+      <RevisionHistory revisions={sortedAsc} currentRevisionId={render.currentRevisionId} onRestore={restore} busy={busy} />
     </div>
   );
 }
