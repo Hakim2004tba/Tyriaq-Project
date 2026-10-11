@@ -140,8 +140,10 @@ function DashboardSidebar({ role }: { role: Role }) {
 }
 
 function DashboardSidebarMobile({ role }: { role: Role }) {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
@@ -158,7 +160,7 @@ function DashboardSidebarMobile({ role }: { role: Role }) {
         <div className="flex items-center px-6 py-7">
           <Logo inverse />
         </div>
-        <SidebarNav role={role} />
+        <SidebarNav role={role} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

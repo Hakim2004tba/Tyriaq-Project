@@ -195,6 +195,7 @@ function FileDropField({
 }
 
 function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
+  const formRef = React.useRef<HTMLFormElement>(null);
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState<ConfiguratorState>(() =>
     referenceLabel
@@ -226,6 +227,10 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
     return true;
   }
 
+  function scrollToTop() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function goNext() {
     if (!canAdvance()) {
       setError("Merci de compléter cette étape avant de continuer.");
@@ -233,11 +238,13 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
     }
     setError(null);
     setStep((s) => Math.min(s + 1, STEP_LABELS.length - 1));
+    scrollToTop();
   }
 
   function goBack() {
     setError(null);
     setStep((s) => Math.max(s - 1, 0));
+    scrollToTop();
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -291,6 +298,7 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="rounded-lg border border-border-subtle bg-surface-raised p-7 shadow-elevation-sm sm:p-9"
     >
