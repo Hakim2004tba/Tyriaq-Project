@@ -539,6 +539,9 @@ function RenderWorkspace({
             {render.sharedAt ? "Partagé avec le client" : "Non partagé"}
           </Badge>
           {decisionBadge && <Badge variant={decisionBadge.variant}>{decisionBadge.label}</Badge>}
+          <span className="text-xs text-text-muted">
+            {sortedAsc.length} génération{sortedAsc.length > 1 ? "s" : ""} IA pour ce devis
+          </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" size="sm" variant="outline" onClick={downloadImage}>

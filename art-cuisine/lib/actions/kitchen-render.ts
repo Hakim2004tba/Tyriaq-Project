@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth/session";
 import { getPgDb } from "@/lib/db/pg";
 import {
@@ -176,7 +176,16 @@ async function runGeneration({
   if (!render) return { ok: false, error: "Ce devis n'a pas encore été approuvé." };
 
   const now = new Date().toISOString();
-  await db.update(kitchenRendersTable).set({ status: "generating", updatedAt: now }).where(eq(kitchenRendersTable.id, render.id));
+  // Atomic compare-and-set: only flips to "generating" if it isn't already — closes the
+  // race between two near-simultaneous clicks/requests both passing the earlier status check.
+  const claimed = await db
+    .update(kitchenRendersTable)
+    .set({ status: "generating", updatedAt: now })
+    .where(and(eq(kitchenRendersTable.id, render.id), ne(kitchenRendersTable.status, "generating")))
+    .returning({ id: kitchenRendersTable.id });
+  if (claimed.length === 0) {
+    return { ok: false, error: "Une génération est déjà en cours pour ce devis — merci de patienter." };
+  }
 
   const prompt = buildPrompt(config, feedbackNote, Boolean(regionOverlay));
   // Original client photos only ground the very first generation — once there's a prior
@@ -222,6 +231,9 @@ export async function generateKitchenRender(devisId: string): Promise<ActionResu
   const { user, config } = result;
 
   const render = await getKitchenRenderForDevis(devisId);
+  if (render?.status === "generating") {
+    return { ok: false, error: "Une génération est déjà en cours pour ce devis — merci de patienter." };
+  }
   if (!render || (render.status !== "approved" && render.status !== "failed")) {
     return { ok: false, error: "Ce devis doit être approuvé avant de générer une visualisation." };
   }
@@ -247,6 +259,9 @@ export async function regenerateKitchenRender(devisId: string, input: unknown): 
   }
 
   const render = await getKitchenRenderForDevis(devisId);
+  if (render?.status === "generating") {
+    return { ok: false, error: "Une génération est déjà en cours pour ce devis — merci de patienter." };
+  }
   if (!render || render.status !== "generated" || !render.currentRevisionId) {
     return { ok: false, error: "Aucune visualisation à retoucher pour ce devis." };
   }
