@@ -25,6 +25,7 @@ type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: s
 const fileMetaSchema = z.object({
   name: z.string().trim().min(1),
   sizeLabel: z.string().trim().min(1),
+  dataUrl: z.string().trim().min(1),
 });
 
 const configSchema = z.object({

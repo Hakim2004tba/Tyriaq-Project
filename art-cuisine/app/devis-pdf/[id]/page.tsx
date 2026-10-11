@@ -7,6 +7,7 @@ import { getOwnerScope } from "@/lib/data/scope";
 import { getClientById, getClientByEmail } from "@/lib/data/clients";
 import { getDevisById } from "@/lib/data/devis";
 import { getConfigByDevisId } from "@/lib/data/kitchen-config";
+import { getKitchenRenderForDevis, getKitchenRenderRevisions } from "@/lib/data/kitchen-render";
 import { getLineItemsForDevis, computeDevisTotalsFor } from "@/lib/data/pricing";
 import { formatCurrencyDA, formatShortDate } from "@/lib/format";
 import { PrintActions } from "@/components/dashboard/devis/print-actions";
@@ -43,6 +44,13 @@ export default async function DevisDocumentPage({ params }: PageProps<"/devis-pd
 
   const lineItems = await getLineItemsForDevis(devis.id);
   const totals = computeDevisTotalsFor(devis, lineItems);
+
+  const kitchenRender = config ? await getKitchenRenderForDevis(devis.id) : undefined;
+  const renderRevisions = kitchenRender ? await getKitchenRenderRevisions(kitchenRender.id) : [];
+  const currentRender =
+    kitchenRender?.status === "generated"
+      ? renderRevisions.find((r) => r.id === kitchenRender.currentRevisionId)
+      : undefined;
 
   const SPEC_ROWS: [string, string][] = config
     ? [
@@ -93,6 +101,17 @@ export default async function DevisDocumentPage({ params }: PageProps<"/devis-pd
           <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">Projet</p>
           <p className="mt-1.5 text-base font-medium text-ink-950">{devis.projectLabel}</p>
         </div>
+
+        {currentRender && (
+          <div className="mt-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">Aperçu de votre future cuisine</p>
+            <img
+              src={currentRender.imageDataUrl}
+              alt="Visualisation de la cuisine après rénovation"
+              className="mt-2 w-full rounded-md border border-stone-200 object-cover"
+            />
+          </div>
+        )}
 
         {lineItems.length > 0 ? (
           <table className="mt-6 w-full border-collapse text-sm">

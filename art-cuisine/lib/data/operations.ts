@@ -971,6 +971,8 @@ export type ConfiguratorBudget = (typeof CONFIGURATOR_BUDGETS)[number];
 export interface KitchenConfigFile {
   name: string;
   sizeLabel: string;
+  /** The actual file content, as a data URL — the reference image an AI kitchen render is generated from. */
+  dataUrl: string;
 }
 
 export interface KitchenConfigRecord {

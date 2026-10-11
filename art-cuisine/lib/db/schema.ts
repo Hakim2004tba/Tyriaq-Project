@@ -218,12 +218,45 @@ export const kitchenConfigs = pgTable("kitchen_configs", {
   budget: text("budget").notNull(),
   floor: text("floor").notNull(),
   dimensions: text("dimensions").notNull(),
-  photos: jsonb("photos").$type<{ name: string; sizeLabel: string }[]>().notNull().default([]),
-  sketches: jsonb("sketches").$type<{ name: string; sizeLabel: string }[]>().notNull().default([]),
+  photos: jsonb("photos").$type<{ name: string; sizeLabel: string; dataUrl: string }[]>().notNull().default([]),
+  sketches: jsonb("sketches").$type<{ name: string; sizeLabel: string; dataUrl: string }[]>().notNull().default([]),
   additionalInfo: text("additional_info").notNull().default(""),
   contactName: text("contact_name").notNull(),
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+// --- Kitchen AI render workflow -----------------------------------------
+//
+// Gated review → approve → generate pipeline for a devis's kitchen-config
+// photo: staff must verify/correct the submitted specs and set a price
+// before any AI image is produced, and the client never sees a render until
+// that approval has happened (see lib/actions/kitchen-render.ts). One row
+// per devis; the row tracks only approval state + a pointer at the current
+// revision — the actual images and prompts live in kitchenRenderRevisions
+// below, which is the full edit/regeneration history.
+
+export const kitchenRenders = pgTable("kitchen_renders", {
+  id: text("id").primaryKey(),
+  devisId: text("devis_id").notNull(),
+  status: text("status").notNull(), // "pending_review" | "approved" | "generating" | "generated" | "failed"
+  approvedBy: text("approved_by"),
+  approvedAt: text("approved_at"),
+  currentRevisionId: text("current_revision_id"),
+  errorMessage: text("error_message"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const kitchenRenderRevisions = pgTable("kitchen_render_revisions", {
+  id: text("id").primaryKey(),
+  renderId: text("render_id").notNull(),
+  imageDataUrl: text("image_data_url").notNull(),
+  prompt: text("prompt").notNull(),
+  /** Null for the first generation; the staff instruction that produced this revision otherwise. */
+  feedbackNote: text("feedback_note"),
+  createdBy: text("created_by").notNull(),
   createdAt: text("created_at").notNull(),
 });
 

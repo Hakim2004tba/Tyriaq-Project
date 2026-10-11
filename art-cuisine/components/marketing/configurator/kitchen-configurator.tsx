@@ -80,6 +80,7 @@ const FRIDGE_DESCRIPTIONS: Record<FridgeOption, string> = {
 interface FileMeta {
   name: string;
   sizeLabel: string;
+  dataUrl: string;
 }
 
 interface ConfiguratorState {
@@ -127,8 +128,46 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
-function filesToMeta(files: FileList): FileMeta[] {
-  return Array.from(files).map((f) => ({ name: f.name, sizeLabel: formatFileSize(f.size) }));
+/** Downscales an image file to keep the payload reasonable before it's base64-encoded and sent to the server. Non-image files (e.g. a PDF plan) are read as-is. */
+function readImageAsDataUrl(file: File, maxDimension = 1600, quality = 0.82): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("Lecture du fichier impossible."));
+    reader.onload = () => {
+      const rawDataUrl = reader.result as string;
+      if (!file.type.startsWith("image/")) {
+        resolve(rawDataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onerror = () => resolve(rawDataUrl);
+      img.onload = () => {
+        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(rawDataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = rawDataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function filesToMeta(files: FileList): Promise<FileMeta[]> {
+  return Promise.all(
+    Array.from(files).map(async (f) => ({
+      name: f.name,
+      sizeLabel: formatFileSize(f.size),
+      dataUrl: await readImageAsDataUrl(f),
+    })),
+  );
 }
 
 function FileDropField({
@@ -473,7 +512,7 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
                 label="Photos de votre espace actuel"
                 hint="Glissez vos photos, ou cliquez pour parcourir"
                 files={data.photos}
-                onChange={(files) => update("photos", [...data.photos, ...filesToMeta(files)])}
+                onChange={async (files) => update("photos", [...data.photos, ...(await filesToMeta(files))])}
                 onRemove={(i) => update("photos", data.photos.filter((_, idx) => idx !== i))}
               />
             </div>
@@ -482,7 +521,7 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
                 label="Croquis ou plan (si vous en avez un)"
                 hint="Glissez vos croquis, ou cliquez pour parcourir"
                 files={data.sketches}
-                onChange={(files) => update("sketches", [...data.sketches, ...filesToMeta(files)])}
+                onChange={async (files) => update("sketches", [...data.sketches, ...(await filesToMeta(files))])}
                 onRemove={(i) => update("sketches", data.sketches.filter((_, idx) => idx !== i))}
               />
             </div>

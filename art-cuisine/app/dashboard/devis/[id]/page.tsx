@@ -18,6 +18,7 @@ import {
   Receipt,
   Files,
   Upload,
+  Sparkles,
 } from "lucide-react";
 import { requirePermission } from "@/lib/auth/session";
 import { getOwnerScope } from "@/lib/data/scope";
@@ -25,6 +26,7 @@ import { getClientOptions, getClientById } from "@/lib/data/clients";
 import { getLeadOptions, getLeadById } from "@/lib/data/leads";
 import { getDevisById, getDevisVersions } from "@/lib/data/devis";
 import { getConfigByDevisId } from "@/lib/data/kitchen-config";
+import { getKitchenRenderForDevis, getKitchenRenderRevisions } from "@/lib/data/kitchen-render";
 import { getProjectOptions, getProjectByRef } from "@/lib/data/appointments";
 import { getLineItemsForDevis, getActiveCatalogueByCategory, computeDevisTotalsFor } from "@/lib/data/pricing";
 import { getDocumentsForDevis } from "@/lib/data/documents";
@@ -35,6 +37,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { DevisFormDialog } from "@/components/dashboard/devis/devis-form-dialog";
 import { DevisStatusSelect } from "@/components/dashboard/devis/devis-status-select";
 import { KitchenConfigSummary } from "@/components/dashboard/devis/kitchen-config-summary";
+import { KitchenRenderPanel } from "@/components/dashboard/devis/kitchen-render-panel";
 import { LinkProjectSelect } from "@/components/dashboard/devis/link-project-select";
 import { DuplicateDevisButton } from "@/components/dashboard/devis/duplicate-devis-button";
 import { SendEmailButton } from "@/components/dashboard/devis/send-email-button";
@@ -80,6 +83,8 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
     getClientOptions(scope),
     getLeadOptions(scope),
   ]);
+  const kitchenRender = config ? await getKitchenRenderForDevis(devis.id) : undefined;
+  const kitchenRenderRevisions = kitchenRender ? await getKitchenRenderRevisions(kitchenRender.id) : [];
   const project = getProjectByRef(devis.projectRef);
   const totals = computeDevisTotalsFor(devis, lineItems);
   const catalogueByCategory = getActiveCatalogueByCategory();
@@ -264,6 +269,25 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
           </CardHeader>
           <CardContent>
             <KitchenConfigSummary config={config} />
+          </CardContent>
+        </Card>
+      )}
+
+      {config && (
+        <Card>
+          <CardHeader className="flex-row items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-accent-strong">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <CardTitle>Visualisation IA de la cuisine</CardTitle>
+              <CardDescription>
+                Vérifiez et approuvez les spécifications avant de générer un aperçu à envoyer au client.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <KitchenRenderPanel devisId={devis.id} config={config} render={kitchenRender} revisions={kitchenRenderRevisions} />
           </CardContent>
         </Card>
       )}
