@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth/session";
+import { SESSION_COOKIE } from "@/lib/auth/session-cookie";
 
 /**
  * Fast, DB-free gate in front of the dashboard: redirects anonymous

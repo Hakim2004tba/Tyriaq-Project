@@ -5,6 +5,7 @@ import {
   PROJECT_ISSUES,
   TASKS,
   ACTIVITY,
+  DESIGNERS,
   type ProjectRecord,
   type ProjectStage,
   type ProjectPriority,
@@ -12,7 +13,6 @@ import {
   type TaskRecord,
   type ActivityRecord,
 } from "@/lib/data/operations";
-import { DESIGNERS } from "@/lib/data/appointments";
 
 export { PROJECT_STAGES, PROJECT_PRIORITIES, DESIGNERS };
 

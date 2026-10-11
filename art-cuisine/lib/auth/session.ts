@@ -11,8 +11,9 @@ import { hasAnyPermission, hasPermission, type Permission } from "@/lib/auth/per
 import type { Role } from "@/lib/auth/roles";
 import { getClientByEmail } from "@/lib/data/clients";
 import type { ClientRecord } from "@/lib/data/operations";
+import { SESSION_COOKIE } from "@/lib/auth/session-cookie";
 
-export const SESSION_COOKIE = "ac_session";
+export { SESSION_COOKIE };
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
