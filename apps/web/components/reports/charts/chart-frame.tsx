@@ -49,7 +49,7 @@ export function ChartFrame({
             className={cn(
               "flex size-7 items-center justify-center rounded-md transition-colors duration-fast",
               "focus-visible:outline-none focus-visible:shadow-focus",
-              showTable ? "bg-primary-muted text-primary" : "text-text-muted hover:bg-white/5 hover:text-text-primary"
+              showTable ? "bg-primary-muted text-primary" : "text-text-muted hover:bg-[var(--tint-raise)] hover:text-text-primary"
             )}
             title={showTable ? "Show chart" : "Show the numbers"}
           >

@@ -49,7 +49,7 @@ export function BoardPreview({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "overflow-hidden rounded-xl border border-white/10 bg-background shadow-[0_40px_120px_-35px_rgba(88,28,235,0.5)]",
+        "overflow-hidden rounded-xl border border-[var(--tint-line)] bg-background shadow-[0_40px_120px_-35px_rgba(88,28,235,0.5)]",
         className
       )}
     >

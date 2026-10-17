@@ -246,7 +246,7 @@ export function SpaceMembersDialog({
                         onClick={invite}
                         disabled={pending}
                         className="flex w-full items-center gap-2.5 rounded-md text-start transition-colors
-                                   hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-white/5"
+                                   hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-[var(--tint-raise)]"
                       >
                         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-muted text-primary">
                           <Mail className="size-4" />
@@ -277,7 +277,7 @@ export function SpaceMembersDialog({
                         type="button"
                         onClick={() => add(member)}
                         className="flex w-full items-center gap-2.5 px-2.5 py-2 text-start transition-colors
-                                   hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-white/5"
+                                   hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-[var(--tint-raise)]"
                       >
                         <Avatar name={member.name} src={member.avatarUrl ?? undefined} size="sm" />
                         <span className="min-w-0 flex-1">

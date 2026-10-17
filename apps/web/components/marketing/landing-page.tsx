@@ -74,7 +74,7 @@ export function LandingPage({ signedIn = false }: { signedIn?: boolean }) {
     writes the Arabic, not before.
   */
   return (
-    <div dir="ltr" className="tq-aurora min-h-screen bg-background">
+    <div dir="ltr" className="tq-aurora tq-aurora-live min-h-screen bg-background">
       <MarketingNav signedIn={signedIn} />
 
       {/* ------------------------------- hero ------------------------------ */}

@@ -12,14 +12,29 @@
   boundary (CSS has no import statement), not an architecture choice.
   If a value in packages/tokens changes, mirror it here.
 
-  Tyriaq is DARK-FIRST and single-theme: :root carries the dark values.
-  There is no light mode — the aurora, the edge-lit rim and the violet
-  glow only read correctly on a near-black ground. The `.dark` selector
-  is kept as an alias so any element or library that stamps that class
-  resolves to the same palette rather than falling through to nothing.
+  Tyriaq ships TWO themes. Dark is still the default and still the one
+  the product was designed in — :root carries it, so anything that fails
+  to resolve a theme lands on the original palette rather than on
+  nothing. Light is an override keyed on [data-theme="light"].
+
+  Light is NOT dark with the lightness flipped. Three things genuinely
+  invert rather than scale:
+
+    - Elevation. On dark, a surface is raised by a white rim catching
+      light from above; on white there is no light to catch, so raise
+      comes from a real cast shadow and the rim becomes a hairline.
+    - Depth. Dark gets deeper by getting darker; light gets deeper by
+      getting LESS white, so the sidebar sits above the canvas rather
+      than below it.
+    - Signal colours. #34D399 reads clearly on near-black and is 1.9:1
+      on white. Every status hue is a different, darker value here.
+
+  Both themes are kept in this one file, adjacent, because a palette
+  split across two files drifts within a month.
 */
 :root,
-.dark {
+.dark,
+[data-theme="dark"] {
   /*
     Solid colours are stored as SPACE-SEPARATED RGB CHANNELS, not hex.
 
@@ -104,8 +119,189 @@
     transparent 70%
   );
 
+
+  /* Elevation — ambient occlusion plus the edge-lit rim. On near-black
+     the rim is what actually reads as "raised"; the cast shadow alone
+     is nearly invisible against a dark ground. */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 6px -1px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 32px 80px -20px rgba(0, 0, 0, 0.8);
+  --shadow-rim: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  --shadow-rim-strong: inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.09), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-glow-sm: 0 0 0 1px rgba(139, 92, 246, 0.18), 0 4px 14px -4px rgba(124, 58, 237, 0.45);
+  --shadow-glow-md: 0 0 0 1px rgba(139, 92, 246, 0.24), 0 8px 28px -8px rgba(124, 58, 237, 0.55);
+  --shadow-glow-lg: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 16px 48px -12px rgba(124, 58, 237, 0.6);
+  --shadow-focus: 0 0 0 2px rgba(139, 92, 246, 0.55), 0 0 0 4px rgba(139, 92, 246, 0.14);
+
+  /* Theme-dependent chrome that used to be hardcoded further down. */
+  --canvas-overscroll: #07040f;
+  --color-selection: rgba(139, 92, 246, 0.32);
+  --color-selection-text: #ffffff;
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.18);
+  --color-scrim: rgba(5, 3, 13, 0.7);
+  --color-scrim-strong: rgba(5, 3, 13, 0.75);
+
+  /* Low-alpha tints used for hover and for chips that sit ON a surface
+     rather than beside it. White on dark; INK on light, where a white
+     tint is literally nothing. */
+  --tint-raise: rgba(255, 255, 255, 0.05);
+  --tint-raise-strong: rgba(255, 255, 255, 0.1);
+  --tint-line: rgba(255, 255, 255, 0.1);
+
+  /* Ink for text sitting on a filled signal colour. On dark the signal
+     hues are light (#34D399, #FB7185) so the text on them must be near
+     black; in light mode those same tokens are dark and the text has to
+     flip to white. A literal hex at the call site cannot do that. */
+  --color-on-danger: #2a0810;
+  --color-on-success: #052e1b;
+  --gradient-text-brand: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 55%, #7c3aed 100%);
+  --rule-line: rgba(255, 255, 255, 0.1);
+
   --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/*
+  LIGHT — the daylight palette.
+
+  Hues follow the MedSpark reference: indigo as the brand, a warm orange
+  and a mint green as the two supporting accents, over an almost-white
+  canvas carrying a very faint blue-to-warm wash. Cheerful, but the
+  cheer lives in the washes and the gradients, not in the text — every
+  foreground token below clears 4.5:1 on the surface it sits on.
+
+  Notably NOT a flip of the dark values: see the note at the top.
+*/
+[data-theme="light"] {
+  /* Brand. Indigo-600 rather than the dark theme's violet-500: #8B5CF6
+     is 3.1:1 on white and would fail as icon or link text. */
+  --color-primary: 79 70 229;
+  --color-primary-foreground: 255 255 255;
+  --color-primary-hover: 99 102 241;
+  --color-primary-active: 67 56 202;
+  --color-primary-subtle: rgba(79, 70, 229, 0.08);
+  --color-primary-muted: rgba(79, 70, 229, 0.14);
+
+  /* Surfaces. Depth runs the other way: the canvas is the tinted step
+     and panels rise toward pure white. */
+  --color-background: 246 248 252;
+  --color-surface: 255 255 255;
+  --color-surface-elevated: 255 255 255;
+  --color-surface-muted: 241 245 251;
+  --color-surface-glass: rgba(255, 255, 255, 0.76);
+
+  /* Borders — ink at low alpha, never grey: a grey hairline over a
+     tinted canvas turns muddy. */
+  --color-border: rgba(15, 23, 42, 0.09);
+  --color-border-strong: rgba(15, 23, 42, 0.16);
+  --color-border-brand: rgba(79, 70, 229, 0.3);
+
+  /* Text */
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 71 85 105;
+  /* Measured, not picked. Slate-400 (#94A3B8), which mirrors the dark
+     theme's muted step, is 2.6:1 on white. Slate-500 (#64748B) looks
+     safe and is 4.35:1 against --color-surface-muted — the surface most
+     captions actually sit on, not the white they were eyeballed
+     against. This value clears 4.5:1 on BOTH. */
+  --color-text-muted: 92 107 127;
+  --color-text-on-primary: 255 255 255;
+
+  /* Signal. Each hue is three to four steps darker than its dark-theme
+     counterpart, which is what it costs to stay legible on white.
+
+     Measured against the SUBTLE tint, not against white — a status word
+     almost always sits on its own tint, and that tint is the harder
+     background. Emerald-600 (#059669) looked obviously fine and is
+     3.8:1 on white and 3.4:1 on its tint; it would have shipped every
+     "Done" badge in the product below the floor.
+
+     The -600 steps survive as the tints and as the dark theme's text;
+     here they are only ever a fill, where the foreground is white. */
+  --color-success: 4 108 78;
+  --color-success-subtle: rgba(16, 185, 129, 0.12);
+  --color-warning: 154 52 18;
+  --color-warning-subtle: rgba(245, 158, 11, 0.16);
+  --color-danger: 190 18 60;
+  --color-danger-subtle: rgba(244, 63, 94, 0.11);
+  --color-info: 29 78 216;
+  --color-info-subtle: rgba(59, 130, 246, 0.12);
+
+  /* A dark tooltip on a light UI, deliberately: a tooltip is a
+     transient overlay, and inverting it is what separates it from the
+     panel underneath without giving it a border. */
+  --color-tooltip-bg: 30 41 59;
+
+  /* Sidebar — white, above the canvas rather than below it, and the
+     active item is brand-coloured rather than white-on-violet. */
+  --color-sidebar-bg: 255 255 255;
+  --color-sidebar-bg-elevated: 248 250 253;
+  --color-sidebar-border: rgba(15, 23, 42, 0.08);
+  --color-sidebar-text: 15 23 42;
+  --color-sidebar-text-muted: 92 107 127;
+  --color-sidebar-hover: rgba(79, 70, 229, 0.06);
+  --color-sidebar-active-bg: rgba(79, 70, 229, 0.1);
+  --color-sidebar-active-text: 67 56 202;
+  --color-sidebar-ring: rgba(79, 70, 229, 0.45);
+
+  /* Gradients. The aurora picks up MedSpark's three-colour hero wash —
+     indigo, warm orange, mint — at an alpha low enough that text sits
+     on it unharmed. */
+  --gradient-brand: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gradient-brand-hover: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-aurora: radial-gradient(1100px 520px at 6% -10%, rgba(99, 102, 241, 0.16), transparent 62%),
+    radial-gradient(820px 460px at 94% 2%, rgba(249, 115, 22, 0.1), transparent 60%),
+    radial-gradient(760px 520px at 50% 108%, rgba(16, 185, 129, 0.08), transparent 62%);
+  --gradient-cosmic: radial-gradient(
+    130% 100% at 100% 0%,
+    rgba(99, 102, 241, 0.16) 0%,
+    rgba(249, 115, 22, 0.09) 42%,
+    transparent 72%
+  );
+
+  /* Elevation. The rim inverts from a white highlight to an ink
+     hairline, and the cast shadows drop to a tenth of their dark-theme
+     alpha — rgba(0,0,0,0.6) under a white card is a smudge, not a
+     shadow. They also take a slight indigo cast, because a pure-grey
+     shadow on a blue-tinted canvas reads as dirt. */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.07), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px -10px rgba(30, 41, 59, 0.18), 0 2px 6px -2px rgba(30, 41, 59, 0.08);
+  --shadow-lg: 0 20px 48px -16px rgba(30, 41, 59, 0.22), 0 4px 12px -4px rgba(30, 41, 59, 0.08);
+  --shadow-xl: 0 32px 72px -24px rgba(30, 41, 59, 0.26), 0 8px 20px -8px rgba(30, 41, 59, 0.1);
+  --shadow-rim: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+  --shadow-rim-strong: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
+  --shadow-card: inset 0 0 0 1px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.07);
+  --shadow-card-hover: inset 0 0 0 1px rgba(79, 70, 229, 0.18),
+    0 12px 28px -12px rgba(79, 70, 229, 0.28), 0 4px 10px -4px rgba(30, 41, 59, 0.08);
+  --shadow-glow-sm: 0 0 0 1px rgba(79, 70, 229, 0.2), 0 4px 14px -4px rgba(79, 70, 229, 0.3);
+  --shadow-glow-md: 0 0 0 1px rgba(79, 70, 229, 0.26), 0 10px 28px -10px rgba(79, 70, 229, 0.38);
+  --shadow-glow-lg: 0 0 0 1px rgba(79, 70, 229, 0.32), 0 18px 48px -14px rgba(79, 70, 229, 0.45);
+  --shadow-focus: 0 0 0 2px rgba(79, 70, 229, 0.5), 0 0 0 4px rgba(79, 70, 229, 0.14);
+
+  --canvas-overscroll: #eef2f9;
+  --color-selection: rgba(79, 70, 229, 0.18);
+  --color-selection-text: #0f172a;
+  --color-scrollbar-thumb: rgba(15, 23, 42, 0.16);
+  --color-scrollbar-thumb-hover: rgba(15, 23, 42, 0.28);
+  --color-scrim: rgba(15, 23, 42, 0.38);
+  --color-scrim-strong: rgba(15, 23, 42, 0.45);
+  --tint-raise: rgba(15, 23, 42, 0.045);
+  --tint-raise-strong: rgba(15, 23, 42, 0.08);
+  --tint-line: rgba(15, 23, 42, 0.1);
+  --color-on-danger: #ffffff;
+  --color-on-success: #ffffff;
+  /* Three stops rather than the dark theme's monochrome violet ramp —
+     this is the one place the MedSpark blue-to-warm run is literal. */
+  --gradient-text-brand: linear-gradient(120deg, #2563eb 0%, #6d28d9 48%, #db2777 100%);
+  --rule-line: rgba(15, 23, 42, 0.1);
+
+  color-scheme: light;
 }
 
 @layer base {
@@ -117,29 +313,53 @@
     -moz-osx-font-smoothing: grayscale;
     /* The canvas sits on the deepest step so any over-scroll reveals
        space rather than a lighter grey band. */
-    background-color: #07040f;
+    background-color: var(--canvas-overscroll);
     color-scheme: dark;
   }
   body {
     @apply bg-background text-text-primary;
   }
 
+  /*
+    The cross-fade, armed ONLY while a switch is actually happening.
+
+    A permanent `transition: background-color` on body looks right and
+    is wrong: the browser also runs it when the stylesheet first
+    applies, so every cold page load fades in from the UA's white
+    default — a flash introduced by the very rule meant to smooth
+    things. The provider sets this attribute for the length of the
+    switch and removes it, so the transition cannot exist at load time.
+
+    Scoped to colour. A blanket `transition: all` here would animate
+    layout on every re-render in the product.
+  */
+  html[data-theme-switching],
+  html[data-theme-switching] body,
+  html[data-theme-switching] *:not(svg):not(path) {
+    transition:
+      background-color 260ms cubic-bezier(0.32, 0.72, 0, 1),
+      border-color 260ms cubic-bezier(0.32, 0.72, 0, 1),
+      color 260ms cubic-bezier(0.32, 0.72, 0, 1),
+      fill 260ms cubic-bezier(0.32, 0.72, 0, 1),
+      box-shadow 260ms cubic-bezier(0.32, 0.72, 0, 1) !important;
+  }
+
   /* One visible focus treatment across the whole product. */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.55), 0 0 0 4px rgba(139, 92, 246, 0.14);
+    box-shadow: var(--shadow-focus);
     border-radius: 6px;
   }
 
   ::selection {
-    background: rgba(139, 92, 246, 0.32);
-    color: #ffffff;
+    background: var(--color-selection);
+    color: var(--color-selection-text);
   }
 
   /* Scrollbars are chrome: present when needed, never a bright rail. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: var(--color-scrollbar-thumb) transparent;
   }
   *::-webkit-scrollbar {
     width: 10px;
@@ -149,13 +369,13 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-scrollbar-thumb);
     border: 3px solid transparent;
     background-clip: content-box;
     border-radius: 9999px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: var(--color-scrollbar-thumb-hover);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -223,10 +443,94 @@
 
   /* Text set in the brand gradient — headline accents only, never body. */
   .tq-gradient-text {
-    background-image: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 55%, #7c3aed 100%);
+    background-image: var(--gradient-text-brand);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /*
+    A slow drift under the aurora.
+
+    The wash is the one element large enough that motion reads as
+    atmosphere rather than as something moving — 18 seconds, under 3%
+    of travel, no edge of it ever crosses a word. Put this on anything
+    smaller and it becomes a distraction competing with the content.
+  */
+  .tq-aurora-live::before {
+    animation: aurora-drift 18s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /*
+    A card that lifts on hover.
+
+    On dark this brightens the rim; on light it casts an indigo-tinted
+    shadow and the border takes the brand hue — the same intent through
+    whichever cue the ground actually supports.
+  */
+  .tq-lift {
+    transition:
+      transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
+      box-shadow 180ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .tq-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /*
+    Brand text that moves through its gradient.
+
+    Reserved for a wordmark or a hero line. The background is oversized
+    so there is somewhere to pan to; on a short label the whole effect
+    collapses into a colour wobble.
+  */
+  .tq-gradient-text-live {
+    background-image: var(--gradient-text-brand);
+    background-size: 220% 220%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-pan 6s ease-in-out infinite;
+  }
+
+  /*
+    A sheen that crosses a surface once on hover.
+
+    Light-mode flourish that costs nothing on dark. It is masked to the
+    element and pointer-events: none, so it can never swallow a click.
+  */
+  .tq-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .tq-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-120%);
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 80%
+    );
+    opacity: 0;
+  }
+  .tq-sheen:hover::after {
+    animation: shimmer 900ms cubic-bezier(0.32, 0.72, 0, 1);
+    opacity: 1;
+  }
+  [data-theme="dark"] .tq-sheen::after,
+  .dark .tq-sheen::after {
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 80%
+    );
   }
 
   /* A hairline that fades at both ends — used to close sections without
@@ -236,8 +540,8 @@
     background-image: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.1) 15%,
-      rgba(255, 255, 255, 0.1) 85%,
+      var(--rule-line) 15%,
+      var(--rule-line) 85%,
       transparent
     );
   }

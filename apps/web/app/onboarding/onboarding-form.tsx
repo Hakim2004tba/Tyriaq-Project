@@ -13,7 +13,7 @@ export function OnboardingForm({ email, fullName }: { email: string; fullName: s
   const [state, action] = useActionState<ActionResult, FormData>(createWorkspace, {});
 
   return (
-    <div className="tq-aurora flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
+    <div className="tq-aurora tq-aurora-live flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
       <Wordmark size={30} />
 
       <main className="w-full max-w-[440px]">

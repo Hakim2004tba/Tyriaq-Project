@@ -184,7 +184,7 @@ export function Composer({
                 }}
                 className={cn(
                   "flex w-full items-center gap-2 px-2.5 py-1.5 text-start text-body-sm transition-colors",
-                  i === active ? "bg-white/5 text-text-primary" : "text-text-secondary hover:bg-white/5"
+                  i === active ? "bg-[var(--tint-raise)] text-text-primary" : "text-text-secondary hover:bg-[var(--tint-raise)]"
                 )}
               >
                 {token.kind === "mention" && <Avatar name={token.label} size="xs" />}

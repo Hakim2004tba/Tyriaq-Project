@@ -144,7 +144,7 @@ export function EditorToolbar({
                   "focus-visible:outline-none focus-visible:shadow-focus",
                   item.active
                     ? "bg-primary-muted text-primary"
-                    : "text-text-muted hover:bg-white/5 hover:text-text-primary"
+                    : "text-text-muted hover:bg-[var(--tint-raise)] hover:text-text-primary"
                 )}
               >
                 <Icon className="size-4" />

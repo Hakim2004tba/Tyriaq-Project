@@ -17,7 +17,7 @@ export const DialogOverlay = React.forwardRef<
       // Deep and blurred: the modal must read as the only live surface,
       // and on a dark canvas a light scrim would brighten the page instead
       // of dimming it.
-      "fixed inset-0 z-50 bg-[#05030D]/75 backdrop-blur-sm",
+      "fixed inset-0 z-50 bg-[var(--color-scrim-strong)] backdrop-blur-sm",
       "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
@@ -45,7 +45,7 @@ export const DialogContent = React.forwardRef<
     >
       {children}
       <DialogPrimitive.Close
-        className="absolute right-4 top-4 flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-fast hover:bg-white/5 hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
+        className="absolute right-4 top-4 flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-fast hover:bg-[var(--tint-raise)] hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
         aria-label="Close dialog"
       >
         <X className="size-4" />

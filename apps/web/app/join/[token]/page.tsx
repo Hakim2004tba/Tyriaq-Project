@@ -32,7 +32,7 @@ export default async function JoinPage({
   const user = await getCurrentUser();
 
   const Frame = ({ children }: { children: React.ReactNode }) => (
-    <main className="tq-aurora flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main className="tq-aurora tq-aurora-live flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-card">
         {children}
       </div>

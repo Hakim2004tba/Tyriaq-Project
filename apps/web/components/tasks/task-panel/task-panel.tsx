@@ -331,7 +331,7 @@ export function TaskPanel({
                     <Link
                       href={`/spaces/${project.spaceSlug}`}
                       className="flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-body-sm
-                                 text-text-primary transition-colors hover:bg-white/5
+                                 text-text-primary transition-colors hover:bg-[var(--tint-raise)]
                                  focus-visible:outline-none focus-visible:shadow-focus"
                     >
                       <span

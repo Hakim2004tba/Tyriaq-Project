@@ -466,7 +466,7 @@ export function GanttView({ project, onOpenTask }: { project: Project; onOpenTas
                           onClick={() => setComposing(r.id)}
                           aria-label={`Add task to ${r.label}`}
                           className="flex size-6 shrink-0 items-center justify-center rounded text-text-muted
-                                     transition-colors hover:bg-white/5 hover:text-text-primary
+                                     transition-colors hover:bg-[var(--tint-raise)] hover:text-text-primary
                                      focus-visible:outline-none focus-visible:shadow-focus"
                         >
                           <Plus className="size-3.5" />

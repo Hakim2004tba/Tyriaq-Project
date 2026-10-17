@@ -65,7 +65,7 @@ export function Kbd({ className, ...props }: React.HTMLAttributes<HTMLElement>) 
   return (
     <kbd
       className={cn(
-        "rounded border border-border bg-white/5 px-1.5 py-0.5 font-sans text-[11px] font-medium leading-none text-text-muted",
+        "rounded border border-border bg-[var(--tint-raise)] px-1.5 py-0.5 font-sans text-[11px] font-medium leading-none text-text-muted",
         className
       )}
       {...props}

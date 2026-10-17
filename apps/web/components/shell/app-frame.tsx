@@ -36,6 +36,7 @@ import {
 import { useSession } from "@/components/auth/session-provider";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { CommandBar } from "./command-bar";
+import { ThemeToggle } from "@/components/theme";
 import { CommandPalette } from "./command-palette";
 import { useT } from "@/lib/i18n/provider";
 import { SpaceTree } from "./space-tree";
@@ -306,7 +307,7 @@ export function AppFrame({
       {isMobile && drawerOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-[#05030D]/70 backdrop-blur-sm animate-in fade-in-0"
+            className="fixed inset-0 z-40 bg-[var(--color-scrim)] backdrop-blur-sm animate-in fade-in-0"
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
@@ -342,6 +343,8 @@ export function AppFrame({
             </IconButton>
 
             <WorkspaceSwitcher />
+
+            <ThemeToggle />
 
             <NotificationCenter />
             <IconButton label="Help and support" className="hidden sm:inline-flex">

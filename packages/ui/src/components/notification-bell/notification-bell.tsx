@@ -36,7 +36,7 @@ export const NotificationBell = React.forwardRef<HTMLButtonElement, Notification
         {hasUnread && (
           <span
             aria-hidden="true"
-            className="absolute right-1.5 top-1.5 flex min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-none text-[#2A0810]"
+            className="absolute right-1.5 top-1.5 flex min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-none text-[var(--color-on-danger)]"
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>

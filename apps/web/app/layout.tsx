@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dirOf } from "@/lib/i18n/config";
 import { getLocale } from "@/lib/i18n/server";
 import { LocaleProvider } from "@/lib/i18n/provider";
+import { ThemeProvider, ThemeScript } from "@/components/theme";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -43,7 +44,18 @@ export default async function RootLayout({ children }: { children: ReactNode }):
   */
   return (
     <html lang={locale} dir={dirOf(locale)} suppressHydrationWarning>
+      <head>
+        {/*
+          Before anything paints. The theme is a client-side preference,
+          so the server cannot know it and the markup it sends is always
+          the default — without this script that default is visible for
+          one frame, which on a light-mode machine is a full-screen
+          white-to-dark flash on every navigation.
+        */}
+        <ThemeScript />
+      </head>
       <body className="font-sans antialiased">
+        <ThemeProvider>
         <LocaleProvider locale={locale}>
           <SessionProvider value={{ profile, workspaces }}>
             <SpaceStoreProvider data={{ workspaces, spaces, projects }}>
@@ -51,6 +63,7 @@ export default async function RootLayout({ children }: { children: ReactNode }):
             </SpaceStoreProvider>
           </SessionProvider>
         </LocaleProvider>
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

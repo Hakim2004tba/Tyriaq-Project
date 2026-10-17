@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: ReactNode }): JSX.E
   if (!isSupabaseConfigured) return <SetupNotice />;
 
   return (
-    <div className="tq-aurora flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
+    <div className="tq-aurora tq-aurora-live flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
       <Link
         href="/"
         className="rounded-md focus-visible:outline-none focus-visible:shadow-focus"

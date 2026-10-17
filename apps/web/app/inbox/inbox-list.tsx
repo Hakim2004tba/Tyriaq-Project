@@ -163,7 +163,7 @@ export function InboxList({
                   href={notification.href}
                   onClick={() => open(notification)}
                   className="flex items-start gap-2.5 px-3 py-2.5 transition-colors
-                             hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-white/5"
+                             hover:bg-white/[0.04] focus-visible:outline-none focus-visible:bg-[var(--tint-raise)]"
                 >
                   {body}
                 </Link>

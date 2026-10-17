@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@flow/ui";
 import { cn } from "@flow/utils";
+import { ThemeToggle } from "@/components/theme";
 
 const LINKS = [
   { label: "Home", href: "#top" },
@@ -78,6 +79,11 @@ export function MarketingNav({ signedIn = false }: { signedIn?: boolean }) {
           </ul>
 
           <div className="ms-auto flex items-center gap-2 md:ms-0">
+            {/* Before the sign-in buttons, not inside the menu: this is
+                the first page anybody sees, and somebody who needs the
+                light theme needs it before they read anything. */}
+            <ThemeToggle />
+
             {signedIn ? (
               <Button size="md" asChild className="hidden sm:inline-flex">
                 <Link href="/dashboard">
@@ -105,7 +111,7 @@ export function MarketingNav({ signedIn = false }: { signedIn?: boolean }) {
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               className="flex size-9 items-center justify-center rounded-md text-text-secondary transition-colors
-                         hover:bg-white/5 hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus md:hidden"
+                         hover:bg-[var(--tint-raise)] hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus md:hidden"
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -128,7 +134,7 @@ export function MarketingNav({ signedIn = false }: { signedIn?: boolean }) {
                 href={link.href}
                 onClick={() => setOpen(false)}
                 className="block rounded-md px-3 py-2 text-body-sm text-text-secondary transition-colors
-                           hover:bg-white/5 hover:text-text-primary"
+                           hover:bg-[var(--tint-raise)] hover:text-text-primary"
               >
                 {link.label}
               </a>

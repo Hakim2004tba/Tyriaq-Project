@@ -72,7 +72,7 @@ export function DocumentProperties({
                     type="button"
                     disabled={pending}
                     className="flex max-w-full items-center gap-1.5 rounded px-1 py-0.5 text-text-primary
-                               transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:shadow-focus"
+                               transition-colors hover:bg-[var(--tint-raise)] focus-visible:outline-none focus-visible:shadow-focus"
                   >
                     <FolderIcon className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
                     <span className="truncate">{folder?.name ?? "Unfiled"}</span>
@@ -105,7 +105,7 @@ export function DocumentProperties({
                     type="button"
                     disabled={pending}
                     className="max-w-full truncate rounded px-1 py-0.5 text-text-primary transition-colors
-                               hover:bg-white/5 focus-visible:outline-none focus-visible:shadow-focus"
+                               hover:bg-[var(--tint-raise)] focus-visible:outline-none focus-visible:shadow-focus"
                   >
                     {document.projectName ?? "Workspace-wide"}
                   </button>
@@ -155,7 +155,7 @@ export function DocumentProperties({
             disabled={pending}
             onClick={() => run(() => setDocumentArchived(document.id, !document.archived))}
             className="flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-body-sm text-text-secondary
-                       transition-colors hover:bg-white/5 hover:text-text-primary
+                       transition-colors hover:bg-[var(--tint-raise)] hover:text-text-primary
                        focus-visible:outline-none focus-visible:shadow-focus"
           >
             {document.archived ? <ArchiveRestore className="size-4" /> : <Archive className="size-4" />}
@@ -212,7 +212,7 @@ export function DocumentProperties({
                     <Link
                       href={`/projects/${task.projectSlug}?task=${task.id}`}
                       className="flex items-center gap-2 rounded-md px-1 py-1 text-body-sm text-text-secondary
-                                 transition-colors hover:bg-white/5 hover:text-text-primary
+                                 transition-colors hover:bg-[var(--tint-raise)] hover:text-text-primary
                                  focus-visible:outline-none focus-visible:shadow-focus"
                     >
                       {row}

@@ -69,7 +69,7 @@ export function StatusControl({
           onClick={stop}
           aria-label={`Status: ${current?.name ?? meta.label}. Change it`}
           className="flex size-5 shrink-0 items-center justify-center rounded-full
-                     transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:shadow-focus"
+                     transition-colors hover:bg-[var(--tint-raise-strong)] focus-visible:outline-none focus-visible:shadow-focus"
         >
           <span
             className={cn(

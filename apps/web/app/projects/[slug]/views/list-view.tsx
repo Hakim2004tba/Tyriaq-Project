@@ -540,7 +540,7 @@ export function ListView({
                   type="button"
                   onClick={() => setComposing(column.key)}
                   className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors
-                             duration-fast hover:bg-white/5 hover:text-text-primary
+                             duration-fast hover:bg-[var(--tint-raise)] hover:text-text-primary
                              focus-visible:outline-none focus-visible:shadow-focus"
                   aria-label={`Add task to ${meta.label}`}
                 >
@@ -678,7 +678,7 @@ export function ListView({
                             }
                             className={cn(
                               "flex size-5 shrink-0 items-center justify-center rounded text-text-muted",
-                              "transition-colors hover:bg-white/10 hover:text-text-primary",
+                              "transition-colors hover:bg-[var(--tint-raise-strong)] hover:text-text-primary",
                               "focus-visible:outline-none focus-visible:shadow-focus",
                               kids.length === 0 && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                             )}

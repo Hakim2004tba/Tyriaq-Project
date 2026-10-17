@@ -176,7 +176,7 @@ export function NotificationCenter() {
             <Link
               href="/settings/notifications"
               className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors
-                         hover:bg-white/5 hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
+                         hover:bg-[var(--tint-raise)] hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
               aria-label="Notification preferences"
             >
               <Settings2 className="size-3.5" />
@@ -232,7 +232,7 @@ export function NotificationCenter() {
 
               const className = cn(
                 "flex w-full items-start gap-2.5 px-3 py-2.5 text-start transition-colors",
-                "focus-visible:outline-none focus-visible:bg-white/5",
+                "focus-visible:outline-none focus-visible:bg-[var(--tint-raise)]",
                 notification.read ? "hover:bg-white/[0.03]" : "bg-primary/[0.04] hover:bg-primary/[0.07]"
               );
 

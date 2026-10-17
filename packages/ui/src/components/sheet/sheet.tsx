@@ -23,7 +23,7 @@ const SheetOverlay = React.forwardRef<
     className={cn(
       // Deep and blurred, matching Dialog: on a dark canvas a light scrim
       // brightens the page instead of dimming it.
-      "fixed inset-0 z-50 bg-[#05030D]/70 backdrop-blur-sm",
+      "fixed inset-0 z-50 bg-[var(--color-scrim)] backdrop-blur-sm",
       "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
@@ -66,7 +66,7 @@ export const SheetContent = React.forwardRef<React.ElementRef<typeof DialogPrimi
       >
         {children}
         <DialogPrimitive.Close
-          className="absolute right-4 top-4 flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-fast hover:bg-white/5 hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
+          className="absolute right-4 top-4 flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-fast hover:bg-[var(--tint-raise)] hover:text-text-primary focus-visible:outline-none focus-visible:shadow-focus"
           aria-label="Close panel"
         >
           <X className="size-4" />

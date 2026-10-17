@@ -39,7 +39,7 @@ export const buttonVariants = cva(
         // Dark ink on the danger fill, not white: white on #FB7185 is 2.4:1.
         // No opacity modifier here — Tailwind cannot apply one to a var()
         // colour, and `bg-danger/90` silently compiles to nothing.
-        destructive: "bg-danger font-semibold text-[#2A0810] hover:brightness-110 active:translate-y-px",
+        destructive: "bg-danger font-semibold text-[var(--color-on-danger)] hover:brightness-110 active:translate-y-px",
         link: "h-auto p-0 text-primary underline-offset-4 hover:text-primary-hover hover:underline",
       },
       size: {

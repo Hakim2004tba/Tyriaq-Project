@@ -58,7 +58,7 @@ export function AppPreview({ className }: { className?: string }) {
       // so a screen reader announcing it twice would be noise.
       aria-hidden="true"
       className={cn(
-        "overflow-hidden rounded-xl border border-white/10 bg-background shadow-[0_40px_120px_-30px_rgba(88,28,235,0.55)]",
+        "overflow-hidden rounded-xl border border-[var(--tint-line)] bg-background shadow-[0_40px_120px_-30px_rgba(88,28,235,0.55)]",
         className
       )}
     >

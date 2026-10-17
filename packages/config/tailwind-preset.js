@@ -133,24 +133,30 @@ module.exports = {
         "2xl": "24px",
       },
       boxShadow: {
-        // Ambient occlusion — separates a surface from the aurora behind it.
-        xs: "0 1px 2px 0 rgba(0, 0, 0, 0.40)",
-        sm: "0 2px 6px -1px rgba(0, 0, 0, 0.45)",
-        md: "0 8px 24px -8px rgba(0, 0, 0, 0.60)",
-        lg: "0 20px 48px -12px rgba(0, 0, 0, 0.70)",
-        xl: "0 32px 80px -20px rgba(0, 0, 0, 0.80)",
-        // The edge-lit rim — what actually reads as "raised" on near-black.
-        rim: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
-        "rim-strong": "inset 0 1px 0 0 rgba(255, 255, 255, 0.09)",
-        // Card = rim + ambient, the default composition for a surface.
-        card: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.45)",
-        "card-hover":
-          "inset 0 1px 0 0 rgba(255, 255, 255, 0.09), 0 8px 24px -8px rgba(0, 0, 0, 0.60)",
-        // Violet spill — a STATE, never decoration.
-        "glow-sm": "0 0 0 1px rgba(139, 92, 246, 0.18), 0 4px 14px -4px rgba(124, 58, 237, 0.45)",
-        "glow-md": "0 0 0 1px rgba(139, 92, 246, 0.24), 0 8px 28px -8px rgba(124, 58, 237, 0.55)",
-        "glow-lg": "0 0 0 1px rgba(139, 92, 246, 0.30), 0 16px 48px -12px rgba(124, 58, 237, 0.60)",
-        focus: "0 0 0 2px rgba(139, 92, 246, 0.55), 0 0 0 4px rgba(139, 92, 246, 0.14)",
+        /*
+          Every shadow is a CSS variable, resolved in globals.css.
+
+          They cannot be literals here: an ambient shadow on near-black
+          is rgba(0,0,0,0.6) and on white that is a smudge, while the
+          edge-lit rim — a white inset that reads as "raised" on dark —
+          is simply invisible on a white card. The two themes need
+          different values for the same semantic name, and a static JS
+          object cannot switch on a selector.
+        */
+        xs: "var(--shadow-xs)",
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+        xl: "var(--shadow-xl)",
+        rim: "var(--shadow-rim)",
+        "rim-strong": "var(--shadow-rim-strong)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        // Brand spill — a STATE, never decoration.
+        "glow-sm": "var(--shadow-glow-sm)",
+        "glow-md": "var(--shadow-glow-md)",
+        "glow-lg": "var(--shadow-glow-lg)",
+        focus: "var(--shadow-focus)",
       },
       transitionDuration: {
         instant: "80ms",
@@ -171,10 +177,42 @@ module.exports = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        /*
+          Ambient motion, for the marketing-weight surfaces only — the
+          aurora wash, an empty state's icon, a hero badge. Never on a
+          control: a button that breathes is a button people watch
+          instead of press. All of it is suspended under
+          prefers-reduced-motion by the global rule in globals.css.
+        */
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
+        "aurora-drift": {
+          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1)" },
+          "50%": { transform: "translate3d(0, -2%, 0) scale(1.06)" },
+        },
+        "gradient-pan": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "pop-in": {
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.55" },
+          "50%": { opacity: "1" },
+        },
       },
       animation: {
         "fade-up": "fade-up 180ms cubic-bezier(0.32, 0.72, 0, 1)",
         shimmer: "shimmer 1.6s infinite",
+        float: "float 6s ease-in-out infinite",
+        "aurora-drift": "aurora-drift 18s ease-in-out infinite",
+        "gradient-pan": "gradient-pan 6s ease-in-out infinite",
+        "pop-in": "pop-in 220ms cubic-bezier(0.32, 0.72, 0, 1)",
+        "glow-pulse": "glow-pulse 3.2s ease-in-out infinite",
       },
     },
   },

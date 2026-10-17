@@ -11,7 +11,7 @@ import { Card, Wordmark } from "@flow/ui";
  */
 export function SetupNotice() {
   return (
-    <div className="tq-aurora flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
+    <div className="tq-aurora tq-aurora-live flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-10">
       <Wordmark size={30} />
       <Card className="flex w-full max-w-[560px] flex-col gap-4 p-6">
         <span className="flex size-10 items-center justify-center rounded-lg bg-warning-subtle text-warning">

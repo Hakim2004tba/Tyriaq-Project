@@ -687,7 +687,7 @@ function NewConversationDialog({
                       }
                       className={cn(
                         "flex w-full items-center gap-2 px-2.5 py-2 text-start text-body-sm transition-colors",
-                        on ? "bg-primary-muted text-primary" : "text-text-secondary hover:bg-white/5"
+                        on ? "bg-primary-muted text-primary" : "text-text-secondary hover:bg-[var(--tint-raise)]"
                       )}
                     >
                       <Avatar name={person.name} size="xs" />
@@ -801,7 +801,7 @@ function SearchDialog({
                   <button
                     type="button"
                     onClick={() => onOpenMessage(result.conversationId)}
-                    className="flex w-full flex-col gap-0.5 px-1 py-2 text-start transition-colors hover:bg-white/5
+                    className="flex w-full flex-col gap-0.5 px-1 py-2 text-start transition-colors hover:bg-[var(--tint-raise)]
                                focus-visible:outline-none focus-visible:shadow-focus"
                   >
                     <span className="flex items-baseline gap-2">

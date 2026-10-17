@@ -269,7 +269,7 @@ export function MessageThread({
                               aria-label={`React with ${emoji}`}
                               className={cn(
                                 "flex size-8 items-center justify-center rounded-md text-base transition-colors",
-                                existing?.mine ? "bg-primary-muted" : "hover:bg-white/5"
+                                existing?.mine ? "bg-primary-muted" : "hover:bg-[var(--tint-raise)]"
                               )}
                             >
                               {emoji}

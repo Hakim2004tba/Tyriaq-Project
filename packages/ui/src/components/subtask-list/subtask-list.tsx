@@ -72,7 +72,7 @@ export function SubtaskList({ subtasks, canManage, onOpenSubtask, onToggleComple
                   }}
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors",
-                    isDone ? "border-success bg-success text-[#052E1B]" : "border-border-strong hover:border-primary",
+                    isDone ? "border-success bg-success text-[var(--color-on-success)]" : "border-border-strong hover:border-primary",
                     !canManage && "opacity-50"
                   )}
                 >

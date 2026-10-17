@@ -22,7 +22,7 @@ export const badgeVariants = cva(
         outline: "border border-border text-text-secondary",
         /** For counts on dark chrome (sidebar, topbar) where the tinted
          * fills would compete with the nav's own active state. */
-        chrome: "bg-white/10 text-text-primary",
+        chrome: "bg-[var(--tint-raise-strong)] text-text-primary",
       },
       size: {
         sm: "px-1.5 py-0 text-[11px] leading-[18px]",

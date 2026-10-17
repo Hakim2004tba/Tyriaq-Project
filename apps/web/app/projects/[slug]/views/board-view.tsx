@@ -450,7 +450,7 @@ export function BoardView({ project, onOpenTask }: { project: Project; onOpenTas
                     <span className={cn("size-2 shrink-0 rounded-full", col.accent)} aria-hidden="true" />
                     {col.badge}
                     <h3 className="min-w-0 truncate text-body-sm font-semibold text-text-primary">{col.label}</h3>
-                    <span className="shrink-0 rounded-sm bg-white/5 px-1.5 text-caption tabular text-text-muted">
+                    <span className="shrink-0 rounded-sm bg-[var(--tint-raise)] px-1.5 text-caption tabular text-text-muted">
                       {col.tasks.length}
                     </span>
 

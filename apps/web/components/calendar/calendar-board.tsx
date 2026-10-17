@@ -355,7 +355,7 @@ function MonthGrid({
                     onClick={() => setComposeOn(day.offset)}
                     aria-label={`Add task on ${day.date.getDate()} ${MONTH_SHORT[day.date.getMonth()]}`}
                     className="ms-auto flex size-5 items-center justify-center rounded text-text-muted opacity-0
-                               transition-opacity hover:bg-white/5 hover:text-text-primary
+                               transition-opacity hover:bg-[var(--tint-raise)] hover:text-text-primary
                                focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-focus
                                [div:hover>div>&]:opacity-100"
                   >

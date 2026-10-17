@@ -138,7 +138,7 @@ export function SubtasksSection({ task, detail }: { task: ProjectTask; detail: T
               <span
                 className={cn(
                   "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors duration-fast",
-                  s.done ? "border-success bg-success text-[#052E1B]" : "border-border-strong"
+                  s.done ? "border-success bg-success text-[var(--color-on-success)]" : "border-border-strong"
                 )}
                 aria-hidden="true"
               >
@@ -659,7 +659,7 @@ export function CommentsSection({ task, detail }: { task: ProjectTask; detail: T
                   type="button"
                   onClick={() => insertMention(p.name)}
                   className="flex w-full items-center gap-2 px-2.5 py-1.5 text-start text-body-sm text-text-primary
-                             transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:bg-white/5"
+                             transition-colors hover:bg-[var(--tint-raise)] focus-visible:outline-none focus-visible:bg-[var(--tint-raise)]"
                 >
                   <Avatar name={p.name} size="xs" />
                   <span className="truncate">{p.name}</span>
