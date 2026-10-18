@@ -53,20 +53,22 @@ function revalidateDevisDetail(devisId: string): void {
 
 function buildPrompt(config: KitchenConfigRecord, feedbackNote?: string, hasRegion?: boolean): string {
   const accessories = config.accessories.length > 0 ? config.accessories.join(", ") : "aucun";
-  const base = `Tu es un visualiseur d'intérieur spécialisé en cuisines sur mesure. À partir de la photo de référence fournie (l'espace réel du client), génère une image photoréaliste montrant à quoi pourrait ressembler cette même pièce après rénovation par ART Cuisine, en conservant autant que possible la géométrie, les proportions et le point de vue de la pièce d'origine (murs, fenêtres, ouvertures).
+  const base = `TÂCHE : édition d'image, PAS de génération libre. L'image fournie en référence est une VRAIE photo prise par le client dans sa propre cuisine — c'est la pièce exacte à rénover, pas une inspiration.
 
-Spécifications de la cuisine à représenter :
-- Agencement : ${config.layout}${config.island === "Avec îlot" ? " avec îlot central" : ", sans îlot"}
+RÈGLE ABSOLUE : conserve à l'identique tout ce que l'image de référence montre et qui n'est pas explicitement listé ci-dessous comme devant changer — en particulier : l'angle de vue et le cadrage exacts, la géométrie de la pièce (murs, plafond, sol visible, fenêtres et portes, leur position et leurs proportions), la luminosité et la source de lumière d'origine. N'invente aucune nouvelle pièce, n'élargis pas l'espace, ne change pas le point de vue de la caméra.
+
+Dans cette même pièce, remplace uniquement le mobilier de cuisine (meubles, plan de travail, électroménager, revêtements des murs/sol de la zone cuisine) pour qu'il corresponde exactement à ces spécifications :
+- Agencement des meubles de cuisine : ${config.layout}${config.island === "Avec îlot" ? " avec îlot central" : ", sans îlot"}
 - Profondeur des meubles : ${config.depth}
 - Hotte : ${config.hood}
 - Four : ${config.oven}
 - Réfrigérateur : ${config.fridge}
-- Accessoires souhaités : ${accessories}
+- Accessoires à intégrer : ${accessories}
 - Type de sol : ${config.floor}
-- Dimensions approximatives de l'espace : ${config.dimensions}
-${config.additionalInfo ? `- Précisions du client : ${config.additionalInfo}` : ""}
+- Dimensions approximatives de l'espace (ne pas dépasser) : ${config.dimensions}
+${config.additionalInfo ? `- Instruction du client à respecter précisément (en particulier si elle concerne l'emplacement d'un élément précis dans la cuisine) : ${config.additionalInfo}` : ""}
 
-Rends un résultat réaliste, bien éclairé, avec des matériaux et finitions haut de gamme cohérents avec une fabrication artisanale en atelier. N'ajoute aucun texte ni filigrane sur l'image.`;
+Rendu photoréaliste, bien éclairé, matériaux et finitions haut de gamme cohérents avec une fabrication artisanale en atelier. N'ajoute aucun texte ni filigrane sur l'image.`;
 
   if (!feedbackNote) return base;
 

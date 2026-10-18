@@ -1,4 +1,7 @@
-import { LayoutGrid, Blocks, Wind, Flame, Refrigerator, PackagePlus, SquareStack, ImageIcon, FileText } from "lucide-react";
+"use client";
+
+import * as React from "react";
+import { LayoutGrid, Blocks, Wind, Flame, Refrigerator, PackagePlus, SquareStack, ImageIcon, X, ImageOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { KitchenConfigRecord } from "@/lib/data/operations";
 
@@ -17,6 +20,8 @@ function SpecRow({ icon: Icon, label, value }: { icon: typeof LayoutGrid; label:
 }
 
 function KitchenConfigSummary({ config }: { config: KitchenConfigRecord }) {
+  const [preview, setPreview] = React.useState<string | null>(null);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -58,36 +63,36 @@ function KitchenConfigSummary({ config }: { config: KitchenConfigRecord }) {
         </div>
       </div>
 
-      {(config.photos.length > 0 || config.sketches.length > 0) && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {config.photos.length > 0 && (
-            <div>
-              <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                <ImageIcon className="h-3.5 w-3.5" /> Photos ({config.photos.length})
-              </p>
-              <ul className="flex flex-col gap-1.5">
-                {config.photos.map((p, i) => (
-                  <li key={i} className="truncate rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-secondary">
-                    {p.name} <span className="text-text-muted">· {p.sizeLabel}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {config.sketches.length > 0 && (
-            <div>
-              <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                <FileText className="h-3.5 w-3.5" /> Croquis ({config.sketches.length})
-              </p>
-              <ul className="flex flex-col gap-1.5">
-                {config.sketches.map((s, i) => (
-                  <li key={i} className="truncate rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-secondary">
-                    {s.name} <span className="text-text-muted">· {s.sizeLabel}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+      {config.photos.length > 0 && (
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+            <ImageIcon className="h-3.5 w-3.5" /> Photo du client ({config.photos.length})
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {config.photos.map((p, i) =>
+              p.dataUrl ? (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPreview(p.dataUrl)}
+                  className="focus-ring overflow-hidden rounded-md border border-border-subtle"
+                  title={p.name}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+                  <img src={p.dataUrl} alt={p.name} className="h-28 w-28 object-cover transition-opacity hover:opacity-80" />
+                </button>
+              ) : (
+                <div
+                  key={i}
+                  className="flex h-28 w-28 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border-subtle bg-surface-sunken p-2 text-center"
+                  title={p.name}
+                >
+                  <ImageOff className="h-5 w-5 text-text-muted" />
+                  <span className="truncate text-[10px] text-text-muted">Image non disponible</span>
+                </div>
+              ),
+            )}
+          </div>
         </div>
       )}
 
@@ -95,6 +100,24 @@ function KitchenConfigSummary({ config }: { config: KitchenConfigRecord }) {
         <div>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">Informations complémentaires</p>
           <p className="text-sm leading-relaxed text-text-secondary">{config.additionalInfo}</p>
+        </div>
+      )}
+
+      {preview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/80 p-6"
+          onClick={() => setPreview(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+          <img src={preview} alt="Photo du client" className="max-h-full max-w-full rounded-lg object-contain" />
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="focus-ring absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       )}
     </div>

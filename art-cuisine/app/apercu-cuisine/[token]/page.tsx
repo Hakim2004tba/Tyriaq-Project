@@ -60,7 +60,7 @@ export default async function KitchenPreviewSharePage({ params }: PageProps<"/ap
           />
         </div>
 
-        {config?.photos[0] && (
+        {config?.photos[0]?.dataUrl && (
           <div className="mt-4 flex items-center gap-3">
             <p className="text-xs text-stone-500">Votre photo d&rsquo;origine :</p>
             {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}

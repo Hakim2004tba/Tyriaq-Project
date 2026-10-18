@@ -54,6 +54,12 @@ export async function getDevisById(id: string): Promise<DevisRecord | undefined>
   return rows[0] as DevisRecord | undefined;
 }
 
+/** Looks a devis up by its human-readable reference (e.g. "DEV-2026-001") — what a client actually remembers, unlike the internal id. Used by the public no-login tracking page. */
+export async function getDevisByRef(ref: string): Promise<DevisRecord | undefined> {
+  const rows = await getPgDb().select().from(devisTable).where(eq(devisTable.ref, ref));
+  return rows[0] as DevisRecord | undefined;
+}
+
 /** Devis id/label options for pickers, optionally scoped to a commercial and/or a single client. */
 export async function getDevisOptions(scope: string | null = null, clientId?: string | null) {
   const devis = await getAllDevis();

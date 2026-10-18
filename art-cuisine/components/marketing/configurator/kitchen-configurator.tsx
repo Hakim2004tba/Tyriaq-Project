@@ -174,38 +174,44 @@ function FileDropField({
   label,
   hint,
   files,
+  maxFiles,
   onChange,
   onRemove,
 }: {
   label: string;
   hint: string;
   files: FileMeta[];
+  maxFiles?: number;
   onChange: (files: FileList) => void;
   onRemove: (index: number) => void;
 }) {
   const inputId = React.useId();
+  const [preview, setPreview] = React.useState<FileMeta | null>(null);
+  const atLimit = maxFiles !== undefined && files.length >= maxFiles;
 
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={inputId}>{label}</Label>
-      <label
-        htmlFor={inputId}
-        className="focus-ring flex cursor-pointer flex-col items-center gap-2 rounded-md border border-dashed border-border-strong bg-surface-sunken px-5 py-6 text-center transition-colors hover:border-ink-950/50"
-      >
-        <ImagePlus className="h-5 w-5 text-text-muted" />
-        <span className="text-xs text-text-muted">{hint}</span>
-        <input
-          id={inputId}
-          type="file"
-          accept="image/*,application/pdf"
-          multiple
-          className="sr-only"
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) onChange(e.target.files);
-            e.target.value = "";
-          }}
-        />
-      </label>
+      {!atLimit && (
+        <label
+          htmlFor={inputId}
+          className="focus-ring flex cursor-pointer flex-col items-center gap-2 rounded-md border border-dashed border-border-strong bg-surface-sunken px-5 py-6 text-center transition-colors hover:border-ink-950/50"
+        >
+          <ImagePlus className="h-5 w-5 text-text-muted" />
+          <span className="text-xs text-text-muted">{hint}</span>
+          <input
+            id={inputId}
+            type="file"
+            accept="image/*"
+            multiple={maxFiles !== 1}
+            className="sr-only"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) onChange(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      )}
       {files.length > 0 && (
         <ul className="flex flex-col gap-1.5">
           {files.map((f, i) => (
@@ -213,7 +219,17 @@ function FileDropField({
               key={`${f.name}-${i}`}
               className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface-raised px-3 py-2 text-xs text-text-secondary"
             >
-              <span className="truncate">{f.name}</span>
+              <button
+                type="button"
+                onClick={() => setPreview(f)}
+                className="focus-ring flex min-w-0 flex-1 items-center gap-2 text-left"
+              >
+                {f.dataUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset
+                  <img src={f.dataUrl} alt={f.name} className="h-8 w-8 shrink-0 rounded object-cover" />
+                )}
+                <span className="truncate underline-offset-2 hover:underline">{f.name}</span>
+              </button>
               <span className="flex shrink-0 items-center gap-2 text-text-muted">
                 {f.sizeLabel}
                 <button
@@ -228,6 +244,23 @@ function FileDropField({
             </li>
           ))}
         </ul>
+      )}
+      {preview?.dataUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/80 p-6"
+          onClick={() => setPreview(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+          <img src={preview.dataUrl} alt={preview.name} className="max-h-full max-w-full rounded-lg object-contain" />
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="focus-ring absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -509,20 +542,12 @@ function KitchenConfigurator({ referenceLabel }: { referenceLabel?: string }) {
             </div>
             <div className="sm:col-span-2">
               <FileDropField
-                label="Photos de votre espace actuel"
-                hint="Glissez vos photos, ou cliquez pour parcourir"
+                label="Photo de votre espace actuel"
+                hint="Une seule photo — elle sert de référence exacte pour la visualisation IA"
                 files={data.photos}
-                onChange={async (files) => update("photos", [...data.photos, ...(await filesToMeta(files))])}
+                maxFiles={1}
+                onChange={async (files) => update("photos", (await filesToMeta(files)).slice(0, 1))}
                 onRemove={(i) => update("photos", data.photos.filter((_, idx) => idx !== i))}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <FileDropField
-                label="Croquis ou plan (si vous en avez un)"
-                hint="Glissez vos croquis, ou cliquez pour parcourir"
-                files={data.sketches}
-                onChange={async (files) => update("sketches", [...data.sketches, ...(await filesToMeta(files))])}
-                onRemove={(i) => update("sketches", data.sketches.filter((_, idx) => idx !== i))}
               />
             </div>
             <div className="flex flex-col gap-2 sm:col-span-2">

@@ -31,6 +31,7 @@ import { getProjectOptions, getProjectByRef } from "@/lib/data/appointments";
 import { getLineItemsForDevis, getActiveCatalogueByCategory, computeDevisTotalsFor } from "@/lib/data/pricing";
 import { getDocumentsForDevis } from "@/lib/data/documents";
 import { formatCurrencyDA, formatShortDate } from "@/lib/format";
+import { getTrackingUrl } from "@/lib/site-url";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -94,7 +95,8 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
 
   const contactPhone = client?.phone ?? config?.contactPhone ?? null;
   const contactEmail = client?.email ?? config?.contactEmail ?? null;
-  const whatsappMessage = `Bonjour ${devis.clientName}, voici votre devis ${devis.ref} (${devis.projectLabel}) — ${formatCurrencyDA(devis.amount)}. N'hésitez pas à nous contacter pour toute question.`;
+  const trackingUrl = await getTrackingUrl(devis.ref);
+  const whatsappMessage = `Bonjour ${devis.clientName}, voici votre devis ${devis.ref} (${devis.projectLabel}) — ${formatCurrencyDA(devis.amount)}. Suivez son avancement ici : ${trackingUrl}\nVotre référence : ${devis.ref}`;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">

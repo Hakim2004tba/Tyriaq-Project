@@ -22,6 +22,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   MessageSquarePlus,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ function ReviewForm({ devisId, config }: { devisId: string; config: KitchenConfi
   });
   const [savingCorrections, setSavingCorrections] = React.useState(false);
   const [approving, setApproving] = React.useState(false);
+  const [preview, setPreview] = React.useState<string | null>(null);
 
   async function saveCorrections() {
     setSavingCorrections(true);
@@ -106,15 +108,45 @@ function ReviewForm({ devisId, config }: { devisId: string; config: KitchenConfi
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Photo de référence du client</p>
           <div className="flex flex-wrap gap-3">
-            {config.photos.map((p, i) => (
-              <img
-                key={i}
-                src={p.dataUrl}
-                alt={p.name}
-                className="h-28 w-28 rounded-md border border-border-subtle object-cover"
-              />
-            ))}
+            {config.photos.map((p, i) =>
+              p.dataUrl ? (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPreview(p.dataUrl)}
+                  className="focus-ring overflow-hidden rounded-md border border-border-subtle"
+                  title={p.name}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+                  <img src={p.dataUrl} alt={p.name} className="h-28 w-28 object-cover transition-opacity hover:opacity-80" />
+                </button>
+              ) : (
+                <div
+                  key={i}
+                  className="flex h-28 w-28 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border-subtle bg-surface-sunken p-2 text-center"
+                >
+                  <span className="truncate text-[10px] text-text-muted">Image non disponible</span>
+                </div>
+              ),
+            )}
           </div>
+        </div>
+      )}
+      {preview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/80 p-6"
+          onClick={() => setPreview(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset */}
+          <img src={preview} alt="Photo du client" className="max-h-full max-w-full rounded-lg object-contain" />
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="focus-ring absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       )}
 
