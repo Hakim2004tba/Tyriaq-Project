@@ -20,6 +20,9 @@ import { getLineItemsForDevis, recomputeDevisAmount } from "@/lib/data/pricing";
 import { getConfigByDevisId } from "@/lib/data/kitchen-config";
 import { getOwnerScope } from "@/lib/data/scope";
 import { notifyEmail, notifyByName, notifyAdmins } from "@/lib/notify";
+import { sendEmail, EmailError } from "@/lib/email";
+import { getTrackingUrl } from "@/lib/site-url";
+import { formatCurrencyDA } from "@/lib/format";
 
 type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -340,7 +343,12 @@ export async function createDevisVersion(id: string, input: unknown): Promise<Ac
   return { ok: true, data: undefined };
 }
 
-/** Simulated send — no real mail provider is wired up, so this logs the send as activity/message history. */
+/**
+ * Sends a real email via Resend. No sending domain is verified yet, so this
+ * only actually delivers to the Resend account owner's own address — any
+ * other recipient gets a clear error back from Resend, which we surface
+ * as a failure rather than pretending it went out (see lib/email.ts).
+ */
 export async function sendDevisByEmail(id: string): Promise<ActionResult<{ email: string }>> {
   const user = await requirePermission("devis.manage");
   const scope = getOwnerScope(user);
@@ -358,6 +366,25 @@ export async function sendDevisByEmail(id: string): Promise<ActionResult<{ email
   const email = client?.email ?? config?.contactEmail ?? null;
   if (!email) {
     return { ok: false, error: "Aucune adresse e-mail disponible pour ce devis." };
+  }
+
+  const trackingUrl = await getTrackingUrl(devis.ref);
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <p style="font-size: 18px; font-weight: 600;">ART CUISINE</p>
+      <p>Bonjour ${devis.clientName},</p>
+      <p>Voici votre devis <strong>${devis.ref}</strong> (${devis.projectLabel}) — <strong>${formatCurrencyDA(devis.amount)}</strong>.</p>
+      <p><a href="${trackingUrl}" style="display: inline-block; background: #1c1917; color: #fff; padding: 12px 20px; border-radius: 6px; text-decoration: none; margin: 12px 0;">Suivre ma demande</a></p>
+      <p style="color: #78716c; font-size: 13px;">Votre référence : <strong>${devis.ref}</strong></p>
+      <p style="color: #78716c; font-size: 13px;">ART Cuisine — contact@art-cuisine.dz — +213 5 55 00 00 00</p>
+    </div>
+  `;
+
+  try {
+    await sendEmail({ to: email, subject: `Votre devis ${devis.ref} — ART Cuisine`, html });
+  } catch (error) {
+    const message = error instanceof EmailError ? error.message : "L'envoi a échoué.";
+    return { ok: false, error: message };
   }
 
   const newCommercial = scope && devis.commercial === null ? scope : devis.commercial;
