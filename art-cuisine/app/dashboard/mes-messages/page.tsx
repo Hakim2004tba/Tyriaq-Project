@@ -5,7 +5,7 @@ import { NewClientConversationDialog } from "@/components/dashboard/messaging/ne
 
 export default async function MesMessagesPage() {
   const user = await requireSession();
-  const conversations = getConversationsForUser(user);
+  const conversations = await getConversationsForUser(user);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">

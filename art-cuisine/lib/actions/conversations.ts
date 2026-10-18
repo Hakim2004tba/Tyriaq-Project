@@ -3,13 +3,11 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
+import { getPgDb } from "@/lib/db/pg";
+import { conversations as conversationsTable, conversationMessages as conversationMessagesTable } from "@/lib/db/schema";
+import type { MessageAttachmentRecord } from "@/lib/data/operations";
 import { requireSession } from "@/lib/auth/session";
-import {
-  CONVERSATIONS,
-  CONVERSATION_MESSAGES,
-  type ConversationRecord,
-  type MessageAttachmentRecord,
-} from "@/lib/data/operations";
 import { getClientByEmail } from "@/lib/data/clients";
 import { getConversationById, canAccessConversation } from "@/lib/data/conversations";
 import { notifyEmail } from "@/lib/notify";
@@ -30,7 +28,7 @@ function revalidateConversation(id: string): void {
 
 async function requireAccess(conversationId: string) {
   const user = await requireSession();
-  const conversation = getConversationById(conversationId);
+  const conversation = await getConversationById(conversationId);
   if (!conversation) return { ok: false as const, error: "Conversation introuvable." };
   if (!canAccessConversation(user, conversation)) {
     return { ok: false as const, error: "Vous n'avez pas accès à cette conversation." };
@@ -73,8 +71,9 @@ export async function sendConversationMessage(conversationId: string, formData: 
 
   const participant = conversation.participants.find((p) => p.email.toLowerCase() === user.email.toLowerCase());
   const now = new Date().toISOString();
+  const db = getPgDb();
 
-  CONVERSATION_MESSAGES.push({
+  await db.insert(conversationMessagesTable).values({
     id: `CMSG-${randomUUID().slice(0, 8).toUpperCase()}`,
     conversationId,
     authorEmail: user.email,
@@ -86,7 +85,7 @@ export async function sendConversationMessage(conversationId: string, formData: 
     readBy: [user.email],
   });
 
-  conversation.updatedAt = now;
+  await db.update(conversationsTable).set({ updatedAt: now }).where(eq(conversationsTable.id, conversationId));
 
   for (const p of conversation.participants) {
     if (p.email.toLowerCase() === user.email.toLowerCase()) continue;
@@ -106,11 +105,16 @@ export async function markConversationRead(conversationId: string): Promise<Acti
   const result = await requireAccess(conversationId);
   if (!result.ok) return result;
   const { user } = result;
+  const db = getPgDb();
 
-  for (const message of CONVERSATION_MESSAGES) {
-    if (message.conversationId !== conversationId) continue;
-    if (!message.readBy.some((e) => e.toLowerCase() === user.email.toLowerCase())) {
-      message.readBy.push(user.email);
+  const messages = await db.select().from(conversationMessagesTable).where(eq(conversationMessagesTable.conversationId, conversationId));
+  for (const message of messages) {
+    const readBy = message.readBy as string[];
+    if (!readBy.some((e) => e.toLowerCase() === user.email.toLowerCase())) {
+      await db
+        .update(conversationMessagesTable)
+        .set({ readBy: [...readBy, user.email] })
+        .where(eq(conversationMessagesTable.id, message.id));
     }
   }
 
@@ -141,7 +145,9 @@ export async function startClientConversation(input: unknown): Promise<ActionRes
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  let conversation = CONVERSATIONS.find((c) => c.type === parsed.data.type && c.clientId === client.id);
+  const db = getPgDb();
+  const existing = await db.select().from(conversationsTable).where(eq(conversationsTable.clientId, client.id));
+  let conversation = existing.find((c) => c.type === parsed.data.type);
 
   if (!conversation) {
     const admin = listUsers().find((u) => u.role === "admin");
@@ -149,8 +155,9 @@ export async function startClientConversation(input: unknown): Promise<ActionRes
 
     const titleSuffix = parsed.data.type === "client_commercial" ? "Commercial" : parsed.data.type === "client_designer" ? "Designer" : "ART Cuisine";
     const role = parsed.data.type === "client_commercial" ? "Commercial" : parsed.data.type === "client_designer" ? "Designer" : "Entreprise";
+    const now = new Date().toISOString();
 
-    const newConversation: ConversationRecord = {
+    const newConversation = {
       id: `CONV-${randomUUID().slice(0, 8).toUpperCase()}`,
       type: parsed.data.type,
       title: `${client.name} — ${titleSuffix}`,
@@ -161,15 +168,15 @@ export async function startClientConversation(input: unknown): Promise<ActionRes
         { email: client.email, name: client.name, role: "Client" },
         { email: admin.email, name: admin.name, role },
       ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
-    CONVERSATIONS.unshift(newConversation);
+    await db.insert(conversationsTable).values(newConversation);
     conversation = newConversation;
   }
 
   const now = new Date().toISOString();
-  CONVERSATION_MESSAGES.push({
+  await db.insert(conversationMessagesTable).values({
     id: `CMSG-${randomUUID().slice(0, 8).toUpperCase()}`,
     conversationId: conversation.id,
     authorEmail: user.email,
@@ -180,7 +187,7 @@ export async function startClientConversation(input: unknown): Promise<ActionRes
     createdAt: now,
     readBy: [user.email],
   });
-  conversation.updatedAt = now;
+  await db.update(conversationsTable).set({ updatedAt: now }).where(eq(conversationsTable.id, conversation.id));
 
   for (const p of conversation.participants) {
     if (p.email.toLowerCase() === user.email.toLowerCase()) continue;
@@ -229,9 +236,12 @@ export async function createStaffConversation(input: unknown): Promise<ActionRes
     return { ok: false, error: "Aucun participant valide." };
   }
 
+  const db = getPgDb();
   const now = new Date().toISOString();
-  const conversation: ConversationRecord = {
-    id: `CONV-${randomUUID().slice(0, 8).toUpperCase()}`,
+  const conversationId = `CONV-${randomUUID().slice(0, 8).toUpperCase()}`;
+
+  await db.insert(conversationsTable).values({
+    id: conversationId,
     type: parsed.data.type,
     title: parsed.data.title,
     clientId: null,
@@ -240,12 +250,11 @@ export async function createStaffConversation(input: unknown): Promise<ActionRes
     participants,
     createdAt: now,
     updatedAt: now,
-  };
-  CONVERSATIONS.unshift(conversation);
+  });
 
-  CONVERSATION_MESSAGES.push({
+  await db.insert(conversationMessagesTable).values({
     id: `CMSG-${randomUUID().slice(0, 8).toUpperCase()}`,
-    conversationId: conversation.id,
+    conversationId,
     authorEmail: user.email,
     authorName: user.name,
     authorRole: "Interne",
@@ -259,12 +268,12 @@ export async function createStaffConversation(input: unknown): Promise<ActionRes
     if (p.email.toLowerCase() === user.email.toLowerCase()) continue;
     notifyEmail(p.email, {
       type: "new_message",
-      title: `Nouvelle conversation — ${conversation.title}`,
+      title: `Nouvelle conversation — ${parsed.data.title}`,
       description: parsed.data.content,
       link: "/dashboard/messagerie",
     });
   }
 
-  revalidateConversation(conversation.id);
-  return { ok: true, data: { id: conversation.id } };
+  revalidateConversation(conversationId);
+  return { ok: true, data: { id: conversationId } };
 }

@@ -192,8 +192,9 @@ async function ClientWorkspace({ user }: { user: SessionUser }) {
   const devisAwaiting = devis.filter((d) => isDevisAwaitingClient(d.status));
   const savTickets = getSavTicketsForClient(client.id);
   const openSav = savTickets.filter((t) => t.status !== "Résolu");
-  const conversations = getConversationsForUser(user);
-  const unreadConversations = conversations.filter((c) => isConversationUnread(c, user));
+  const conversations = await getConversationsForUser(user);
+  const conversationUnreadFlags = await Promise.all(conversations.map((c) => isConversationUnread(c, user)));
+  const unreadConversations = conversations.filter((_, i) => conversationUnreadFlags[i]);
   const unreadNotifications = getUnreadNotificationCount(user.email);
 
   const nextMontage = activeProjects

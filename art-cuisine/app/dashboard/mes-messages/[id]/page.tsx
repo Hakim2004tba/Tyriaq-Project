@@ -10,7 +10,7 @@ import { ConversationThread } from "@/components/dashboard/messaging/conversatio
 
 export async function generateMetadata({ params }: PageProps<"/dashboard/mes-messages/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const conversation = getConversationById(id);
+  const conversation = await getConversationById(id);
   return { title: conversation ? `${conversation.title} — ART Cuisine` : "Messages — ART Cuisine" };
 }
 
@@ -18,10 +18,10 @@ export default async function MesMessagesThreadPage({ params }: PageProps<"/dash
   const user = await requireSession();
   const { id } = await params;
 
-  const conversation = getConversationById(id);
+  const conversation = await getConversationById(id);
   if (!conversation || !canAccessConversation(user, conversation)) notFound();
 
-  const messages = getMessagesForConversation(id);
+  const messages = await getMessagesForConversation(id);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">

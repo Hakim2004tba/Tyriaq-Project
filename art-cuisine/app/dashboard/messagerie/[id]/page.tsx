@@ -11,7 +11,7 @@ import { ConversationThread } from "@/components/dashboard/messaging/conversatio
 
 export async function generateMetadata({ params }: PageProps<"/dashboard/messagerie/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const conversation = getConversationById(id);
+  const conversation = await getConversationById(id);
   return { title: conversation ? `${conversation.title} — ART Cuisine` : "Messagerie — ART Cuisine" };
 }
 
@@ -19,10 +19,10 @@ export default async function MessagerieThreadPage({ params }: PageProps<"/dashb
   const user = await requireSession();
   const { id } = await params;
 
-  const conversation = getConversationById(id);
+  const conversation = await getConversationById(id);
   if (!conversation || !canAccessConversation(user, conversation)) notFound();
 
-  const messages = getMessagesForConversation(id);
+  const messages = await getMessagesForConversation(id);
   const client = conversation.clientId ? await getClientById(conversation.clientId) : undefined;
 
   return (

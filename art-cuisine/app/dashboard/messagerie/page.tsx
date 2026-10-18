@@ -7,7 +7,7 @@ import { NewStaffConversationDialog } from "@/components/dashboard/messaging/new
 
 export default async function MessagerieListPage() {
   const user = await requireSession();
-  const conversations = getConversationsForUser(user);
+  const conversations = await getConversationsForUser(user);
   const staffDirectory = listUsers()
     .filter((u) => isStaffRole(u.role) && u.active)
     .map((u) => ({ email: u.email, name: u.name }));

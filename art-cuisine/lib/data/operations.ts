@@ -1244,9 +1244,9 @@ export interface ConversationMessageRecord {
   readBy: string[];
 }
 
-export const CONVERSATIONS: ConversationRecord[] = [];
-
-export const CONVERSATION_MESSAGES: ConversationMessageRecord[] = [];
+// Storage for conversations/messages lives in Postgres (lib/db/schema.ts,
+// read via lib/data/conversations.ts) — not here, since an in-memory array
+// doesn't survive across Vercel's serverless instances.
 
 // --- Notifications -------------------------------------------------------------
 

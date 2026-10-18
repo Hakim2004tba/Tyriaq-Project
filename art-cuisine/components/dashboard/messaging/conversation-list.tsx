@@ -6,7 +6,7 @@ import { formatRelativeTime } from "@/lib/format";
 import { getMessagesForConversation, isConversationUnread, CONVERSATION_TYPE_LABELS } from "@/lib/data/conversations";
 import type { ConversationRecord } from "@/lib/data/operations";
 
-function ConversationList({
+async function ConversationList({
   conversations,
   basePath,
   currentUser,
@@ -24,12 +24,18 @@ function ConversationList({
     );
   }
 
+  const rows = await Promise.all(
+    conversations.map(async (conv) => {
+      const messages = await getMessagesForConversation(conv.id);
+      const last = messages[messages.length - 1];
+      const unread = await isConversationUnread(conv, currentUser);
+      return { conv, last, unread };
+    }),
+  );
+
   return (
     <div className="flex flex-col gap-2">
-      {conversations.map((conv) => {
-        const messages = getMessagesForConversation(conv.id);
-        const last = messages[messages.length - 1];
-        const unread = isConversationUnread(conv, currentUser);
+      {rows.map(({ conv, last, unread }) => {
         const hasAttachment = last?.attachments.length > 0;
 
         return (

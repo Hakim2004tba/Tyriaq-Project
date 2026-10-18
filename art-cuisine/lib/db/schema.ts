@@ -283,6 +283,35 @@ export const kitchenRenderRevisions = pgTable("kitchen_render_revisions", {
   createdAt: text("created_at").notNull(),
 });
 
+// --- Messaging (conversations) ------------------------------------------
+
+export const conversations = pgTable("conversations", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(), // "client_commercial" | "client_designer" | "client_company" | "internal" | "project"
+  title: text("title").notNull(),
+  clientId: text("client_id"),
+  clientName: text("client_name"),
+  projectRef: text("project_ref"),
+  participants: jsonb("participants").$type<{ email: string; name: string; role: string }[]>().notNull().default([]),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const conversationMessages = pgTable("conversation_messages", {
+  id: text("id").primaryKey(),
+  conversationId: text("conversation_id").notNull(),
+  authorEmail: text("author_email").notNull(),
+  authorName: text("author_name").notNull(),
+  authorRole: text("author_role").notNull(),
+  content: text("content").notNull(),
+  attachments: jsonb("attachments")
+    .$type<{ id: string; fileName: string; mimeType: string; sizeLabel: string; dataUrl: string }[]>()
+    .notNull()
+    .default([]),
+  createdAt: text("created_at").notNull(),
+  readBy: jsonb("read_by").$type<string[]>().notNull().default([]),
+});
+
 // --- SAV ---------------------------------------------------------------
 
 export const savTickets = pgTable("sav_tickets", {
