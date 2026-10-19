@@ -46,7 +46,7 @@ export default async function EmployeeDetailPage({ params }: PageProps<"/dashboa
   const isSelf = user.id === session.id;
 
   const profile = getEmployeeProfile(user.email);
-  const assignedProjects = getAssignedProjectsForEmployee(user.name);
+  const assignedProjects = await getAssignedProjectsForEmployee(user.name);
   const tasks = getTasksForEmployeeRole(role);
   const activity = getActivityForEmployee(user.name);
   const performance = await getEmployeePerformance(role, user.name);

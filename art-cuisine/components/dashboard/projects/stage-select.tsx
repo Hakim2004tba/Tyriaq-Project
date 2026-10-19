@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { updateProjectStage } from "@/lib/actions/projects";
-import { PROJECT_STAGES } from "@/lib/data/project-records";
+import { PROJECT_STAGES } from "@/lib/data/project-constants";
 import type { ProjectStage } from "@/lib/data/operations";
 
 function StageSelect({ projectId, stage, className }: { projectId: string; stage: ProjectStage; className?: string }) {

@@ -2,11 +2,11 @@ import {
   DESIGN_VERSIONS,
   DESIGN_STATUSES,
   DESIGN_VERSION_KINDS,
-  PROJECTS,
   type DesignVersionRecord,
   type DesignStatus,
   type ProjectRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import { CABINET_FINISHES, WORKTOP_FINISHES } from "@/lib/design/kitchen-svg";
 
 export { DESIGN_STATUSES, DESIGN_VERSION_KINDS, CABINET_FINISHES, WORKTOP_FINISHES };
@@ -31,8 +31,9 @@ export function getDesignVersionById(id: string): DesignVersionRecord | undefine
 }
 
 /** Projects the design department still owes work on — anything not yet validated. */
-export function getProjectsAwaitingDesign(scope: string | null = null): ProjectRecord[] {
-  const pool = scope ? PROJECTS.filter((p) => p.commercial === scope) : PROJECTS;
+export async function getProjectsAwaitingDesign(scope: string | null = null): Promise<ProjectRecord[]> {
+  const all = await getAllProjects();
+  const pool = scope ? all.filter((p) => p.commercial === scope) : all;
   return pool
     .filter((p) => p.designStatus !== "Validé" && p.stage !== "Terminé")
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
@@ -45,8 +46,9 @@ export interface DesignListStats {
   validated: number;
 }
 
-export function getDesignListStats(scope: string | null = null): DesignListStats {
-  const pool = scope ? PROJECTS.filter((p) => p.commercial === scope) : PROJECTS;
+export async function getDesignListStats(scope: string | null = null): Promise<DesignListStats> {
+  const all = await getAllProjects();
+  const pool = scope ? all.filter((p) => p.commercial === scope) : all;
   const active = pool.filter((p) => p.stage !== "Terminé");
 
   return {

@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { WORKSHOP_TEAM } from "@/lib/data/production";
+import { WORKSHOP_TEAM } from "@/lib/data/operations";
 
 function AssignedWorkersField({ selected, onChange }: { selected: string[]; onChange: (next: string[]) => void }) {
   function toggle(name: string, checked: boolean) {

@@ -8,7 +8,6 @@ import {
   WORKSHOP_TEAM,
   PIECE_STATUSES,
   ACTIVITY,
-  PROJECTS,
   type ProductionOrderRecord,
   type ProductionStage,
   type ProductionPieceRecord,
@@ -16,6 +15,7 @@ import {
   type QualityControlRecord,
   type ActivityRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 
 export { PRODUCTION_STAGES, PRODUCTION_STAGE_PROGRESS, WORKSHOP_TEAM, PIECE_STATUSES };
 
@@ -26,8 +26,9 @@ export interface ProjectOption {
 }
 
 /** Projects whose design is validated and that don't already have an order in progress — eligible for a new production order. */
-export function getEligibleProjectOptions(scope: string | null = null): ProjectOption[] {
-  const pool = scope ? PROJECTS.filter((p) => p.commercial === scope) : PROJECTS;
+export async function getEligibleProjectOptions(scope: string | null = null): Promise<ProjectOption[]> {
+  const all = await getAllProjects();
+  const pool = scope ? all.filter((p) => p.commercial === scope) : all;
   return pool
     .filter((p) => p.designStatus === "Validé")
     .map((p) => ({ id: p.id, ref: p.ref, label: `${p.ref} — ${p.name} (${p.clientName})` }))

@@ -21,8 +21,8 @@ export default async function ConceptionPage() {
   const user = await requirePermission("conception.manage");
   const scope = getOwnerScope(user);
 
-  const stats = getDesignListStats(scope);
-  const projects = getProjectsAwaitingDesign(scope);
+  const stats = await getDesignListStats(scope);
+  const projects = await getProjectsAwaitingDesign(scope);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">

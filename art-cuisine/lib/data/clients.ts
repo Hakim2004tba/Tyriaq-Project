@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { getPgDb } from "@/lib/db/pg";
 import { clients as clientsTable } from "@/lib/db/schema";
 import {
-  PROJECTS,
   PAYMENTS,
   SAV_TICKETS,
   DOCUMENTS,
@@ -14,6 +13,7 @@ import {
   type ClientStatus,
 } from "@/lib/data/operations";
 import { getDevisForClientName } from "@/lib/data/devis";
+import { getAllProjects } from "@/lib/data/project-records";
 
 export type { ClientRecord };
 export { COMMERCIALS, CLIENT_STATUSES };
@@ -92,8 +92,9 @@ export function getMessagesForClient(clientName: string) {
   );
 }
 
-export function getClientFinancials(clientName: string) {
-  const clientProjects = PROJECTS.filter((p) => p.clientName === clientName);
+export async function getClientFinancials(clientName: string) {
+  const projects = await getAllProjects();
+  const clientProjects = projects.filter((p) => p.clientName === clientName);
   const clientPayments = PAYMENTS.filter((p) => p.clientName === clientName);
 
   const totalSpent = clientPayments
@@ -139,8 +140,9 @@ export async function getClientListStats(scope: string | null = null): Promise<C
 }
 
 export async function getClientRelations(clientName: string) {
+  const allProjects = await getAllProjects();
   return {
-    projects: PROJECTS.filter((p) => p.clientName === clientName).sort(
+    projects: allProjects.filter((p) => p.clientName === clientName).sort(
       (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
     ),
     devis: await getDevisForClientName(clientName),

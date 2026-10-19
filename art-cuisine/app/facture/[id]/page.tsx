@@ -12,7 +12,7 @@ import { PrintActions } from "@/components/dashboard/devis/print-actions";
 
 export async function generateMetadata({ params }: PageProps<"/facture/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const project = getProjectById(id);
+  const project = await getProjectById(id);
   return { title: project ? `Facture ${project.ref} — ART Cuisine` : "Facture — ART Cuisine" };
 }
 
@@ -20,7 +20,7 @@ export default async function ProjectInvoicePage({ params }: PageProps<"/facture
   const user = await requireSession();
   const { id } = await params;
 
-  const project = getProjectById(id);
+  const project = await getProjectById(id);
   if (!project) notFound();
 
   const role = user.role as Role;

@@ -28,8 +28,9 @@ import {
 import { FormMessage } from "@/components/auth/form-message";
 import { AssignedVernisseursField } from "@/components/dashboard/vernissage/assigned-vernisseurs-field";
 import { createVernissageJob } from "@/lib/actions/vernissage";
-import { PROJECT_PRIORITIES } from "@/lib/data/project-records";
-import { CABINET_FINISHES, VERNISSAGE_FINISHES } from "@/lib/data/vernissage";
+import { PROJECT_PRIORITIES } from "@/lib/data/project-constants";
+import { VERNISSAGE_FINISHES } from "@/lib/data/operations";
+import { CABINET_FINISHES } from "@/lib/design/kitchen-svg";
 import type { ProjectOption } from "@/lib/data/vernissage";
 
 function CreateVernissageJobDialog({ projectOptions = [], lockedProjectId }: { projectOptions?: ProjectOption[]; lockedProjectId?: string }) {

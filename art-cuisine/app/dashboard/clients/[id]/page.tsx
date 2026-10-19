@@ -62,7 +62,7 @@ export default async function ClientProfilePage({ params }: PageProps<"/dashboar
   if (scope && client.commercial !== scope) notFound();
 
   const relations = await getClientRelations(client.name);
-  const financials = getClientFinancials(client.name);
+  const financials = await getClientFinancials(client.name);
   const appointments = getAppointmentsForClient(client.id);
   const pendingDevis = relations.devis.filter((d) => d.status === "Envoyé" || d.status === "Vu").length;
   const openSav = relations.savTickets.filter((t) => t.status !== "Résolu").length;

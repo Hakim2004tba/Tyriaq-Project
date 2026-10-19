@@ -16,7 +16,7 @@ async function ClientDocumentsPanel({
   documents: DocumentRecord[];
 }) {
   const devisOptions = await getDevisOptions(null, clientId);
-  const projectOptions = getProjectOptions();
+  const projectOptions = await getProjectOptions();
 
   return (
     <div className="flex flex-col gap-4">

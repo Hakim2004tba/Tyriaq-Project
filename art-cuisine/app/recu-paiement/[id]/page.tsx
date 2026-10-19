@@ -29,7 +29,7 @@ export default async function PaymentReceiptPage({ params }: PageProps<"/recu-pa
   if (hasPermission(role, "finance.manage")) {
     const scope = getOwnerScope(user);
     if (scope) {
-      const project = payment.projectId ? getProjectById(payment.projectId) : undefined;
+      const project = payment.projectId ? await getProjectById(payment.projectId) : undefined;
       const devis = payment.devisId ? await getDevisById(payment.devisId) : undefined;
       const commercial = project?.commercial ?? devis?.commercial ?? null;
       if (commercial !== null && commercial !== scope) notFound();
@@ -42,7 +42,7 @@ export default async function PaymentReceiptPage({ params }: PageProps<"/recu-pa
   }
 
   const client = payment.clientId ? await getClientById(payment.clientId) : undefined;
-  const project = payment.projectId ? getProjectById(payment.projectId) : undefined;
+  const project = payment.projectId ? await getProjectById(payment.projectId) : undefined;
   const devis = payment.devisId ? await getDevisById(payment.devisId) : undefined;
 
   return (

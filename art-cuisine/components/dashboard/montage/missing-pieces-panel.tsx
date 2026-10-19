@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { addMissingPiece, updateMissingPieceStatus } from "@/lib/actions/montage";
-import { MISSING_PIECE_STATUSES } from "@/lib/data/montage";
+import { MISSING_PIECE_STATUSES } from "@/lib/data/operations";
 import { formatShortDate } from "@/lib/format";
 import type { MontageMissingPieceRecord, MissingPieceStatus } from "@/lib/data/operations";
 

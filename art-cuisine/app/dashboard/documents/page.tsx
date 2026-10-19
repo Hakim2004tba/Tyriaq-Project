@@ -37,7 +37,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/dashbo
   const documents = filterDocuments({ search, category: category as DocumentCategory | "toutes" }, commercialByClient, scope);
 
   const [clientOptions, devisOptions] = await Promise.all([getClientOptions(scope), getDevisOptions(scope)]);
-  const projectOptions = getProjectOptions(scope);
+  const projectOptions = await getProjectOptions(scope);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">

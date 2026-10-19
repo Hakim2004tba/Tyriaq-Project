@@ -50,7 +50,7 @@ import { ProjectMaterialsTab } from "@/components/dashboard/projects/project-mat
 
 export async function generateMetadata({ params }: PageProps<"/dashboard/projets/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const project = getProjectById(id);
+  const project = await getProjectById(id);
   return { title: project ? `${project.ref} — ART Cuisine` : "Projet — ART Cuisine" };
 }
 
@@ -59,14 +59,14 @@ export default async function ProjectDetailPage({ params }: PageProps<"/dashboar
   const scope = getOwnerScope(user);
   const { id } = await params;
 
-  const project = getProjectById(id);
+  const project = await getProjectById(id);
   if (!project) notFound();
   if (scope && project.commercial !== null && project.commercial !== scope) notFound();
 
   const client = project.clientId ? await getClientById(project.clientId) : undefined;
   const devis = project.devisId ? await getDevisById(project.devisId) : undefined;
   const tasks = getTasksForProject(project.ref);
-  const issues = getIssuesForProject(project.ref);
+  const issues = await getIssuesForProject(project.ref);
   const activity = getActivityForProject(project);
   const documents = getDocumentsForProject(project.ref);
   const photos = documents.filter((d) => d.mimeType?.startsWith("image/"));

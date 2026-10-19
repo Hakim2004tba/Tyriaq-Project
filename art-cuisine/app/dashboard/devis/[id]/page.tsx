@@ -87,11 +87,11 @@ export default async function DevisDetailPage({ params }: PageProps<"/dashboard/
   const kitchenRender = config ? await getKitchenRenderForDevis(devis.id) : undefined;
   const kitchenRenderRevisions = kitchenRender ? await getKitchenRenderRevisions(kitchenRender.id) : [];
   const kitchenRenderEvents = kitchenRender ? await getKitchenRenderEvents(kitchenRender.id) : [];
-  const project = getProjectByRef(devis.projectRef);
+  const project = await getProjectByRef(devis.projectRef);
   const totals = computeDevisTotalsFor(devis, lineItems);
   const catalogueByCategory = getActiveCatalogueByCategory();
   const documents = getDocumentsForDevis(devis.id);
-  const projectOptions = getProjectOptions(scope);
+  const projectOptions = await getProjectOptions(scope);
 
   const contactPhone = client?.phone ?? config?.contactPhone ?? null;
   const contactEmail = client?.email ?? config?.contactEmail ?? null;

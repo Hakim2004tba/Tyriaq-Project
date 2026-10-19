@@ -36,7 +36,7 @@ export default async function VernissagePage({ searchParams }: PageProps<"/dashb
 
   const stats = getVernissageListStats(scope);
   const jobs = filterVernissageJobs({ search, stage: stage as VernissageStage | "toutes" }, scope);
-  const projectOptions = getEligibleProjectOptions();
+  const projectOptions = await getEligibleProjectOptions();
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">

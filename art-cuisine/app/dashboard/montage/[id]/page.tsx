@@ -59,7 +59,7 @@ export default async function MontageJobDetailPage({ params }: PageProps<"/dashb
   if (!job) notFound();
   if (!canAccessMontageJob(scope, job)) notFound();
 
-  const project = getProjectById(job.projectId);
+  const project = await getProjectById(job.projectId);
   if (!project) notFound();
 
   const client = project.clientId ? await getClientById(project.clientId) : undefined;
@@ -68,7 +68,7 @@ export default async function MontageJobDetailPage({ params }: PageProps<"/dashb
   const photos = getPhotosForJob(job.id);
   const activity = getActivityForJob(job.ref);
   const documents = getDocumentsForProject(job.projectRef);
-  const issues = getIssuesForProject(job.projectRef);
+  const issues = await getIssuesForProject(job.projectRef);
 
   const doneCount = checklist.filter((c) => c.done).length;
 

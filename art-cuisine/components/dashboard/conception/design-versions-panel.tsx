@@ -32,7 +32,8 @@ import { WhatsAppShareLink } from "@/components/dashboard/devis/whatsapp-share-l
 import { generateDesignVersion, refineDesignVersion, uploadDesignVersion, sendDesignToClient } from "@/lib/actions/design";
 import { formatShortDate } from "@/lib/format";
 import { KITCHEN_LAYOUTS, type DesignVersionRecord, type DesignVersionKind, type DesignStatus } from "@/lib/data/operations";
-import { DESIGN_VERSION_KINDS, CABINET_FINISHES, WORKTOP_FINISHES } from "@/lib/data/design";
+import { DESIGN_VERSION_KINDS } from "@/lib/data/operations";
+import { CABINET_FINISHES, WORKTOP_FINISHES } from "@/lib/design/kitchen-svg";
 
 const SOURCE_LABEL: Record<DesignVersionRecord["source"], string> = {
   upload: "Importé",

@@ -111,7 +111,7 @@ export default async function SavPage({ searchParams }: PageProps<"/dashboard/sa
   }
 
   const tickets = getSavTicketsForClient(client.id);
-  const projects = getProjectsForClient(client.id);
+  const projects = await getProjectsForClient(client.id);
   const completedProjects = projects.filter((p) => p.stage === "Terminé" && p.completedAt);
 
   return (

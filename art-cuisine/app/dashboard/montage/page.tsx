@@ -51,7 +51,7 @@ export default async function MontagePage({ searchParams }: PageProps<"/dashboar
 
   const stats = getMontageListStats(scope);
   const jobs = filterMontageJobs({ search, stage: stage as MontageStage | "toutes" }, scope);
-  const projectOptions = getEligibleProjectOptions();
+  const projectOptions = await getEligibleProjectOptions();
   const calendar = getInstallationCalendar(scope);
 
   return (

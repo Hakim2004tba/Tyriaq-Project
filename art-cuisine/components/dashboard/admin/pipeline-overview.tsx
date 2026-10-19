@@ -19,16 +19,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatCurrencyDA, formatShortDate } from "@/lib/format";
-import { PROJECTS, type ProjectStage } from "@/lib/data/operations";
+import { type ProjectStage } from "@/lib/data/operations";
 import { STAGES, getProjectsByStage, getActiveProjectsCount, daysLate, isOverdue } from "@/lib/data/metrics";
-import { STAGE_COLOR, STAGE_BADGE } from "@/lib/data/project-records";
+import { STAGE_COLOR, STAGE_BADGE, getAllProjects } from "@/lib/data/project-records";
 
-function PipelineOverview({ stage }: { stage: ProjectStage | "tous" }) {
-  const byStage = getProjectsByStage();
-  const active = getActiveProjectsCount();
-  const total = PROJECTS.length;
+async function PipelineOverview({ stage }: { stage: ProjectStage | "tous" }) {
+  const allProjects = await getAllProjects();
+  const byStage = await getProjectsByStage();
+  const active = await getActiveProjectsCount();
+  const total = allProjects.length;
 
-  const projects = stage === "tous" ? PROJECTS : byStage[stage];
+  const projects = stage === "tous" ? allProjects : byStage[stage];
 
   return (
     <div className="flex flex-col gap-5">

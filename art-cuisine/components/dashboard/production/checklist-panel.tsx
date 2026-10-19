@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { toggleChecklistItem, addChecklistItem } from "@/lib/actions/production";
-import { PRODUCTION_STAGES } from "@/lib/data/production";
+import { PRODUCTION_STAGES } from "@/lib/data/operations";
 import type { ProductionChecklistItemRecord, ProductionStage } from "@/lib/data/operations";
 
 function ChecklistRow({ item, orderId }: { item: ProductionChecklistItemRecord; orderId: string }) {

@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { PROJECT_STAGES, PROJECT_PRIORITIES } from "@/lib/data/project-records";
+import { PROJECT_STAGES, PROJECT_PRIORITIES } from "@/lib/data/project-constants";
 
 function ProjectFilters({ search, stage, priority }: { search: string; stage: string; priority: string }) {
   const router = useRouter();

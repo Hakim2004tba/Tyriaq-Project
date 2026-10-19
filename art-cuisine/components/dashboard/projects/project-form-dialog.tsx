@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { updateProject } from "@/lib/actions/projects";
-import { COMMERCIALS, DESIGNERS, PRODUCTION_LEADS, VERNISSEURS, MONTAGE_LEADS, PROJECT_PRIORITIES } from "@/lib/data/project-records";
+import { COMMERCIALS, DESIGNERS, PRODUCTION_LEADS, VERNISSEURS, MONTAGE_LEADS, PROJECT_PRIORITIES } from "@/lib/data/project-constants";
 import type { ProjectRecord } from "@/lib/data/operations";
 
 function toDateInputValue(iso: string): string {

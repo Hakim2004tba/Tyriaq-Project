@@ -55,7 +55,7 @@ export default async function ProductionOrderDetailPage({ params }: PageProps<"/
   const order = getProductionOrderById(id);
   if (!order) notFound();
 
-  const project = getProjectById(order.projectId);
+  const project = await getProjectById(order.projectId);
   if (!project) notFound();
   if (scope && project.commercial !== null && project.commercial !== scope) notFound();
 
@@ -66,7 +66,7 @@ export default async function ProductionOrderDetailPage({ params }: PageProps<"/
   const activity = getActivityForOrder(order.ref);
   const documents = getDocumentsForProject(order.projectRef);
   const photos = documents.filter((d) => d.mimeType?.startsWith("image/"));
-  const issues = getIssuesForProject(order.projectRef);
+  const issues = await getIssuesForProject(order.projectRef);
 
   const doneCount = checklist.filter((c) => c.done).length;
 

@@ -95,7 +95,7 @@ export async function recordPayment(input: unknown): Promise<ActionResult<{ id: 
   let clientName: string;
 
   if (targetType === "project") {
-    const project = getProjectById(targetId);
+    const project = await getProjectById(targetId);
     if (!project) return { ok: false, error: "Projet introuvable." };
     if (!canManage(scope, project.commercial)) return { ok: false, error: "Vous n'avez pas accès à ce projet." };
     projectId = project.id;
@@ -148,7 +148,7 @@ async function requirePaymentAccess(paymentId: string) {
   const payment = getPaymentById(paymentId);
   if (!payment) return { ok: false as const, error: "Paiement introuvable." };
 
-  const project = payment.projectId ? getProjectById(payment.projectId) : null;
+  const project = payment.projectId ? await getProjectById(payment.projectId) : null;
   const devis = payment.devisId ? await getDevisById(payment.devisId) : null;
   const commercial = project?.commercial ?? devis?.commercial ?? null;
   if (!canManage(scope, commercial)) return { ok: false as const, error: "Vous n'avez pas accès à ce paiement." };

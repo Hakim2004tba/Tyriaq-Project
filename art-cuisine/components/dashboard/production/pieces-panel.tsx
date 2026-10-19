@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { addProductionPiece, updatePieceStatus, removeProductionPiece } from "@/lib/actions/production";
-import { PIECE_STATUSES } from "@/lib/data/production";
+import { PIECE_STATUSES } from "@/lib/data/operations";
 import type { ProductionPieceRecord, PieceStatus } from "@/lib/data/operations";
 
 const STATUS_BADGE: Record<PieceStatus, "neutral" | "info" | "success"> = {

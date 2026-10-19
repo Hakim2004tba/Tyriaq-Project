@@ -27,7 +27,7 @@ import {
 import { FormMessage } from "@/components/auth/form-message";
 import { AssignedWorkersField } from "@/components/dashboard/production/assigned-workers-field";
 import { updateProductionOrder } from "@/lib/actions/production";
-import { PROJECT_PRIORITIES } from "@/lib/data/project-records";
+import { PROJECT_PRIORITIES } from "@/lib/data/project-constants";
 import type { ProductionOrderRecord } from "@/lib/data/operations";
 
 function toDateInputValue(iso: string): string {

@@ -64,8 +64,8 @@ export default async function AppointmentDetailPage({ params }: PageProps<"/dash
     getLeadOptions(scope),
     getClientOptions(scope),
   ]);
-  const project = getProjectByRef(appointment.projectRef);
-  const projectOptions = getProjectOptions(scope);
+  const project = await getProjectByRef(appointment.projectRef);
+  const projectOptions = await getProjectOptions(scope);
 
   const date = new Date(appointment.date);
 

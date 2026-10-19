@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { updateMontageStage } from "@/lib/actions/montage";
-import { MONTAGE_STAGES } from "@/lib/data/montage";
+import { MONTAGE_STAGES } from "@/lib/data/operations";
 import type { MontageStage } from "@/lib/data/operations";
 
 function MontageStageSelect({ jobId, stage, className }: { jobId: string; stage: MontageStage; className?: string }) {

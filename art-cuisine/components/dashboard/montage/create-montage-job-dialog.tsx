@@ -28,8 +28,9 @@ import {
 import { FormMessage } from "@/components/auth/form-message";
 import { AssignedTeamField } from "@/components/dashboard/montage/assigned-team-field";
 import { createMontageJob } from "@/lib/actions/montage";
-import { PROJECT_PRIORITIES } from "@/lib/data/project-records";
-import { MONTAGE_VEHICLES, type ProjectOption } from "@/lib/data/montage";
+import { PROJECT_PRIORITIES } from "@/lib/data/project-constants";
+import { MONTAGE_VEHICLES } from "@/lib/data/operations";
+import type { ProjectOption } from "@/lib/data/montage";
 
 function CreateMontageJobDialog({ projectOptions = [], lockedProjectId }: { projectOptions?: ProjectOption[]; lockedProjectId?: string }) {
   const router = useRouter();

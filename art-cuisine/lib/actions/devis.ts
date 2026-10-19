@@ -9,11 +9,11 @@ import { getPgDb } from "@/lib/db/pg";
 import { devis as devisTable, devisVersions as devisVersionsTable, devisLineItems as devisLineItemsTable, kitchenConfigs as kitchenConfigsTable } from "@/lib/db/schema";
 import {
   DEVIS_STATUSES,
-  PROJECTS,
   ACTIVITY,
   MESSAGES,
   type DevisRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import { COMMERCIALS, getDevisById, nextRef } from "@/lib/data/devis";
 import { getClientById } from "@/lib/data/clients";
 import { getLineItemsForDevis, recomputeDevisAmount } from "@/lib/data/pricing";
@@ -198,8 +198,11 @@ export async function linkDevisToProject(id: string, input: unknown): Promise<Ac
   if (!parsed.success) {
     return { ok: false, error: "Projet invalide." };
   }
-  if (parsed.data.projectRef && !PROJECTS.some((p) => p.ref === parsed.data.projectRef)) {
-    return { ok: false, error: "Projet introuvable." };
+  if (parsed.data.projectRef) {
+    const projects = await getAllProjects();
+    if (!projects.some((p) => p.ref === parsed.data.projectRef)) {
+      return { ok: false, error: "Projet introuvable." };
+    }
   }
 
   const newCommercial = scope && devis.commercial === null ? scope : devis.commercial;

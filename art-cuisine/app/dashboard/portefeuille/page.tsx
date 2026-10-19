@@ -21,7 +21,7 @@ import { FeatureToggleButton } from "@/components/dashboard/portfolio/feature-to
 import { ReorderButtons } from "@/components/dashboard/portfolio/reorder-buttons";
 import { ArchiveToggleButton } from "@/components/dashboard/portfolio/archive-toggle-button";
 import { filterPortfolio, getPortfolioListStats, type PortfolioFilters as PortfolioFiltersType } from "@/lib/data/portfolio";
-import { PROJECTS } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import type { PortfolioStatus } from "@/lib/data/operations";
 
 const STATUS_BADGE: Record<PortfolioStatus, "neutral" | "success" | "warning"> = {
@@ -46,7 +46,8 @@ export default async function PortefeuillePage({ searchParams }: PageProps<"/das
     status: status as PortfolioFiltersType["status"],
   });
 
-  const candidateProjects = PROJECTS.filter((p) => p.stage === "Terminé").map((p) => ({
+  const allProjects = await getAllProjects();
+  const candidateProjects = allProjects.filter((p) => p.stage === "Terminé").map((p) => ({
     ref: p.ref,
     label: `${p.ref} — ${p.name}`,
   }));

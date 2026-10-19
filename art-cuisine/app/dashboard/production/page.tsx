@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Factory, ClipboardCheck, PackageCheck, AlertTriangle, ChevronRight } from "lucide-react";
 import { requirePermission } from "@/lib/auth/session";
 import { getOwnerScope } from "@/lib/data/scope";
-import { PROJECTS } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import {
   filterProductionOrders,
   getProductionListStats,
@@ -35,10 +35,11 @@ export default async function ProductionPage({ searchParams }: PageProps<"/dashb
   const search = typeof params.q === "string" ? params.q : "";
   const stage = typeof params.etape === "string" ? params.etape : "toutes";
 
-  const commercialByProjectRef = new Map(PROJECTS.map((p) => [p.ref, p.commercial] as const));
+  const allProjects = await getAllProjects();
+  const commercialByProjectRef = new Map(allProjects.map((p) => [p.ref, p.commercial] as const));
   const stats = getProductionListStats(scope, commercialByProjectRef);
   const orders = filterProductionOrders({ search, stage: stage as ProductionStage | "toutes" }, scope, commercialByProjectRef);
-  const projectOptions = getEligibleProjectOptions(scope);
+  const projectOptions = await getEligibleProjectOptions(scope);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">

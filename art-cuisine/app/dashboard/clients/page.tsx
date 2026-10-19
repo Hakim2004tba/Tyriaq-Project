@@ -63,6 +63,9 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
       city,
     }),
   ]);
+  const financialsByClient = new Map(
+    await Promise.all(clients.map(async (c) => [c.name, await getClientFinancials(c.name)] as const)),
+  );
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -126,7 +129,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
               </TableRow>
             )}
             {clients.map((client) => {
-              const financials = getClientFinancials(client.name);
+              const financials = financialsByClient.get(client.name)!;
               return (
                 <TableRow key={client.id} className="cursor-pointer">
                   <TableCell>

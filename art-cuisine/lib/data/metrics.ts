@@ -1,7 +1,6 @@
 import { getPgDb } from "@/lib/db/pg";
 import { leads as leadsTable, clients as clientsTable, devis as devisTable } from "@/lib/db/schema";
 import {
-  PROJECTS,
   PAYMENTS,
   SAV_TICKETS,
   TASKS,
@@ -15,6 +14,7 @@ import {
   type ProjectStage,
   type ProjectRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 
 export { PERIOD_OPTIONS, type PeriodKey };
 
@@ -147,7 +147,7 @@ export async function getDevisMetrics(period: PeriodKey) {
 
 export { PROJECT_STAGES as STAGES } from "@/lib/data/operations";
 
-export function getProjectsByStage(): Record<ProjectStage, ProjectRecord[]> {
+export async function getProjectsByStage(): Promise<Record<ProjectStage, ProjectRecord[]>> {
   const grouped: Record<ProjectStage, ProjectRecord[]> = {
     Conception: [],
     "Validation client": [],
@@ -158,19 +158,22 @@ export function getProjectsByStage(): Record<ProjectStage, ProjectRecord[]> {
     Réception: [],
     Terminé: [],
   };
-  for (const project of PROJECTS) {
+  const projects = await getAllProjects();
+  for (const project of projects) {
     grouped[project.stage].push(project);
   }
   return grouped;
 }
 
-export function getActiveProjectsCount(): number {
-  return PROJECTS.filter((p) => p.stage !== "Terminé").length;
+export async function getActiveProjectsCount(): Promise<number> {
+  const projects = await getAllProjects();
+  return projects.filter((p) => p.stage !== "Terminé").length;
 }
 
-export function getDelayedProjects(): ProjectRecord[] {
+export async function getDelayedProjects(): Promise<ProjectRecord[]> {
   const now = Date.now();
-  return PROJECTS.filter((p) => p.stage !== "Terminé" && new Date(p.dueDate).getTime() < now).sort(
+  const projects = await getAllProjects();
+  return projects.filter((p) => p.stage !== "Terminé" && new Date(p.dueDate).getTime() < now).sort(
     (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
   );
 }

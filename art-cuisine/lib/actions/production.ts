@@ -37,7 +37,7 @@ async function requireOrderAccess(orderId: string) {
   const scope = getOwnerScope(user);
   const order = getProductionOrderById(orderId);
   if (!order) return { ok: false as const, error: "Ordre de fabrication introuvable." };
-  const project = getProjectById(order.projectId);
+  const project = await getProjectById(order.projectId);
   if (!project) return { ok: false as const, error: "Projet introuvable." };
   if (!canManage(scope, project.commercial)) return { ok: false as const, error: "Vous n'avez pas accès à cet ordre de fabrication." };
   return { ok: true as const, order, project, user };
@@ -105,7 +105,7 @@ export async function createProductionOrder(input: unknown): Promise<ActionResul
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  const project = getProjectById(parsed.data.projectId);
+  const project = await getProjectById(parsed.data.projectId);
   if (!project) return { ok: false, error: "Projet introuvable." };
   if (!canManage(scope, project.commercial)) return { ok: false, error: "Vous n'avez pas accès à ce projet." };
   if (project.designStatus !== "Validé") {

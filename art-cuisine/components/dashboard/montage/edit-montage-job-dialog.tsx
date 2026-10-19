@@ -27,8 +27,8 @@ import {
 import { FormMessage } from "@/components/auth/form-message";
 import { AssignedTeamField } from "@/components/dashboard/montage/assigned-team-field";
 import { updateMontageJob } from "@/lib/actions/montage";
-import { PROJECT_PRIORITIES } from "@/lib/data/project-records";
-import { MONTAGE_VEHICLES } from "@/lib/data/montage";
+import { PROJECT_PRIORITIES } from "@/lib/data/project-constants";
+import { MONTAGE_VEHICLES } from "@/lib/data/operations";
 import type { MontageJobRecord } from "@/lib/data/operations";
 
 function toDateTimeInputValue(iso: string): string {

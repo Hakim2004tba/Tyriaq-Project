@@ -186,7 +186,7 @@ async function ClientWorkspace({ user }: { user: SessionUser }) {
     );
   }
 
-  const projects = getProjectsForClient(client.id);
+  const projects = await getProjectsForClient(client.id);
   const activeProjects = projects.filter((p) => p.stage !== "Terminé");
   const devis = await getDevisForClient(client.id);
   const devisAwaiting = devis.filter((d) => isDevisAwaitingClient(d.status));

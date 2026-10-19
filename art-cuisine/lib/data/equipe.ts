@@ -4,7 +4,6 @@ import {
   EMPLOYEE_PROFILES,
   AVAILABILITY_STATUSES,
   AVAILABILITY_BADGE,
-  PROJECTS,
   TASKS,
   ACTIVITY,
   type DevisRecord,
@@ -19,6 +18,7 @@ import {
   type TaskRecord,
   type ActivityRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 
 export { AVAILABILITY_STATUSES, AVAILABILITY_BADGE };
@@ -39,10 +39,11 @@ export function getEmployeeProfile(email: string): EmployeeProfileRecord {
 }
 
 /** Every project where this person appears in any lead role — commercial, designer, production, vernisseur or montage. */
-export function getAssignedProjectsForEmployee(name: string): ProjectRecord[] {
-  return PROJECTS.filter(
-    (p) => p.commercial === name || p.designer === name || p.productionLead === name || p.vernisseur === name || p.montageLead === name,
-  ).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+export async function getAssignedProjectsForEmployee(name: string): Promise<ProjectRecord[]> {
+  const projects = await getAllProjects();
+  return projects
+    .filter((p) => p.commercial === name || p.designer === name || p.productionLead === name || p.vernisseur === name || p.montageLead === name)
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 }
 
 /**
@@ -69,6 +70,7 @@ export interface PerformanceStat {
 
 /** A handful of role-aware stats computed from the data this person actually appears in — no separate performance-tracking system exists. */
 export async function getEmployeePerformance(role: Role, name: string): Promise<PerformanceStat[]> {
+  const projects = await getAllProjects();
   switch (role) {
     case "commercial": {
       const allDevis = (await getPgDb().select().from(devisTable)) as DevisRecord[];
@@ -76,7 +78,7 @@ export async function getEmployeePerformance(role: Role, name: string): Promise<
       const accepted = myDevis.filter((d) => d.status === "Accepté");
       const decided = myDevis.filter((d) => d.status === "Accepté" || d.status === "Refusé");
       const rate = decided.length > 0 ? Math.round((accepted.length / decided.length) * 100) : 0;
-      const myClients = new Set(PROJECTS.filter((p) => p.commercial === name).map((p) => p.clientId)).size;
+      const myClients = new Set(projects.filter((p) => p.commercial === name).map((p) => p.clientId)).size;
       return [
         { label: "Devis acceptés", value: String(accepted.length), helperText: `sur ${myDevis.length} émis` },
         { label: "Taux d'acceptation", value: `${rate}%` },
@@ -85,11 +87,11 @@ export async function getEmployeePerformance(role: Role, name: string): Promise<
     }
     case "designer": {
       const versions = DESIGN_VERSIONS.filter((v) => v.createdBy === name);
-      const validated = PROJECTS.filter((p) => p.designer === name && p.designStatus === "Validé").length;
+      const validated = projects.filter((p) => p.designer === name && p.designStatus === "Validé").length;
       return [
         { label: "Versions produites", value: String(versions.length) },
         { label: "Designs validés", value: String(validated) },
-        { label: "Projets assignés", value: String(PROJECTS.filter((p) => p.designer === name).length) },
+        { label: "Projets assignés", value: String(projects.filter((p) => p.designer === name).length) },
       ];
     }
     case "production": {
@@ -123,10 +125,10 @@ export async function getEmployeePerformance(role: Role, name: string): Promise<
       ];
     }
     default: {
-      const activeProjects = PROJECTS.filter((p) => p.stage !== "Terminé").length;
+      const activeProjects = projects.filter((p) => p.stage !== "Terminé").length;
       return [
         { label: "Projets actifs (entreprise)", value: String(activeProjects) },
-        { label: "Projets au total", value: String(PROJECTS.length) },
+        { label: "Projets au total", value: String(projects.length) },
       ];
     }
   }

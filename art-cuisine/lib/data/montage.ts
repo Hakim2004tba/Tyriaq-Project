@@ -10,7 +10,6 @@ import {
   MISSING_PIECE_STATUSES,
   MONTAGE_PHOTO_PHASES,
   ACTIVITY,
-  PROJECTS,
   PROJECT_STAGES,
   type MontageJobRecord,
   type MontageStage,
@@ -19,6 +18,7 @@ import {
   type MontagePhotoRecord,
   type ActivityRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 
 export { MONTAGE_STAGES, MONTAGE_STAGE_PROGRESS, MONTAGE_TEAM, MONTAGE_VEHICLES, MISSING_PIECE_STATUSES, MONTAGE_PHOTO_PHASES };
 
@@ -49,9 +49,11 @@ export interface ProjectOption {
 }
 
 /** Projects whose vernissage (or later) has been reached — eligible for a new montage job. */
-export function getEligibleProjectOptions(): ProjectOption[] {
+export async function getEligibleProjectOptions(): Promise<ProjectOption[]> {
   const montageIndex = PROJECT_STAGES.indexOf("Montage");
-  return PROJECTS.filter((p) => PROJECT_STAGES.indexOf(p.stage) >= montageIndex)
+  const projects = await getAllProjects();
+  return projects
+    .filter((p) => PROJECT_STAGES.indexOf(p.stage) >= montageIndex)
     .map((p) => ({ id: p.id, ref: p.ref, label: `${p.ref} — ${p.name} (${p.clientName})` }))
     .sort((a, b) => a.ref.localeCompare(b.ref));
 }

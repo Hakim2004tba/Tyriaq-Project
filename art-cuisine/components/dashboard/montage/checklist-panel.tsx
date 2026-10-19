@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { toggleMontageChecklistItem, addMontageChecklistItem } from "@/lib/actions/montage";
-import { MONTAGE_STAGES } from "@/lib/data/montage";
+import { MONTAGE_STAGES } from "@/lib/data/operations";
 import type { MontageChecklistItemRecord, MontageStage } from "@/lib/data/operations";
 
 function ChecklistRow({ item, jobId }: { item: MontageChecklistItemRecord; jobId: string }) {

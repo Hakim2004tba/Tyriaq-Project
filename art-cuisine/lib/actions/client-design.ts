@@ -22,7 +22,7 @@ async function requireOwnProjectDesign(projectId: string): Promise<OwnProjectRes
     return { ok: false, error: "Aucun compte client associé à cette adresse e-mail." };
   }
 
-  const project = getProjectById(projectId);
+  const project = await getProjectById(projectId);
   if (!project) {
     return { ok: false, error: "Projet introuvable." };
   }

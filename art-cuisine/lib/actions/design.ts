@@ -26,7 +26,7 @@ function canManage(scope: string | null, commercial: string | null): boolean {
 async function requireDesignAccess(projectId: string) {
   const user = await requirePermission("conception.manage");
   const scope = getOwnerScope(user);
-  const project = getProjectById(projectId);
+  const project = await getProjectById(projectId);
   if (!project) return { ok: false as const, error: "Projet introuvable." };
   if (!canManage(scope, project.commercial)) return { ok: false as const, error: "Vous n'avez pas accès à ce projet." };
   return { ok: true as const, project, user };

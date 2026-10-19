@@ -56,7 +56,7 @@ export default async function DocumentDetailPage({ params }: PageProps<"/dashboa
 
   const client = doc.clientId ? await getClientById(doc.clientId) : undefined;
   const devis = doc.devisId ? await getDevisById(doc.devisId) : undefined;
-  const project = getProjectByRef(doc.projectRef);
+  const project = await getProjectByRef(doc.projectRef);
   const versions = getDocumentVersions(doc.id);
   const shares = getDocumentShares(doc.id);
   const events = getDocumentEvents(doc.id);

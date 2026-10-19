@@ -34,7 +34,7 @@ async function requireJobAccess(jobId: string) {
   const job = getVernissageJobById(jobId);
   if (!job) return { ok: false as const, error: "Job de vernissage introuvable." };
   if (!canAccessVernissageJob(scope, job)) return { ok: false as const, error: "Vous n'avez pas accès à ce job." };
-  const project = getProjectById(job.projectId);
+  const project = await getProjectById(job.projectId);
   if (!project) return { ok: false as const, error: "Projet introuvable." };
   return { ok: true as const, job, project, user };
 }
@@ -101,7 +101,7 @@ export async function createVernissageJob(input: unknown): Promise<ActionResult<
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  const project = getProjectById(parsed.data.projectId);
+  const project = await getProjectById(parsed.data.projectId);
   if (!project) return { ok: false, error: "Projet introuvable." };
 
   const vernissageIndex = PROJECT_STAGES.indexOf("Vernissage");

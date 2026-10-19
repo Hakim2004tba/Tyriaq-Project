@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { uploadMontagePhoto } from "@/lib/actions/montage";
-import { MONTAGE_PHOTO_PHASES } from "@/lib/data/montage";
+import { MONTAGE_PHOTO_PHASES } from "@/lib/data/operations";
 import { formatShortDate } from "@/lib/format";
 import type { MontagePhotoRecord, MontagePhotoPhase } from "@/lib/data/operations";
 

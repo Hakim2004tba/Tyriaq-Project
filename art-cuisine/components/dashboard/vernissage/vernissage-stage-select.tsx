@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { updateVernissageStage } from "@/lib/actions/vernissage";
-import { VERNISSAGE_STAGES } from "@/lib/data/vernissage";
+import { VERNISSAGE_STAGES } from "@/lib/data/operations";
 import type { VernissageStage } from "@/lib/data/operations";
 
 function VernissageStageSelect({ jobId, stage, className }: { jobId: string; stage: VernissageStage; className?: string }) {

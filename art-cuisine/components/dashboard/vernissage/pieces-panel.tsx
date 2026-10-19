@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { addVernissagePiece, updateVernissagePieceStatus, removeVernissagePiece } from "@/lib/actions/vernissage";
-import { PIECE_STATUSES } from "@/lib/data/vernissage";
+import { PIECE_STATUSES } from "@/lib/data/operations";
 import type { VernissagePieceRecord, PieceStatus } from "@/lib/data/operations";
 
 const STATUS_BADGE: Record<PieceStatus, "neutral" | "info" | "success"> = {

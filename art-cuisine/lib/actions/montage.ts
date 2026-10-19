@@ -37,7 +37,7 @@ async function requireJobAccess(jobId: string, options: { allowCancelled?: boole
   if (!job) return { ok: false as const, error: "Installation introuvable." };
   if (!canAccessMontageJob(scope, job)) return { ok: false as const, error: "Vous n'avez pas accès à cette installation." };
   if (job.cancelled && !options.allowCancelled) return { ok: false as const, error: "Cette installation a été annulée." };
-  const project = getProjectById(job.projectId);
+  const project = await getProjectById(job.projectId);
   if (!project) return { ok: false as const, error: "Projet introuvable." };
   return { ok: true as const, job, project, user };
 }
@@ -108,7 +108,7 @@ export async function createMontageJob(input: unknown): Promise<ActionResult<{ i
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  const project = getProjectById(parsed.data.projectId);
+  const project = await getProjectById(parsed.data.projectId);
   if (!project) return { ok: false, error: "Projet introuvable." };
 
   const montageIndex = PROJECT_STAGES.indexOf("Montage");

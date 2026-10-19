@@ -34,7 +34,7 @@ export default async function DevisPage({ searchParams }: PageProps<"/dashboard/
   const status = typeof params.statut === "string" ? params.statut : "tous";
   const commercial = typeof params.commercial === "string" ? params.commercial : "tous";
 
-  const projectOptions = getProjectOptions(scope);
+  const projectOptions = await getProjectOptions(scope);
   const [stats, clientOptions, leadOptions, devis] = await Promise.all([
     getDevisListStats(scope),
     getClientOptions(scope),

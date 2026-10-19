@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrencyDA, formatShortDate } from "@/lib/format";
 import { getDelayedProjects, daysLate } from "@/lib/data/metrics";
 
-function DelayedProjectsPanel() {
-  const delayed = getDelayedProjects();
+async function DelayedProjectsPanel() {
+  const delayed = await getDelayedProjects();
 
   return (
     <Card>

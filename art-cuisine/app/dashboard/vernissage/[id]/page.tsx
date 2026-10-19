@@ -57,7 +57,7 @@ export default async function VernissageJobDetailPage({ params }: PageProps<"/da
   if (!job) notFound();
   if (!canAccessVernissageJob(scope, job)) notFound();
 
-  const project = getProjectById(job.projectId);
+  const project = await getProjectById(job.projectId);
   if (!project) notFound();
 
   const client = project.clientId ? await getClientById(project.clientId) : undefined;
@@ -67,7 +67,7 @@ export default async function VernissageJobDetailPage({ params }: PageProps<"/da
   const activity = getActivityForJob(job.ref);
   const documents = getDocumentsForProject(job.projectRef);
   const photos = documents.filter((d) => d.mimeType?.startsWith("image/"));
-  const issues = getIssuesForProject(job.projectRef);
+  const issues = await getIssuesForProject(job.projectRef);
   const colorLabel = CABINET_FINISHES.find((f) => f.hex === job.color)?.label ?? job.color;
 
   const doneCount = checklist.filter((c) => c.done).length;

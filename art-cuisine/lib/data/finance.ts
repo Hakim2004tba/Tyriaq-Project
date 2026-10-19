@@ -3,13 +3,13 @@ import { devis as devisTable } from "@/lib/db/schema";
 import {
   PAYMENTS,
   PAYMENT_METHODS,
-  PROJECTS,
   type DevisRecord,
   type PaymentRecord,
   type PaymentStatus,
   type PaymentMethod,
   type ProjectRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 
 async function getAllDevis(): Promise<DevisRecord[]> {
   const rows = await getPgDb().select().from(devisTable);
@@ -113,7 +113,8 @@ export interface PaymentTargetOption {
  * is sometimes collected before the project record exists.
  */
 export async function getPaymentTargetOptions(scope: string | null = null): Promise<PaymentTargetOption[]> {
-  const projectPool = scope ? PROJECTS.filter((p) => p.commercial === scope) : PROJECTS;
+  const allProjects = await getAllProjects();
+  const projectPool = scope ? allProjects.filter((p) => p.commercial === scope) : allProjects;
   const projectOptions: PaymentTargetOption[] = projectPool.map((p) => ({
     value: `project:${p.id}`,
     label: `${p.ref} — ${p.name} (${p.clientName})`,
@@ -138,7 +139,8 @@ export interface PaymentFilters {
 export async function filterPayments(filters: PaymentFilters, scope: string | null = null): Promise<PaymentRecord[]> {
   const search = filters.search?.trim().toLowerCase();
   const devis = await getAllDevis();
-  const commercialByProjectRef = new Map(PROJECTS.map((p) => [p.ref, p.commercial] as const));
+  const allProjects = await getAllProjects();
+  const commercialByProjectRef = new Map(allProjects.map((p) => [p.ref, p.commercial] as const));
   const commercialByDevisId = new Map(devis.map((d) => [d.id, d.commercial] as const));
 
   return PAYMENTS.filter((p) => {

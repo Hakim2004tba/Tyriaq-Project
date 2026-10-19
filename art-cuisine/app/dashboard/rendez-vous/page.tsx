@@ -67,7 +67,7 @@ export default async function RendezVousPage({ searchParams }: PageProps<"/dashb
     Promise.all(appointments.map((a) => getLeadNameById(a.leadId))),
     Promise.all(appointments.map((a) => getClientNameById(a.clientId))),
   ]);
-  const projectOptions = getProjectOptions(scope);
+  const projectOptions = await getProjectOptions(scope);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">

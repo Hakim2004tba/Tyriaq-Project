@@ -28,8 +28,8 @@ export default async function ProjetsPage({ searchParams }: PageProps<"/dashboar
   const stage = typeof params.etape === "string" ? params.etape : "tous";
   const priority = typeof params.priorite === "string" ? params.priorite : "toutes";
 
-  const stats = getProjectListStats(scope);
-  const projects = filterProjects(
+  const stats = await getProjectListStats(scope);
+  const projects = await filterProjects(
     { search, stage: stage as ProjectStage | "tous", priority: priority as ProjectPriority | "toutes" },
     scope,
   );

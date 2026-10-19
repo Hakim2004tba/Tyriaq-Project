@@ -28,7 +28,7 @@ import {
 import { FormMessage } from "@/components/auth/form-message";
 import { AssignedWorkersField } from "@/components/dashboard/production/assigned-workers-field";
 import { createProductionOrder } from "@/lib/actions/production";
-import { PROJECT_PRIORITIES } from "@/lib/data/project-records";
+import { PROJECT_PRIORITIES } from "@/lib/data/project-constants";
 import type { ProjectOption } from "@/lib/data/production";
 
 function CreateProductionOrderDialog({ projectOptions = [], lockedProjectId }: { projectOptions?: ProjectOption[]; lockedProjectId?: string }) {

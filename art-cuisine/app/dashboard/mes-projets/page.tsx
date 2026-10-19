@@ -29,7 +29,12 @@ export default async function MesProjetsPage() {
     );
   }
 
-  const projects = getProjectsForClient(client.id);
+  const projects = await getProjectsForClient(client.id);
+  const openIssuesByProject = new Map(
+    await Promise.all(
+      projects.map(async (p) => [p.ref, (await getIssuesForProject(p.ref)).filter((i) => i.status !== "Résolu")] as const),
+    ),
+  );
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -44,7 +49,7 @@ export default async function MesProjetsPage() {
 
       {projects.map((project) => {
         const documents = getDocumentsForProject(project.ref);
-        const openIssues = getIssuesForProject(project.ref).filter((i) => i.status !== "Résolu");
+        const openIssues = openIssuesByProject.get(project.ref)!;
         const latestDesignVersion = getLatestDesignVersion(project.ref);
         const showDesignPanel = isDesignAwaitingClient(project.designStatus) && latestDesignVersion;
         const designVersions = getDesignVersionsForProject(project.ref);

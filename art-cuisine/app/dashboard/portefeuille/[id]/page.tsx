@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { Role } from "@/lib/auth/roles";
 import { getPortfolioProjectById } from "@/lib/data/portfolio";
-import { PROJECTS } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,8 +29,9 @@ export default async function PortfolioDetailPage({ params }: PageProps<"/dashbo
   const project = getPortfolioProjectById(id);
   if (!project) notFound();
 
-  const linkedProject = project.sourceProjectRef ? PROJECTS.find((p) => p.ref === project.sourceProjectRef) : undefined;
-  const candidateProjects = PROJECTS.filter((p) => p.stage === "Terminé").map((p) => ({
+  const allProjects = await getAllProjects();
+  const linkedProject = project.sourceProjectRef ? allProjects.find((p) => p.ref === project.sourceProjectRef) : undefined;
+  const candidateProjects = allProjects.filter((p) => p.stage === "Terminé").map((p) => ({
     ref: p.ref,
     label: `${p.ref} — ${p.name}`,
   }));

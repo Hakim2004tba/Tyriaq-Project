@@ -6,12 +6,10 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth/session";
 import { getPgDb } from "@/lib/db/pg";
-import { devis as devisTable } from "@/lib/db/schema";
+import { devis as devisTable, projects as projectsTable, projectIssues as projectIssuesTable } from "@/lib/db/schema";
 import {
-  PROJECTS,
   PROJECT_STAGES,
   PROJECT_PRIORITIES,
-  PROJECT_ISSUES,
   TASKS,
   ACTIVITY,
   CATALOGUE_ITEMS,
@@ -56,12 +54,13 @@ export async function convertDevisToProject(devisId: string): Promise<ActionResu
   }
 
   const id = `P-${randomUUID().slice(0, 8).toUpperCase()}`;
-  const ref = nextProjectRef();
+  const ref = await nextProjectRef();
   const startDate = new Date().toISOString();
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + 45);
 
-  PROJECTS.unshift({
+  const db = getPgDb();
+  await db.insert(projectsTable).values({
     id,
     ref,
     name: devis.projectLabel,
@@ -88,7 +87,7 @@ export async function convertDevisToProject(devisId: string): Promise<ActionResu
     materialSelections: [],
   });
 
-  await getPgDb().update(devisTable).set({ projectRef: ref }).where(eq(devisTable.id, devisId));
+  await db.update(devisTable).set({ projectRef: ref }).where(eq(devisTable.id, devisId));
 
   ACTIVITY.unshift({
     id: `A-${randomUUID().slice(0, 6).toUpperCase()}`,
@@ -108,7 +107,7 @@ export async function convertDevisToProject(devisId: string): Promise<ActionResu
 async function requireManageableProject(projectId: string) {
   const user = await requirePermission("projects.manage");
   const scope = getOwnerScope(user);
-  const project = getProjectById(projectId);
+  const project = await getProjectById(projectId);
   if (!project) return { ok: false as const, error: "Projet introuvable." };
   if (!canManage(scope, project.commercial)) return { ok: false as const, error: "Vous n'avez pas accès à ce projet." };
   return { ok: true as const, project, user };
@@ -147,16 +146,21 @@ export async function updateProject(id: string, input: unknown): Promise<ActionR
   const vernisseur = normalize(parsed.data.vernisseur);
   const montageLead = normalize(parsed.data.montageLead);
 
-  project.name = parsed.data.name;
-  project.designer = designer && (DESIGNERS as readonly string[]).includes(designer) ? designer : null;
-  project.productionLead = productionLead && (PRODUCTION_LEADS as readonly string[]).includes(productionLead) ? productionLead : null;
-  project.vernisseur = vernisseur && (VERNISSEURS as readonly string[]).includes(vernisseur) ? vernisseur : null;
-  project.montageLead = montageLead && (MONTAGE_LEADS as readonly string[]).includes(montageLead) ? montageLead : null;
-  project.priority = parsed.data.priority;
-  project.amount = parsed.data.amount;
-  project.dueDate = new Date(parsed.data.dueDate).toISOString();
-  project.progress = parsed.data.progress;
-  if (parsed.data.commercial) project.commercial = parsed.data.commercial;
+  await getPgDb()
+    .update(projectsTable)
+    .set({
+      name: parsed.data.name,
+      designer: designer && (DESIGNERS as readonly string[]).includes(designer) ? designer : null,
+      productionLead: productionLead && (PRODUCTION_LEADS as readonly string[]).includes(productionLead) ? productionLead : null,
+      vernisseur: vernisseur && (VERNISSEURS as readonly string[]).includes(vernisseur) ? vernisseur : null,
+      montageLead: montageLead && (MONTAGE_LEADS as readonly string[]).includes(montageLead) ? montageLead : null,
+      priority: parsed.data.priority,
+      amount: parsed.data.amount,
+      dueDate: new Date(parsed.data.dueDate).toISOString(),
+      progress: parsed.data.progress,
+      commercial: parsed.data.commercial || project.commercial,
+    })
+    .where(eq(projectsTable.id, id));
 
   revalidateProject(id);
   return { ok: true, data: undefined };
@@ -180,9 +184,13 @@ export async function updateProjectStage(id: string, stage: unknown): Promise<Ac
     return { ok: false, error: "Le design doit être validé par le client avant de passer en production." };
   }
 
-  project.stage = parsed.data.stage;
-  project.progress = Math.max(project.progress, STAGE_PROGRESS[parsed.data.stage]);
-  project.completedAt = parsed.data.stage === "Terminé" ? new Date().toISOString() : null;
+  const progress = Math.max(project.progress, STAGE_PROGRESS[parsed.data.stage]);
+  const completedAt = parsed.data.stage === "Terminé" ? new Date().toISOString() : null;
+
+  await getPgDb()
+    .update(projectsTable)
+    .set({ stage: parsed.data.stage, progress, completedAt })
+    .where(eq(projectsTable.id, id));
 
   ACTIVITY.unshift({
     id: `A-${randomUUID().slice(0, 6).toUpperCase()}`,
@@ -213,7 +221,9 @@ export async function updateProjectMaterials(projectId: string, input: unknown):
   }
 
   const validIds = new Set(CATALOGUE_ITEMS.map((i) => i.id));
-  project.materialSelections = parsed.data.itemIds.filter((id) => validIds.has(id));
+  const materialSelections = parsed.data.itemIds.filter((id) => validIds.has(id));
+
+  await getPgDb().update(projectsTable).set({ materialSelections }).where(eq(projectsTable.id, projectId));
 
   revalidateProject(projectId);
   return { ok: true, data: undefined };
@@ -290,7 +300,7 @@ export async function reportProjectIssue(projectRef: string, projectId: string, 
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  PROJECT_ISSUES.unshift({
+  await getPgDb().insert(projectIssuesTable).values({
     id: `ISS-${randomUUID().slice(0, 8).toUpperCase()}`,
     projectRef,
     title: parsed.data.title,
@@ -317,11 +327,13 @@ export async function updateIssueStatus(issueId: string, projectId: string, stat
     return { ok: false, error: "Statut invalide." };
   }
 
-  const issue = PROJECT_ISSUES.find((i) => i.id === issueId);
-  if (!issue) return { ok: false, error: "Problème introuvable." };
-
-  issue.status = parsed.data.status as ProjectIssueStatus;
-  issue.resolvedAt = parsed.data.status === "Résolu" ? new Date().toISOString() : null;
+  await getPgDb()
+    .update(projectIssuesTable)
+    .set({
+      status: parsed.data.status as ProjectIssueStatus,
+      resolvedAt: parsed.data.status === "Résolu" ? new Date().toISOString() : null,
+    })
+    .where(eq(projectIssuesTable.id, issueId));
 
   revalidateProject(projectId);
   return { ok: true, data: undefined };

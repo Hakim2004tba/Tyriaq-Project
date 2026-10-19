@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { updateProductionStage } from "@/lib/actions/production";
-import { PRODUCTION_STAGES } from "@/lib/data/production";
+import { PRODUCTION_STAGES } from "@/lib/data/operations";
 import type { ProductionStage } from "@/lib/data/operations";
 
 function ProductionStageSelect({ orderId, stage, className }: { orderId: string; stage: ProductionStage; className?: string }) {

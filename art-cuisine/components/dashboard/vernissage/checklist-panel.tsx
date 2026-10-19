@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { FormMessage } from "@/components/auth/form-message";
 import { toggleVernissageChecklistItem, addVernissageChecklistItem } from "@/lib/actions/vernissage";
-import { VERNISSAGE_STAGES } from "@/lib/data/vernissage";
+import { VERNISSAGE_STAGES } from "@/lib/data/operations";
 import type { VernissageChecklistItemRecord, VernissageStage } from "@/lib/data/operations";
 
 function ChecklistRow({ item, jobId }: { item: VernissageChecklistItemRecord; jobId: string }) {

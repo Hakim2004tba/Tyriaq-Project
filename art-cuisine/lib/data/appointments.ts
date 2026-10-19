@@ -4,13 +4,13 @@ import {
   APPOINTMENT_STATUSES,
   COMMERCIALS,
   DESIGNERS,
-  PROJECTS,
   type AppointmentRecord,
   type AppointmentType,
   type AppointmentStatus,
 } from "@/lib/data/operations";
 import { getClientById } from "@/lib/data/clients";
 import { getLeadById } from "@/lib/data/leads";
+import { getAllProjects } from "@/lib/data/project-records";
 
 export { APPOINTMENT_TYPES, APPOINTMENT_STATUSES, COMMERCIALS, DESIGNERS };
 
@@ -93,14 +93,16 @@ export async function getClientNameById(id: string | null): Promise<string | nul
   return client?.name ?? null;
 }
 
-export function getProjectByRef(ref: string | null) {
+export async function getProjectByRef(ref: string | null) {
   if (!ref) return null;
-  return PROJECTS.find((p) => p.ref === ref) ?? null;
+  const projects = await getAllProjects();
+  return projects.find((p) => p.ref === ref) ?? null;
 }
 
 /** Project ref/label options for pickers, optionally scoped to a commercial. */
-export function getProjectOptions(scope: string | null = null) {
-  const pool = scope ? PROJECTS.filter((p) => p.commercial === scope) : PROJECTS;
+export async function getProjectOptions(scope: string | null = null) {
+  const all = await getAllProjects();
+  const pool = scope ? all.filter((p) => p.commercial === scope) : all;
   return pool
     .map((p) => ({ ref: p.ref, label: `${p.ref} — ${p.name} (${p.clientName})` }))
     .sort((a, b) => a.ref.localeCompare(b.ref));

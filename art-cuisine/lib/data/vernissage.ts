@@ -9,7 +9,6 @@ import {
   VERNISSAGE_FINISHES,
   PIECE_STATUSES,
   ACTIVITY,
-  PROJECTS,
   PROJECT_STAGES,
   type VernissageJobRecord,
   type VernissageStage,
@@ -18,6 +17,7 @@ import {
   type VernissageQualityControlRecord,
   type ActivityRecord,
 } from "@/lib/data/operations";
+import { getAllProjects } from "@/lib/data/project-records";
 import { CABINET_FINISHES } from "@/lib/design/kitchen-svg";
 
 export { VERNISSAGE_STAGES, VERNISSAGE_STAGE_PROGRESS, VERNISSAGE_TEAM, VERNISSAGE_FINISHES, PIECE_STATUSES, CABINET_FINISHES };
@@ -40,9 +40,11 @@ export interface ProjectOption {
 }
 
 /** Projects whose production has reached (or passed) Vernissage — eligible for a new vernissage job. */
-export function getEligibleProjectOptions(): ProjectOption[] {
+export async function getEligibleProjectOptions(): Promise<ProjectOption[]> {
   const vernissageIndex = PROJECT_STAGES.indexOf("Vernissage");
-  return PROJECTS.filter((p) => PROJECT_STAGES.indexOf(p.stage) >= vernissageIndex)
+  const projects = await getAllProjects();
+  return projects
+    .filter((p) => PROJECT_STAGES.indexOf(p.stage) >= vernissageIndex)
     .map((p) => ({ id: p.id, ref: p.ref, label: `${p.ref} — ${p.name} (${p.clientName})` }))
     .sort((a, b) => a.ref.localeCompare(b.ref));
 }
